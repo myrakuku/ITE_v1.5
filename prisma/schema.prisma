@@ -1,0 +1,338 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String        @id @default(uuid())
+  username                String        @unique
+  password                String
+  email                   String? // 添加 email 欄位
+  emailVerified           DateTime? // 添加 emailVerified 欄位
+  phone                   String?
+  phoneVerified           DateTime?
+  name                    String?
+  role                    UserRole
+  teacherholidaysDateTime String[]
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  accounts                Accounts[]
+  sessions                Session[]
+  Order                   Order[]
+  Cart                    Cart[]
+  CourseModul             CourseModul[]
+  Account                 Account[]
+  Course                  Course[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model company {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certigificate {
+  id          String        @id @default(uuid())
+  name        String
+  date        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  GroupUser   GroupUser[]
+  GroupMember GroupMember[]
+}
+
+model GroupUser {
+  id          String          @id @default(uuid())
+  GroupName   String
+  Groupmember String[]
+  Certificate Certigificate[]
+  Course      Course[]
+  Date        String[]
+}
+
+model GroupMember {
+  id          String          @id @default(uuid())
+  username    String
+  Date        String[]
+  Certificate Certigificate[]
+  Course      Course[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Course {
+  id                  String                @id @default(uuid())
+  title               String
+  description         String
+  courseCode          String
+  schoolName          String
+  CourseTypes         String?
+  startDate           String?
+  endDate             String?
+  Coursedates         String[]              @default([])
+  numberOfDays        Float // 從 Int 改為 Float
+  timeHours           Float // 從 Int 改為 Float
+  timeRange           String[]              @default([]) // 儲存可用的時間段（例如 ["morning", "afternoon"]）應該用不到
+  teacher             String[]              @default([])
+  teacherId           String
+  isPublic            Boolean
+  isProductItem       Boolean //暫時不用
+  isProduct           Boolean
+  Producted           Boolean
+  Students            String[]
+  type                String[]              @default([])
+  classroom           String? // 可選的課室欄位
+  weekday             String? // 可選的週份欄位
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  GroupUser           GroupUser[]
+  GroupMember         GroupMember[]
+  CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
+  courseModulId       String?
+  CoursePorductType   CourseProductType[]
+  CoursePorductStatue CourseProductStatus[]
+  CourseTimeRanges    CourseTimeRange[] // 新增關聯到 CourseTimeRange
+  Products            Product[] // 新增反向關聯
+  Teacher             User?                 @relation(fields: [teacherId], references: [id])
+}
+
+model CourseTimeRange {
+  id        String   @id @default(uuid())
+  courseId  String
+  timeRange String // 例如 "morning", "afternoon", "evening", "full_day"
+  starttime String? // 例如 "09:00"
+  endtime   String? // 例如 "13:00"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id                       String                @id @default(uuid())
+  title                    String
+  description              String
+  price                    Int
+  real_price               Int
+  CourseProductTypeArray   String[]              @default([])
+  CourseProductStatusArray String[]              @default([])
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  IsPublic                 Boolean
+  courseId                 String?               @map("course_id")
+  Course                   Course?               @relation(fields: [courseId], references: [id])
+  CartItem                 CartItem[]
+  OrderItem                OrderItem[]
+  CourseProductType        CourseProductType[]
+  CourseProductStatus      CourseProductStatus[]
+}
+
+model CourseModul {
+  id                 String   @id @default(uuid())
+  title              String
+  description        String
+  Teaching_Materials String?
+  originalFileName   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  TeacherId          String
+  Teacher            User     @relation(fields: [TeacherId], references: [id])
+  Courses            Course[] // 反向關係，指向引用此 CourseModul 的所有 Course
+}
+
+model Message_Box {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  sender    String
+  receiver  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Accounts {
+  id          String   @id @default(uuid())
+  client_name String // 改為 client_name
+  title       String
+  description String
+  price       Int
+  total       Int
+  date        String
+  client_id   String
+  products    Json?
+  Client_User User     @relation(fields: [client_id], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model NITTP {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  school_name   String
+  day           String
+  time          String
+  time_h        Int
+  teacher       String[]
+  Ispublic      Boolean
+  company_name  String
+  company_price Int
+  date_start    String
+  date_end      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Homemade {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  teacher       String[]
+  Ispublic      Boolean
+  Homemade_code String
+  school_name   String
+  day           String
+  time          String
+  time_h        Int
+  date_start    String
+  date_end      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ERB {
+  id          String   @id @default(uuid())
+  ERB_code    String
+  title       String
+  description String
+  school_name String
+  day         String
+  time        String
+  time_h      Int
+  teacher     String[]
+  Ispublic    Boolean
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  total     Float
+  status    String      @default("PENDING")
+  paymentId String?     // 新增：儲存 PayMe 或其他支付閘道的支付 ID
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     OrderItem[]
+  user      User        @relation(fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model CourseProductType {
+  id        String    @id @default(uuid())
+  typename  String
+  author    String
+  role      UserRole
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Product   Product[]
+  Course    Course[]
+}
+
+model CourseProductStatus {
+  id         String    @id @default(uuid())
+  statuename String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Product    Product[]
+  Course     Course[]
+}
+
+model HeaderType {
+  id             String   @id @default(uuid())
+  HeaderTypeName String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  TEACHER
+}

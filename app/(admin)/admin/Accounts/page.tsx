@@ -1,0 +1,363 @@
+// "use client";
+
+// import { useEffect, useState } from "react";
+
+// interface AccountsData {
+//     id: string;
+//     client_name: string;
+//     title: string;
+//     description: string;
+//     price: number;
+//     total: number;
+//     date: string;
+// }
+
+// interface TeacherData {
+//     id: string;
+//     name: string;
+//     email: string;
+//     phone: string;
+//     address: string;
+//     city: string;
+//     state: string;
+//     zip: string;
+//     country: string;
+//     created_at: string;
+//     updated_at: string;
+// }
+
+// const AccountsListsPage = () => {
+
+//     const [ GetAccountsData , setGetAccountsData] = useState<AccountsData | []>([]);
+//     const [ GetTeacherData , setGetTeacherData ] = useState<AccountsData | []>([]);
+
+
+//     useEffect(() => {
+//         const  fetchAccountsData = async () => {
+//             const response = await fetch("/api/Accounts/Get_Accounts_Lists");
+//             const data = await response.json();
+//             setGetAccountsData(data);
+//         }
+//         fetchAccountsData();
+//     }, []);
+
+//     console.log("GetAccountsData : ", GetAccountsData , " -- End -- ")
+
+//     return (
+//         <>
+//             AccountsListsPage
+//         </>
+//     )
+// }
+
+// export default AccountsListsPage;
+
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface AccountsData {
+  id: string;
+  client_name: string;
+  title: string;
+  description: string;
+  price: number;
+  total: number;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  Course: Course[];
+}
+
+interface Course {
+  id: string;
+  title: string;
+  timeHours: number;
+  Coursedates: string[];
+  teacherId: string;
+}
+
+const AccountsListsPage = () => {
+  const [accountsData, setAccountsData] = useState<AccountsData[]>([]);
+  const [teachersData, setTeachersData] = useState<Teacher[]>([]);
+  const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
+  const [selectedTeacher, setSelectedTeacher] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // 獲取帳目數據
+        const accountsResponse = await fetch("/api/Accounts/Get_Accounts_Lists");
+        const accountsData = await accountsResponse.json();
+        setAccountsData(accountsData);
+
+        // 獲取教師數據
+        const teachersResponse = await fetch("/api/user/Get_Teachers_With_Course");
+        const teachersData = await teachersResponse.json();
+        setTeachersData(teachersData);
+        setFilteredTeachers(teachersData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 應用篩選條件
+  useEffect(() => {
+    let result = teachersData;
+
+    // 篩選教師
+    if (selectedTeacher) {
+      result = result.filter(teacher => teacher.id === selectedTeacher);
+    }
+
+    // 篩選月份
+    if (selectedMonth) {
+      result = result.map(teacher => ({
+        ...teacher,
+        Course: teacher.Course.map(course => ({
+          ...course,
+          Coursedates: course.Coursedates.filter(date => {
+            const dateObj = new Date(date);
+            return dateObj.getMonth() + 1 === parseInt(selectedMonth);
+          })
+        })).filter(course => course.Coursedates.length > 0)
+      })).filter(teacher => teacher.Course.length > 0);
+    }
+
+    // 篩選年份
+    if (selectedYear) {
+      result = result.map(teacher => ({
+        ...teacher,
+        Course: teacher.Course.map(course => ({
+          ...course,
+          Coursedates: course.Coursedates.filter(date => {
+            const dateObj = new Date(date);
+            return dateObj.getFullYear() === parseInt(selectedYear);
+          })
+        })).filter(course => course.Coursedates.length > 0)
+      })).filter(teacher => teacher.Course.length > 0);
+    }
+
+    setFilteredTeachers(result);
+  }, [selectedTeacher, selectedMonth, selectedYear, teachersData]);
+
+
+  console.log("teachersData ： ", teachersData,"-- END --")
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl font-semibold text-gray-600">載入中...</div>
+      </div>
+    );
+  }
+
+  console.log("filteredTeachers ： ", filteredTeachers,"-- END --")
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">帳目與教師課程管理</h1>
+        
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* 左側：帳目數據 */}
+          <div className="w-full lg:w-1/2 bg-white rounded-lg shadow-md p-6">
+            <Link href={'/admin/Accounts/createBill'}>
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                新增帳目
+              </button>
+            </Link>
+
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">帳目記錄</h2>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">標題</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客戶</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {accountsData.map((account) => (
+                    <tr key={account.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{account.title}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.client_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${account.total}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(account.date).toLocaleDateString('zh-TW')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+
+          {/* 右側：教師課程時間 */}
+          <div className="w-full lg:w-1/2 bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">教師課程時間</h2>
+            
+            {/* 篩選器 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">教師</label>
+                <select
+                  value={selectedTeacher}
+                  onChange={(e) => setSelectedTeacher(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">全部教師</option>
+                  {teachersData.map(teacher => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">月份</label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">全部月份</option>
+                  {Array.from({length: 12}, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>
+                      {month}月
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">年份</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">全部年份</option>
+                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <option key={year} value={year}>
+                      {year}年
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {/* 教師課程列表 */}
+            {/* <div className="space-y-6">
+              {filteredTeachers.length > 0 ? (
+                filteredTeachers.map(teacher => (
+                  <div key={teacher.id} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-lg text-gray-800 mb-2">{teacher.name}</h3>
+                    
+                    {teacher.Course.length > 0 ? (
+                      teacher.Course.map(course => (
+                        <div key={course.id} className="ml-4 mb-4">
+                          <h4 className="font-medium text-gray-700 mb-1">{course.title}</h4>
+                          <p className="text-sm text-gray-600 mb-2">總時數: {course.timeHours} 小時</p>
+                          
+                          {course.Coursedates.length > 0 && (
+                            <div className="ml-4">
+                              <p className="text-sm font-medium text-gray-600 mb-1">上課日期:</p>
+                              <ul className="list-disc pl-5 text-sm text-gray-500">
+                                {course.Coursedates.map((date, index) => (
+                                  <li key={index}>
+                                    {new Date(date).toLocaleDateString('zh-TW', {
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric',
+                                      weekday: 'short'
+                                    })}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">沒有符合條件的課程</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-8">沒有符合條件的教師課程</p>
+              )}
+            </div> */}
+
+            <div className="space-y-6">
+  {filteredTeachers.length > 0 ? (
+    filteredTeachers.map(teacher => (
+      <div key={teacher.id} className="border border-gray-200 rounded-lg p-4">
+        <h3 className="font-medium text-lg text-gray-800 mb-2">{teacher.name}</h3>
+        {teacher.Course.length > 0 ? (
+          teacher.Course.map(course => (
+            <div key={course.id} className="ml-4 mb-4">
+              <h4 className="font-medium text-gray-700 mb-1">{course.title}</h4>
+              <p className="text-sm text-gray-600 mb-2">
+                總時數: {course.timeHours * course.Coursedates.length} 小時
+              </p>
+              {course.Coursedates.length > 0 && (
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600 mb-1">上課日期:</p>
+                  <ul className="list-disc pl-5 text-sm text-gray-500">
+                    {course.Coursedates.map((date, index) => (
+                      <li key={index}>
+                        {new Date(date).toLocaleDateString('zh-TW', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          weekday: 'short'
+                        })}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500">沒有符合條件的課程</p>
+        )}
+      </div>
+    ))
+  ) : (
+    <p className="text-gray-500 text-center py-8">沒有符合條件的教師課程</p>
+  )}
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AccountsListsPage;
