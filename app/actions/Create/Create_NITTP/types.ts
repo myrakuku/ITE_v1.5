@@ -7,5 +7,5 @@ import { NITTP} from "@prisma/client";
 
 
 export type InputType = z.infer<typeof CreateNITTPSchema>;
-export type ReturnType = ActionState<InputType , NITTP>
+export type ReturnType = ActionState<NITTP>
 

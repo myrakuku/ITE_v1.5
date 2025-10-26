@@ -46,6 +46,7 @@ export async function GET(req: Request) {
                     CourseTimeRanges: true,
                   },
                 },
+                Product_Img: true,
               },
             });
 

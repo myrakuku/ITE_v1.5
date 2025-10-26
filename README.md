@@ -148,8 +148,29 @@ user
 
 
 
+24-9-2025
 
+在Change-IsPay中index中
+
+    // 使用 student_id 查詢 Student 以取得 parentId
+    const student_data = await db.student.findUnique({
+      where: { id: invoice_data.student_id },
+      select: { student_parent_data_id: true }, // 只選取需要的欄位以優化查詢
+    });
+中沒有student 要改user 以及更個的邏輯
 
 
 
 <!--  -->
+
+02-10-2025
+
+在layout 中,head中要加入一個部件
+
+
+
+24-10-2025
+
+要在product 中　加入maxStudents及student[] 的顯示 - 做完
+
+以及在 CREATE COURSE FORM 中加入maxStudents(特別課程都要)

@@ -362,6 +362,8 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
+import { createId } from '@paralleldrive/cuid2'; // 引入 cuid2
+
 // 檢查環境變量
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not defined');
@@ -491,6 +493,23 @@ export async function POST(
       })),
       skipDuplicates: true, // 可選：避免重複，如果有 unique 約束
     });
+
+    await prisma.invoice.createMany({
+      data: cart.items.map((item) => ({
+        studentname: username, // 使用 username 作為 cilent_name
+        title: item.product.title, // 從產品拿 title
+        description: item.product.description, // 從產品拿 description
+        price: item.product.price, // 單價
+        total: item.product.price * item.quantity, // 總價 = 單價 * 數量
+        date: currentDate, // 當前日期作為字符串
+        student_id: userId, // 用戶 ID
+        Invoice_id: createId(), // 生成隨機 CUID
+        servetype:"",
+        DB: 0,
+        adminFee: 0,
+      })),
+    });
+
 
     // 清空用戶的購物車（刪除 Cart 和相關的 CartItem）
     await prisma.cartItem.deleteMany({

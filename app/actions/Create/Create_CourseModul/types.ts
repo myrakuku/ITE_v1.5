@@ -7,5 +7,5 @@ import { CourseModul } from "@prisma/client";
 
 
 export type InputType = z.infer<typeof CreateCourseModulSchema>;
-export type ReturnType = ActionState<InputType , CourseModul>
+export type ReturnType = ActionState< CourseModul>
 

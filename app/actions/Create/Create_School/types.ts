@@ -7,5 +7,5 @@ import { School } from "@prisma/client";
 
 
 export type InputType = z.infer<typeof CreateSchoolSchema>;
-export type ReturnType = ActionState<InputType , School>
+export type ReturnType = ActionState<School>
 

@@ -10,8 +10,8 @@ datasource db {
 model User {
   id                      String        @id @default(uuid())
   username                String        @unique
-  password                String
-  email                   String? // 添加 email 欄位
+  password                String?
+  email                   String?        @unique
   emailVerified           DateTime? // 添加 emailVerified 欄位
   phone                   String?
   phoneVerified           DateTime?
@@ -27,6 +27,17 @@ model User {
   CourseModul             CourseModul[]
   Account                 Account[]
   Course                  Course[]
+  OAuth                   OAuth[]
+  Invoice                Invoice[]
+  Receipt                Receipt[]
+  specialCourse           specialCourse[]
+}
+
+model OAuth{
+  id        String   @id @default(uuid())
+  OAuthEmail              String        @unique 
+  userId                  String
+  User                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Session {
@@ -94,6 +105,9 @@ model GroupUser {
   Certificate Certigificate[]
   Course      Course[]
   Date        String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  specialCourse         specialCourse[]
 }
 
 model GroupMember {
@@ -104,6 +118,7 @@ model GroupMember {
   Course      Course[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+  specialCourse         specialCourse[]
 }
 
 model Course {
@@ -117,6 +132,8 @@ model Course {
   endDate             String?
   Coursedates         String[]              @default([])
   numberOfDays        Float // 從 Int 改為 Float
+  numberOfStudents     Int?
+  maxStudents         Int?                  // 新增：人數上限字段，可選
   timeHours           Float // 從 Int 改為 Float
   timeRange           String[]              @default([]) // 儲存可用的時間段（例如 ["morning", "afternoon"]）應該用不到
   teacher             String[]              @default([])
@@ -142,21 +159,38 @@ model Course {
   Teacher             User?                 @relation(fields: [teacherId], references: [id])
 }
 
+// model CourseTimeRange {
+//   id        String   @id @default(uuid())
+//   courseId  String
+//   timeRange String // 例如 "morning", "afternoon", "evening", "full_day"
+//   starttime String? // 例如 "09:00"
+//   endtime   String? // 例如 "13:00"
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+//   specialCourse         specialCourse[]
+
+// }
+
 model CourseTimeRange {
   id        String   @id @default(uuid())
   courseId  String
-  timeRange String // 例如 "morning", "afternoon", "evening", "full_day"
-  starttime String? // 例如 "09:00"
-  endtime   String? // 例如 "13:00"
+  timeRange String
+  starttime String?
+  endtime   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  // 移除 specialCourse 關聯
 }
 
 model Product {
   id                       String                @id @default(uuid())
   title                    String
   description              String
+  Target_Audience          String?              // 目標觀眾
+  Course_Objective         String?              // 課程目標
+  Applicable_Scenarios     String?              // 可適用場景
   price                    Int
   real_price               Int
   CourseProductTypeArray   String[]              @default([])
@@ -170,6 +204,41 @@ model Product {
   OrderItem                OrderItem[]
   CourseProductType        CourseProductType[]
   CourseProductStatus      CourseProductStatus[]
+  Product_Course_Dates      Product_Course_Dates[] // 新增
+  Product_Course_Time_Ranges Product_Course_Time_Ranges[] // 新增
+  Product_Img               Product_Img[]
+  Product_video             Product_video[]
+}
+
+model Product_Course_Dates {
+  id         String   @id @default(uuid())
+  date       DateTime
+  ProductId  String
+  product    Product  @relation(fields: [ProductId], references: [id])
+}
+
+model Product_Course_Time_Ranges {
+  id         String   @id @default(uuid())
+  timeRange  String
+  starttime  String?
+  endtime    String?
+  ProductId  String
+  product    Product  @relation(fields: [ProductId], references: [id])
+}
+
+
+model Product_video{
+  id        String   @id @default(uuid())
+  video_url    String
+  ProductId  String
+  Product    Product @relation(fields: [ProductId], references: [id])
+}
+
+model Product_Img{
+  id        String   @id @default(uuid())
+  img_url    String
+  ProductId  String
+  Product    Product @relation(fields: [ProductId], references: [id])
 }
 
 model CourseModul {
@@ -183,6 +252,7 @@ model CourseModul {
   TeacherId          String
   Teacher            User     @relation(fields: [TeacherId], references: [id])
   Courses            Course[] // 反向關係，指向引用此 CourseModul 的所有 Course
+  specialCourse         specialCourse[]
 }
 
 model Message_Box {
@@ -313,6 +383,7 @@ model CourseProductType {
   updatedAt DateTime  @updatedAt
   Product   Product[]
   Course    Course[]
+  specialCourse   specialCourse[]
 }
 
 model CourseProductStatus {
@@ -322,6 +393,7 @@ model CourseProductStatus {
   updatedAt  DateTime  @updatedAt
   Product    Product[]
   Course     Course[]
+  specialCourse   specialCourse[]
 }
 
 model HeaderType {
@@ -329,6 +401,145 @@ model HeaderType {
   HeaderTypeName String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Invoice {
+  id          String  @id @default(cuid())
+  title       String
+  content     String[]
+  studentname  String
+  student_id   String
+  Invoice_id   String  //人做invoice code
+  price           Float
+  servetype       String
+  PaymentMethods  String[]
+  DB      Float
+  adminFee         Float
+  isPayment        Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  User            User[]
+  PaymentMethods_price    PaymentMethods_price[]
+}
+
+
+model Receipt {
+  id          String  @id @default(cuid())
+  title       String
+  content     String[]
+  // parentId    String?
+  studentname  String
+  invoicebydbid   String
+  Invoice_id   String
+  servetype       String
+  isPayment        Boolean 
+  DB Float
+  adminFee          Float
+  price           Float
+  PaymentMethods  String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  User            User[]
+}
+
+model PaymentMethods_price {
+  id          String  @id @default(cuid())
+  Invoice_id  String
+  Invoice     Invoice[]
+  price       Float
+  Item_name   String[]
+  PaymentMethods String
+  craetedAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+}
+
+// model specialCourse {
+//   id                  String                @id @default(uuid())
+//   title               String
+//   description         String
+//   courseCode          String
+//   schoolName          String
+//   CourseTypes         String?
+//   startDate           String?
+//   endDate             String?
+//   Coursedates         String[]              @default([])
+//   numberOfDays        Float // 從 Int 改為 Float
+//   numberOfStudents    Int
+//   timeHours           Float // 從 Int 改為 Float
+//   timeRange           String[]              @default([]) // 儲存可用的時間段（例如 ["morning", "afternoon"]）應該用不到
+//   teacher             String[]              @default([])
+//   teacherId           String
+//   isPublic            Boolean
+//   isProduct           Boolean
+//   Producted           Boolean
+//   Students            String[]
+//   type                String[]              @default([])
+//   classroom           String? // 可選的課室欄位
+//   weekday             String? // 可選的週份欄位
+//   createdAt           DateTime              @default(now())
+//   updatedAt           DateTime              @updatedAt
+//   GroupUser           GroupUser[]
+//   GroupMember         GroupMember[]
+//   CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
+//   courseModulId       String?
+//   CoursePorductType   CourseProductType[]
+//   CoursePorductStatue CourseProductStatus[]
+//   CourseTimeRanges    CourseTimeRange[] // 新增關聯到 CourseTimeRange
+//   Teacher             User?                 @relation(fields: [teacherId], references: [id])
+
+// }
+
+
+model specialCourse {
+  id                  String                @id @default(uuid())
+  title               String
+  description         String
+  courseCode          String
+  schoolName          String
+  CourseTypes         String?
+  startDate           String?
+  endDate             String?
+  Coursedates         String[]              @default([])
+  numberOfDays        Float
+  numberOfStudents    Int?
+  maxStudents         Int?                  // 新增：人數上限字段，可選
+  timeHours           Float
+  timeRange           String[]              @default([])
+  teacher             String[]              @default([])
+  teacherId           String
+  isPublic            Boolean
+  isProduct           Boolean
+  Producted           Boolean
+  Students            String[]
+  type                String[]              @default([])
+  classroom           String?
+  weekday             String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  IMG_URL             String?
+  Video_URL           String?
+  price               Float?
+  GroupUser           GroupUser[]
+  GroupMember         GroupMember[]
+  CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
+  courseModulId       String?
+  CoursePorductType   CourseProductType[]
+  CoursePorductStatue CourseProductStatus[]
+  // CourseTimeRanges    CourseTimeRange[]     // 移除此關聯，因為它與 Course 相關
+  SpecialCourseTimeRanges SpecialCourseTimeRange[] // 新增關聯
+  Teacher             User?                 @relation(fields: [teacherId], references: [id])
+}
+
+
+model SpecialCourseTimeRange {
+  id        String   @id @default(uuid())
+  courseId  String
+  timeRange String
+  starttime String?
+  endtime   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    specialCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {

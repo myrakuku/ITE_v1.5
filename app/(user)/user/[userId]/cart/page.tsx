@@ -76,9 +76,17 @@ export default function CartPage() {
     router.push(`/user/${userId}/checkout`);
   };
 
-  if (status === 'loading') return <div>載入中...</div>;
+  if (status === 'loading') return(
+    console.log("loading  cart : ",cart ,"-- end --") ,
+    <div>載入中...</div>
+  );
+    
+  
   if (status === 'unauthenticated') return <div>請先登入</div>;
-  if (!cart) return <div>載入中...</div>;
+  if (!cart)  return(
+    console.log("!cart : ",cart ,"-- end --") ,
+    <div>載入中...</div>
+  );
 
   return (
     <div className="container mx-auto p-4">

@@ -30,8 +30,10 @@ export default function Navbar() {
     { name: "教師列表", href: "/admin/TeacherLists" },
     { name: "使用者列表", href: "/admin/UserLists" },
     { name: "狀態列表", href: "/admin/StatueLists" },
-    { name: "類型清單", href: "/admin/TypeLists" },
+    { name: "科目清單", href: "/admin/TypeLists" },
     { name: "關鍵字清單", href: "/admin/HeaderTypeLists" },
+    { name: "AdminLOG", href: "/admin/AdminLog" },
+    { name: "特別程程列表", href: "/admin/SpecialCourseLists" },
   ];
 
   const teacherNavItems = teacherId
@@ -40,7 +42,7 @@ export default function Navbar() {
         { name: "日曆", href: `/teacher/${teacherId}/calendar` },
         { name: "課程列表", href: `/teacher/${teacherId}/CourseLists` },
         { name: "教師教材列表", href: `/teacher/${teacherId}/TeachingMaterialsLists` },
-        { name: "類型列表", href: `/teacher/${teacherId}/TypesLists` },
+        { name: "科目清單", href: `/teacher/${teacherId}/TypesLists` },
       ]
     : [];
 

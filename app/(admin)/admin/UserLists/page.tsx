@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 interface UserDataLists {
   id: string;
   username: string;
-  phone: string;
-  name: string;
-  email: string;
+  phone: string | null; // 允許 null
+  name: string | null; // 允許 null
+  email: string | null; // 允許 null
   role: string;
 }
 
@@ -41,13 +41,13 @@ const UserListsPage = () => {
 
   console.log("getUserDataLists:", getUserDataLists, "-- End --");
 
-  // 搜尋和過濾用戶
+  // 搜尋和過濾用戶，處理 null 值
   const filteredUsers = getUserDataLists.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchQuery.toLowerCase())
+      (user.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (user.username?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (user.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (user.role?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
 
   // 分頁邏輯
@@ -73,7 +73,11 @@ const UserListsPage = () => {
         </div>
 
         {/* 錯誤訊息 */}
-        {error && <div className="mb-4 text-red-500">{error}</div>}
+        {error && (
+          <div className="mb-4 text-red-500 p-4 bg-red-900/50 rounded-md">
+            {error}
+          </div>
+        )}
 
         {/* 搜尋框 */}
         <div className="mb-4">
@@ -103,11 +107,11 @@ const UserListsPage = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-base font-medium">{user.name}</div>
+                      <div className="text-base font-medium">{user.name || "無名稱"}</div>
                       <div className="text-sm text-gray-400">{user.username}</div>
                     </div>
                     <div className="text-sm text-gray-400 text-right">
-                      <div>{user.email}</div>
+                      <div>{user.email || "無電郵"}</div>
                       <div>角色: {user.role}</div>
                       <div>電話: {user.phone || "無"}</div>
                     </div>

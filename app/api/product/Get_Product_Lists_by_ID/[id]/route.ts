@@ -38,8 +38,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         Course: {
                   include: {
                     CourseTimeRanges: true,
+                    
                   },
         },
+        Product_Img: true,
       },
     });
 

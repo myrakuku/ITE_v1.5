@@ -4,4 +4,4 @@ import { CreateUserSchema } from './schema'
 import { ActionState } from '@/lib/create-safe-action'
 
 export type InputType = z.infer<typeof CreateUserSchema>
-export type ReturnType = ActionState<InputType, z.infer<typeof CreateUserSchema>>
+export type ReturnType = ActionState< z.infer<typeof CreateUserSchema>>

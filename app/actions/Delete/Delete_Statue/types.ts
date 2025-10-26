@@ -7,5 +7,5 @@ import type{ Accounts } from "@prisma/client";
 
 
 export type InputType = z.infer<typeof DeleteStatueSchema>;
-export type ReturnType = ActionState<InputType , Accounts>
+export type ReturnType = ActionState< Accounts>
 

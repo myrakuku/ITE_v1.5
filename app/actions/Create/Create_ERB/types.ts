@@ -7,5 +7,5 @@ import { ERB } from "@prisma/client";
 
 
 export type InputType = z.infer<typeof CreateERBSchema>;
-export type ReturnType = ActionState<InputType , ERB>
+export type ReturnType = ActionState< ERB>
 

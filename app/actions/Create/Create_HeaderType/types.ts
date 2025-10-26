@@ -7,5 +7,5 @@ import { HeaderType } from "@prisma/client";
 
 
 export type InputType = z.infer<typeof CreateHeaderTypeSchema>;
-export type ReturnType = ActionState<InputType , HeaderType>
+export type ReturnType = ActionState<HeaderType>
 

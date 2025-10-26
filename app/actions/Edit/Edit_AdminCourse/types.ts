@@ -5,7 +5,7 @@ import { EditADminCourseSchema } from "./schema";
 
 export type InputType = z.infer<typeof EditADminCourseSchema>;
 export type ReturnType = ActionState<
-  InputType,
+  
   {
     courseId: string;
     teacher: string[];
