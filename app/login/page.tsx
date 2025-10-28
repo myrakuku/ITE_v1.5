@@ -1,222 +1,327 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { serverLogin } from "../actions/auth/login"; // 確保路徑正確
-import { signIn } from "@/auth"; // 從 auth.ts 導入 signIn
+import { serverLogin } from "../actions/auth/login";
+import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import { toast } from "sonner"; // 新增 toast 導入
+import { toast } from "sonner";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
-  const { update } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const router = useRouter();
+  const { data: session, status, update } = useSession();
+
+  // 登入成功後自動導向對應頁面
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.id) {
+      const { role, id } = session.user;
+      const path =
+        role === "USER" ? `/user/${id}` :
+        role === "TEACHER" ? `/teacher/${id}` :
+        role === "ADMIN" ? "/admin" :
+        "/shop";
+
+      console.log("導向:", path); // 除錯用
+      router.replace(path);
+    }
+  }, [status, session, router]);
+
+  // 表單登入
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("password", password);
-
+    const formData = new FormData(e.currentTarget);
     const result = await serverLogin(formData);
 
-    if (result.error) {
+    if (result?.error) {
       setError(result.error);
-      toast.error(result.error); // 使用 toast 顯示錯誤
+      toast.error(result.error);
     } else {
-      await update(); // 同步客戶端會話
-      const userRole = result.user?.role;
-      const userId = result.user?.id;
-      if (userRole === "USER" && userId) {
-        router.push(`/user/${userId}`);
-      } else if (userRole === "TEACHER" && userId) {
-        router.push(`/teacher/${userId}`);
-      } else if (userRole === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/shop");
-      }
+      await update(); // 同步 session
+      toast.success("登入成功");
+      // 導向由 useEffect 處理
+    }
+
+    setIsLoading(false);
+  };
+
+  // Google 登入（關鍵修正）
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError("");
+
+    try {
+      // 不要指定 callbackUrl
+      await signIn("google");
+      // NextAuth 會回調到 /login，useEffect 會在 session 更新後導向
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Google 登入失敗";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signIn("google", { redirect: false });
-      if (result?.error) {
-        setError("Google 登入失敗，請稍後再試");
-        toast.error("Google 登入失敗，請稍後再試"); // 使用 toast 顯示錯誤
-      } else {
-        await update(); // 同步客戶端會話
-        const session = await fetch("/api/auth/session").then((res) => res.json());
-        const userRole = session?.user?.role;
-        const userId = session?.user?.id;
-        if (userRole === "USER" && userId) {
-          router.push(`/user/${userId}`);
-        } else if (userRole === "TEACHER" && userId) {
-          router.push(`/teacher/${userId}`);
-        } else if (userRole === "ADMIN") {
-          router.push("/admin");
-        } else {
-          router.push("/shop");
-        }
-        toast.success("Google 登入成功"); // 使用 toast 顯示成功訊息
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Google 登入失敗，請稍後再試";
-      setError(errorMessage);
-      toast.error(errorMessage); // 使用 toast 顯示錯誤
-    }
-  };
+  // 正在載入 session 時顯示
+  if (status === "loading") {
+    return (
+      <div className="container mx-auto p-4 flex justify-center items-center min-h-screen">
+        <div className="text-lg">正在載入...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">登入</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
-        <input
-          type="text"
-          placeholder="用戶名"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border p-2 bg-gray-700 text-white border-gray-600 focus:border-gray-500 rounded-md"
-        />
-        <input
-          type="password"
-          placeholder="密碼"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border p-2 bg-gray-700 text-white border-gray-600 focus:border-gray-500 rounded-md"
-        />
-        {error && <p className="text-red-400">{error}</p>}
+    <div className="container mx-auto p-4 max-w-md">
+      <h1 className="text-2xl font-bold mb-6 text-center">登入</h1>
+
+      {/* 表單登入 */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <input
+            type="text"
+            name="username"
+            placeholder="用戶名"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-gray-500 disabled:opacity-50"
+            disabled={isLoading}
+            required
+          />
+        </div>
+
+        <div>
+          <input
+            type="password"
+            name="password"
+            placeholder="密碼"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-gray-500 disabled:opacity-50"
+            disabled={isLoading}
+            required
+          />
+        </div>
+
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+
         <button
           type="submit"
-          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+          disabled={isLoading || googleLoading}
+          className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md disabled:opacity-50 transition"
         >
-          登入
+          {isLoading ? "登入中..." : "登入"}
         </button>
       </form>
-      <button
-        onClick={handleGoogleSignIn}
-        className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-      >
-        使用 Google 登入
-      </button>
-      <a href="/forgot-password" className="mt-2 text-sm text-blue-400">
-        忘記密碼？
-      </a>
+
+      {/* Google 登入按鈕 */}
+      <div className="mt-6">
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || isLoading}
+          className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 transition flex items-center justify-center gap-2"
+        >
+          {googleLoading ? (
+            "導向 Google..."
+          ) : (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="currentColor" d="M12 6.25c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              使用 Google 登入
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* 忘記密碼 */}
+      <div className="mt-4 text-center">
+        <a href="/forgot-password" className="text-sm text-blue-400 hover:underline">
+          忘記密碼？
+        </a>
+      </div>
     </div>
   );
 }
-// // app/login/page.tsx
+
 // "use client";
 
-// import { useState } from "react";
+// import { useState, useEffect } from "react";
 // import { useRouter } from "next/navigation";
-// import { serverLogin } from "../actions/auth/login"; // 確保路徑正確
-// import { signIn } from "@/auth"; // 從 auth.ts 導入 signIn
+// import { serverLogin } from "../actions/auth/login";
+// import { signIn } from "next-auth/react";
 // import { useSession } from "next-auth/react";
+// import { toast } from "sonner";
 
 // export default function SignIn() {
 //   const [username, setUsername] = useState("");
 //   const [password, setPassword] = useState("");
 //   const [error, setError] = useState("");
-//   const router = useRouter();
-//   const { update } = useSession();
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [googleLoading, setGoogleLoading] = useState(false);
 
-//   const handleSubmit = async (e: React.FormEvent) => {
+//   const router = useRouter();
+//   const { data: session, status, update } = useSession();
+
+//   // 登入成功後自動導向對應頁面
+//   useEffect(() => {
+//     if (status === "authenticated" && session?.user?.id) {
+//       const { role, id } = session.user;
+//       const path =
+//         role === "USER" ? `/user/${id}` :
+//         role === "TEACHER" ? `/teacher/${id}` :
+//         role === "ADMIN" ? "/admin" :
+//         "/shop";
+
+//       // 使用 replace 避免回到登入頁
+//       router.replace(path);
+//     }
+//   }, [status, session, router]);
+
+//   // 表單登入
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 //     e.preventDefault();
 //     setError("");
+//     setIsLoading(true);
 
-//     const formData = new FormData();
-//     formData.append("username", username);
-//     formData.append("password", password);
-
+//     const formData = new FormData(e.currentTarget);
 //     const result = await serverLogin(formData);
 
-//     if (result.error) {
+//     if (result?.error) {
 //       setError(result.error);
+//       toast.error(result.error);
 //     } else {
-//       await update(); // 同步客戶端會話
-//       const userRole = result.user?.role;
-//       const userId = result.user?.id;
-//       if (userRole === "USER" && userId) {
-//         router.push(`/user/${userId}`);
-//       } else if (userRole === "TEACHER" && userId) {
-//         router.push(`/teacher/${userId}`);
-//       } else if (userRole === "ADMIN") {
-//         router.push("/admin");
-//       } else {
-//         router.push("/shop");
-//       }
+//       await update(); // 同步 session
+//       toast.success("登入成功");
+//       // 導向由 useEffect 處理
+//     }
+
+//     setIsLoading(false);
+//   };
+
+//   // Google 登入
+//   const handleGoogleSignIn = async () => {
+//     setGoogleLoading(true);
+//     setError("");
+
+//     try {
+//       // 直接跳轉到 Google OAuth
+//       await signIn("google", { callbackUrl: `/` });
+//       // 成功後 NextAuth 會自動處理回調，useSession 會更新
+//     } catch (err) {
+//       const msg = err instanceof Error ? err.message : "Google 登入失敗";
+//       setError(msg);
+//       toast.error(msg);
+//     } finally {
+//       setGoogleLoading(false);
 //     }
 //   };
 
-//   const handleGoogleSignIn = async () => {
-//     try {
-//       const result = await signIn("google", { redirect: false });
-//       if (result?.error) {
-//         setError("Google 登入失敗，請稍後再試");
-//       } else {
-//         // Google 登入成功後，依賴 session 回調進行重定向
-//         await update();
-//         // 由於 session 回調已處理角色，我們需要在客戶端檢查角色並重定向
-//         const session = await fetch("/api/auth/session").then((res) => res.json());
-//         const userRole = session?.user?.role;
-//         const userId = session?.user?.id;
-//         if (userRole === "USER" && userId) {
-//           router.push(`/user/${userId}`);
-//         } else if (userRole === "TEACHER" && userId) {
-//           router.push(`/teacher/${userId}`);
-//         } else if (userRole === "ADMIN") {
-//           router.push("/admin");
-//         } else {
-//           router.push("/shop");
-//         }
-//       }
-//     } catch (error) {
-//       setError("Google 登入失敗，請稍後再試");
-//     }
-//   };
+//   // 正在載入 session 時顯示
+//   if (status === "loading") {
+//     return (
+//       <div className="container mx-auto p-4 flex justify-center items-center min-h-screen">
+//         <div className="text-lg">正在載入...</div>
+//       </div>
+//     );
+//   }
 
 //   return (
-//     <div className="container mx-auto p-4">
-//       <h1 className="text-2xl font-bold mb-4">登入</h1>
-//       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
-//         <input
-//           type="text"
-//           placeholder="用戶名"
-//           value={username}
-//           onChange={(e) => setUsername(e.target.value)}
-//           className="border p-2 bg-gray-700 text-white border-gray-600 focus:border-gray-500 rounded-md"
-//         />
-//         <input
-//           type="password"
-//           placeholder="密碼"
-//           value={password}
-//           onChange={(e) => setPassword(e.target.value)}
-//           className="border p-2 bg-gray-700 text-white border-gray-600 focus:border-gray-500 rounded-md"
-//         />
-//         {error && <p className="text-red-400">{error}</p>}
+//     <div className="container mx-auto p-4 max-w-md">
+//       <h1 className="text-2xl font-bold mb-6 text-center">登入</h1>
+
+//       {/* 表單登入 */}
+//       <form onSubmit={handleSubmit} className="space-y-4">
+//         <div>
+//           <input
+//             type="text"
+//             name="username"
+//             placeholder="用戶名"
+//             value={username}
+//             onChange={(e) => setUsername(e.target.value)}
+//             className="w-full px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-gray-500 disabled:opacity-50"
+//             disabled={isLoading}
+//             required
+//           />
+//         </div>
+
+//         <div>
+//           <input
+//             type="password"
+//             name="password"
+//             placeholder="密碼"
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             className="w-full px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-gray-500 disabled:opacity-50"
+//             disabled={isLoading}
+//             required
+//           />
+//         </div>
+
+//         {error && <p className="text-red-400 text-sm">{error}</p>}
+
 //         <button
 //           type="submit"
-//           className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+//           disabled={isLoading || googleLoading}
+//           className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md disabled:opacity-50 transition"
 //         >
-//           登入
+//           {isLoading ? "登入中..." : "登入"}
 //         </button>
 //       </form>
-//       <button
-//         onClick={handleGoogleSignIn}
-//         className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-//       >
-//         使用 Google 登入
-//       </button>
-//       <a href="/forgot-password" className="mt-2 text-sm text-blue-400">
-//         忘記密碼？
-//       </a>
+
+//       {/* Google 登入按鈕 */}
+//       <div className="mt-6">
+//         <button
+//           onClick={handleGoogleSignIn}
+//           disabled={googleLoading || isLoading}
+//           className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 transition flex items-center justify-center gap-2"
+//         >
+//           {googleLoading ? (
+//             "導向 Google..."
+//           ) : (
+//             <>
+//               <svg className="w-5 h-5" viewBox="0 0 24 24">
+//                 <path
+//                   fill="currentColor"
+//                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+//                 />
+//                 <path
+//                   fill="currentColor"
+//                   d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+//                 />
+//                 <path
+//                   fill="currentColor"
+//                   d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+//                 />
+//                 <path
+//                   fill="currentColor"
+//                   d="M12 6.25c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+//                 />
+//               </svg>
+//               使用 Google 登入
+//             </>
+//           )}
+//         </button>
+//       </div>
+
+//       {/* 忘記密碼 */}
+//       <div className="mt-4 text-center">
+//         <a href="/forgot-password" className="text-sm text-blue-400 hover:underline">
+//           忘記密碼？
+//         </a>
+//       </div>
 //     </div>
 //   );
 // }

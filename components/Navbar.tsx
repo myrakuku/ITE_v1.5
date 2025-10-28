@@ -8,12 +8,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image"; // 導入 Next.js 的 Image 組件
-import { UserRole } from "@/auth"; // 從 auth.ts 導入 UserRole
+
 import { createChat } from "@n8n/chat";
 import "@n8n/chat/style.css";
 
 // 導入圖片資源
 import ITELOGO from "../public/image/ITELOGO.jpeg";
+import { UserRole } from "@/auth-options";
 
 export default function Navbar() {
   const { data: session, status } = useSession();

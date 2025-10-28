@@ -55,6 +55,8 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { Toaster } from "sonner";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,6 +88,7 @@ export default function RootLayout({
         <SessionProvider>
           <Navbar />
           <main>{children}</main>
+          <Toaster position="top-center" />
         </SessionProvider>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />

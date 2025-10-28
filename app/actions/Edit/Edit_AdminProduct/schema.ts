@@ -9,13 +9,16 @@ export const EditProductSchema = z.object({
   IsPublic: z.boolean(),
   CoursePorductTypeArray: z.array(z.string()),
   CoursePorductStatueArray: z.array(z.string()),
-  images: z.array(z.instanceof(File)).optional(), // 修改為 File[]，允許 undefined
+  // 改為 unknown，Server Action 內部自行驗證
+  images: z.array(z.any()).optional(),
   video_urls: z.array(z.string().url({ message: "無效的影片 URL" })).optional(),
-}).refine((data) => data.CoursePorductTypeArray !== undefined, {
-  message: "CoursePorductTypeArray 不能為 undefined",
+})
+.refine((data) => Array.isArray(data.CoursePorductTypeArray), {
+  message: "CoursePorductTypeArray 必須是陣列",
   path: ["CoursePorductTypeArray"],
-}).refine((data) => data.CoursePorductStatueArray !== undefined, {
-  message: "CoursePorductStatueArray 不能為 undefined",
+})
+.refine((data) => Array.isArray(data.CoursePorductStatueArray), {
+  message: "CoursePorductStatueArray 必須是陣列",
   path: ["CoursePorductStatueArray"],
 });
 

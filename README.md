@@ -174,3 +174,10 @@ user
 要在product 中　加入maxStudents及student[] 的顯示 - 做完
 
 以及在 CREATE COURSE FORM 中加入maxStudents(特別課程都要)
+
+
+28-10-2025
+
+修改了product edit 頁面的　無法修改bug
+加了google login 
+修改了無法用username 及 pw login bug
