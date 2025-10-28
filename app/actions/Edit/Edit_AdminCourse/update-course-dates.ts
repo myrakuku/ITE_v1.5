@@ -1,8 +1,9 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth, UserRole } from '@/auth'; // 使用 NextAuth v5 的 auth 方法
+import { auth, } from '@/auth'; // 使用 NextAuth v5 的 auth 方法
 import { z } from 'zod';
+import { UserRole } from '@prisma/client';
 
 const CourseDateSchema = z.object({
   courseId: z.string().uuid(),

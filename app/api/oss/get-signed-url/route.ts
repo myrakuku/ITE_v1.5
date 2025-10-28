@@ -49,8 +49,9 @@
 
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, UserRole } from "@/auth";
+import { auth} from "@/auth";
 import { createOssClient } from "@/lib/oss-client";
+import { UserRole } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,10 +63,9 @@ export async function POST(req: NextRequest) {
     }
 
     const userRole = session.user.role as UserRole;
-    if (![UserRole.TEACHER, UserRole.ADMIN].includes(userRole)) {
-      return NextResponse.json({ message: "無權限存取" }, { status: 403 });
-    }
-
+if (userRole !== UserRole.TEACHER && userRole !== UserRole.ADMIN) {
+  return NextResponse.json({ message: "無權限存取" }, { status: 403 });
+}
     const body = await req.json();
     console.log("Request body:", JSON.stringify(body, null, 2));
     const { objectKey, fileName } = body;

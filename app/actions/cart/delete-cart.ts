@@ -1,7 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { auth, UserRole } from '@/auth'; // 使用 NextAuth v5 的 auth 方法
+import { auth } from '@/auth'; // 使用 NextAuth v5 的 auth 方法
+import { UserRole } from '@prisma/client';
 
 interface DeleteCartResult {
   success: boolean;

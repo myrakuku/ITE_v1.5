@@ -129,7 +129,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth, UserRole } from "@/auth";
+import { auth} from "@/auth";
+import { UserRole } from "@prisma/client";
 
 interface AddStudentToCourseInput {
   cartId: string;
