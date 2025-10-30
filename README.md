@@ -181,3 +181,10 @@ user
 修改了product edit 頁面的　無法修改bug
 加了google login 
 修改了無法用username 及 pw login bug
+
+
+30-10-2025
+
+加了三行數版面在獨立商品頁面
+修改了建立商品表格的顯示方式
+修改了product data 關聯顯示方式

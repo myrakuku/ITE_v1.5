@@ -36,6 +36,12 @@ const nextConfig = {
         port: "",
         pathname: "/special-course/**", // 添加對 special-course 路徑的支持
       },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+        port: '',
+        pathname: '/vi/**',
+      },
     ],
   },
   unoptimized: true, // 禁用圖片優化（僅用於開發環境）
