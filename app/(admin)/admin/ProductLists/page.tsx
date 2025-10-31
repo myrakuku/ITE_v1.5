@@ -31,7 +31,6 @@ interface ProductLists {
   IsPublic: boolean;
   Product_Img: ProductImg[];
   Course?: Course;
-  // 自定義欄位：用於垃圾桶
   isTrash?: boolean;
 }
 
@@ -50,7 +49,6 @@ const ProductListsPage = () => {
       const res = await fetch("/api/product/Get_Product_Lists");
       if (!res.ok) throw new Error("載入失敗");
       const data = await res.json();
-      // 初始為非垃圾桶
       setProducts(data.map((p: any) => ({ ...p, isTrash: false })));
     } catch (err) {
       setError(err instanceof Error ? err.message : "載入失敗");
@@ -59,7 +57,6 @@ const ProductListsPage = () => {
     }
   };
 
-  // 設為廢品
   const moveToTrash = async (id: string) => {
     try {
       const res = await fetch(`/api/product/move-to-trash/${id}`, { method: "PATCH" });
@@ -71,7 +68,6 @@ const ProductListsPage = () => {
     }
   };
 
-  // 永久刪除（僅允許無學生）
   const confirmDelete = async () => {
     const id = deleteDialog.id;
     if (!id) return;
@@ -88,12 +84,10 @@ const ProductListsPage = () => {
     }
   };
 
-  // 檢查是否可刪除
   const canDelete = (product: ProductLists) => {
     return !product.Course?.Students.length;
   };
 
-  // 篩選分類
   const normalProducts = products.filter(p => !p.isTrash && p.Course?.Producted !== true);
   const specialProducts = products.filter(p => !p.isTrash && p.Course?.Producted === true);
   const trashProducts = products.filter(p => p.isTrash);
@@ -101,8 +95,9 @@ const ProductListsPage = () => {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} />;
 
+  // 修正：加入 key 給 ProductCard
   const ProductCard = (product: ProductLists) => (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+    <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
       <Link href={`/admin/ProductLists/${product.id}`} className="block">
         <div className="relative aspect-video bg-gray-700">
           {product.Product_Img[0]?.img_url ? (
@@ -118,7 +113,7 @@ const ProductListsPage = () => {
               <span className="text-gray-500">無圖片</span>
             </div>
           )}
-         {product.Course && product.Course.Students.length >= (product.Course.maxStudents ?? 0) && product.Course.maxStudents && (
+          {product.Course && product.Course.Students.length >= (product.Course.maxStudents ?? 0) && product.Course.maxStudents && (
             <Badge className="absolute top-2 right-2 bg-red-600">已滿</Badge>
           )}
         </div>
@@ -144,7 +139,6 @@ const ProductListsPage = () => {
         </div>
       </Link>
 
-      {/* 操作按鈕 */}
       <div className="p-3 border-t border-gray-700 flex gap-2">
         {!product.isTrash ? (
           <Button
@@ -191,21 +185,15 @@ const ProductListsPage = () => {
 
         <Tabs defaultValue="normal" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="normal">
-              產品 ({normalProducts.length})
-            </TabsTrigger>
-            <TabsTrigger value="special">
-              特別產品 ({specialProducts.length})
-            </TabsTrigger>
-            <TabsTrigger value="trash">
-              垃圾桶 ({trashProducts.length})
-            </TabsTrigger>
+            <TabsTrigger value="normal">產品 ({normalProducts.length})</TabsTrigger>
+            <TabsTrigger value="special">特別產品 ({specialProducts.length})</TabsTrigger>
+            <TabsTrigger value="trash">垃圾桶 ({trashProducts.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="normal" className="mt-0">
             {normalProducts.length === 0 ? <EmptyState type="normal" /> : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {normalProducts.map(ProductCard)}
+                {normalProducts.map(product => <ProductCard key={product.id} {...product} />)}
               </div>
             )}
           </TabsContent>
@@ -213,7 +201,7 @@ const ProductListsPage = () => {
           <TabsContent value="special" className="mt-0">
             {specialProducts.length === 0 ? <EmptyState type="special" /> : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {specialProducts.map(ProductCard)}
+                {specialProducts.map(product => <ProductCard key={product.id} {...product} />)}
               </div>
             )}
           </TabsContent>
@@ -221,14 +209,13 @@ const ProductListsPage = () => {
           <TabsContent value="trash" className="mt-0">
             {trashProducts.length === 0 ? <EmptyState type="trash" /> : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {trashProducts.map(ProductCard)}
+                {trashProducts.map(product => <ProductCard key={product.id} {...product} />)}
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* 刪除確認對話框 */}
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -273,7 +260,7 @@ const EmptyState = ({ type }: { type: "normal" | "special" | "trash" }) => {
   };
   return (
     <div className="text-center py-12">
-      <div className="text-6xl text-gray-700 mb-4">📭</div>
+      <div className="text-6xl text-gray-700 mb-4">郵件</div>
       <p className="text-gray-400">{messages[type]}</p>
     </div>
   );

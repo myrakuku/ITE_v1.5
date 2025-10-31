@@ -1,3 +1,4 @@
+// auth-options.ts
 import type { AuthConfig } from "@auth/core/types";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "@auth/core/providers/credentials";
@@ -5,7 +6,6 @@ import GoogleProvider from "@auth/core/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "./lib/db";
 import { z } from "zod";
-import { randomUUID } from "crypto";
 
 export enum UserRole {
   USER = "USER",
@@ -18,8 +18,46 @@ const credentialsSchema = z.object({
   password: z.string().min(1, "密碼不能為空"),
 });
 
+// === 自定義 PrismaAdapter：自動生成 username ===
+const adapter = PrismaAdapter(db);
+
+// 覆蓋 createUser：為 Google 登入自動生成唯一 username
+(adapter as any).createUser = async (profile: any) => {
+  const email = profile.email;
+  const name = profile.name || "User";
+
+  if (!email) {
+    throw new Error("Google 登入缺少 email");
+  }
+
+  // 基礎 username：使用 name 或 email 前綴
+  let base = name.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();
+  if (base.length === 0) {
+    base = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();
+  }
+
+  // 確保唯一性
+  let username = base;
+  let counter = 1;
+  while (await db.user.findUnique({ where: { username } })) {
+    username = `${base}_${counter}`;
+    counter++;
+  }
+
+  // 創建 User（包含必填的 username）
+  return db.user.create({
+    data: {
+      name: profile.name,
+      email: profile.email,
+      emailVerified: profile.email_verified ? new Date() : null,
+      username, // 自動生成
+      role: UserRole.USER, // 預設角色
+    },
+  });
+};
+
 export const authOptions: AuthConfig = {
-  adapter: PrismaAdapter(db), // 不要覆蓋 createUser
+  adapter: adapter as any, // 使用自定義 adapter
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
@@ -64,14 +102,13 @@ export const authOptions: AuthConfig = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google" && profile?.email) {
-        // 讓 Prisma Adapter 創建 User
-        return true;
+        return true; // 交給 adapter.createUser 處理
       }
       return true;
     },
 
     async jwt({ token, user, account, profile }) {
-      // 首次登入（user 存在）
+      // 首次登入
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -79,32 +116,14 @@ export const authOptions: AuthConfig = {
         token.role = (user as any).role || UserRole.USER;
       }
 
-      // Google OAuth 後，補上 username 和 OAuth 關聯
-      if (account?.provider === "google" && profile?.email && !user) {
+      // Google 登入後，補 OAuth 關聯
+      if (account?.provider === "google" && profile?.email && token.email) {
         try {
           const dbUser = await db.user.findUnique({
-            where: { email: profile.email },
+            where: { email: token.email as string },
           });
 
           if (dbUser) {
-            // 補 username（如果為空）
-            if (!dbUser.username) {
-              const base = profile.email.split("@")[0] || "user";
-              const cleanBase = base.replace(/[^a-zA-Z0-9_]/g, "_");
-              let username = cleanBase;
-              let counter = 1;
-              while (await db.user.findUnique({ where: { username } })) {
-                username = `${cleanBase}_${counter}`;
-                counter++;
-              }
-
-              await db.user.update({
-                where: { id: dbUser.id },
-                data: { username },
-              });
-            }
-
-            // 創建 OAuth 關聯
             await db.oAuth.upsert({
               where: { OAuthEmail: profile.email },
               create: {
@@ -116,11 +135,9 @@ export const authOptions: AuthConfig = {
 
             token.id = dbUser.id;
             token.role = dbUser.role as UserRole;
-            token.email = dbUser.email;
-            token.name = dbUser.name;
           }
         } catch (error) {
-          console.error("JWT Google 處理錯誤:", error);
+          console.error("JWT Google OAuth 關聯錯誤:", error);
         }
       }
 

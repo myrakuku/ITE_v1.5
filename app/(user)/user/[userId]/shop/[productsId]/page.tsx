@@ -237,58 +237,6 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* 影片切換按鈕 */}
-              {videos.length > 1 && (
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => setCurrentVideoIndex((i) => (i - 1 + videos.length) % videos.length)}
-                    className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
-                    aria-label="上一部影片"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-
-                  <span className="text-sm font-medium text-gray-600">
-                    {currentVideoIndex + 1} / {videos.length}
-                  </span>
-
-                  <button
-                    onClick={() => setCurrentVideoIndex((i) => (i + 1) % videos.length)}
-                    className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
-                    aria-label="下一部影片"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-
-              {/* 縮圖列表 */}
-              <div className="grid grid-cols-2 gap-3">
-                {videos.map((video, idx) => {
-                  const vid = getYouTubeId(video.video_url);
-                  return vid ? (
-                    <button
-                      key={video.id}
-                      onClick={() => setCurrentVideoIndex(idx)}
-                      className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                        idx === currentVideoIndex ? 'border-blue-500 shadow-lg' : 'border-transparent'
-                      }`}
-                    >
-                      <Image
-                        src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`}
-                        alt={`影片縮圖 ${idx + 1}`}
-                        width={240}
-                        height={135}
-                        className="w-full h-auto"
-                        unoptimized
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                        <Play className="w-8 h-8 text-white opacity-80" />
-                      </div>
-                    </button>
-                  ) : null;
-                })}
-              </div>
             </div>
           )}
 

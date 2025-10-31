@@ -188,3 +188,10 @@ user
 加了三行數版面在獨立商品頁面
 修改了建立商品表格的顯示方式
 修改了product data 關聯顯示方式
+
+
+31-10-2025
+
+修改了google login bug 
+可刪商品 bug
+自動生成codeCourse
