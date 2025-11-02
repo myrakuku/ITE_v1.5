@@ -18,14 +18,107 @@ interface AddStudentToAllCoursesResult {
   };
 }
 
-// 統一的 Server Action，同時處理 Course 和 specialCourse
+// === 處理 Course：Students 是 String[]，push user.name ===
+async function addStudentToCourses(
+  cartId: string,
+  userName: string
+): Promise<number> {
+  const cart = await prisma.cart.findUnique({
+    where: { id: cartId },
+    include: {
+      items: {
+        where: {
+          product: {
+            courseId: { not: null },
+          },
+        },
+        include: {
+          product: {
+            select: { courseId: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!cart?.items.length) return 0;
+
+  const courseIds = cart.items
+    .map((item) => item.product.courseId)
+    .filter((id): id is string => !!id);
+
+  if (courseIds.length === 0) return 0;
+
+  // 逐個更新課程
+  const updatePromises = courseIds.map(courseId => 
+    prisma.course.update({
+      where: { id: courseId },
+      data: {
+        Students: {
+          push: userName,
+        },
+      },
+    })
+  );
+
+  await Promise.all(updatePromises);
+  return courseIds.length;
+}
+
+// === 處理 specialCourse：通過關係查詢 ===
+async function addStudentToSpecialCourses(
+  cartId: string,
+  userId: string
+): Promise<number> {
+  // 首先獲取購物車中所有關聯 specialCourse 的產品
+  const cart = await prisma.cart.findUnique({
+    where: { id: cartId },
+    include: {
+      items: {
+        include: {
+          product: {
+            include: {
+              specialCourse: {
+                select: { id: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!cart?.items.length) return 0;
+
+  // 提取所有 specialCourse 的 ID
+const specialCourseIds = cart.items
+  .flatMap((item) => item.product.specialCourse ?? []) // 展开 specialCourse 数组
+  .map(sc => sc.id); // 提取每个对象的 id
+  if (specialCourseIds.length === 0) return 0;
+
+  // 逐個更新特殊課程
+  const updatePromises = specialCourseIds.map(specialCourseId =>
+    prisma.specialCourse.update({
+      where: { id: specialCourseId },
+      data: {
+        Students: {
+          connect: { id: userId },
+        },
+      },
+    })
+  );
+
+  await Promise.all(updatePromises);
+  return specialCourseIds.length;
+}
+
+// === 主函數：統籌兩者 ===
 export async function addStudentToAllCourses({
   cartId,
   userId,
 }: AddStudentToAllCoursesInput): Promise<AddStudentToAllCoursesResult> {
   try {
     const session = await auth();
-    
     if (!session?.user?.id) {
       return { success: false, error: "未授權：請先登入" };
     }
@@ -34,19 +127,18 @@ export async function addStudentToAllCourses({
       return { success: false, error: "無權操作：用戶 ID 不匹配" };
     }
 
-    // 獲取用戶信息（用於 Course 的字符串數組）
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true },
+      select: { id: true, name: true },
     });
 
     if (!user) {
       return { success: false, error: "找不到用戶" };
     }
 
-    // const userName = user.name || "匿名用戶";
+    const userName = user.name || "匿名用戶";
 
-    // 獲取購物車
+    // 驗證購物車存在且屬於該用戶
     const cart = await prisma.cart.findUnique({
       where: { id: cartId },
       include: {
@@ -55,7 +147,9 @@ export async function addStudentToAllCourses({
             product: {
               select: {
                 courseId: true,
-                specialCourse: true,
+                specialCourse: {
+                  select: { id: true },
+                },
               },
             },
           },
@@ -63,47 +157,35 @@ export async function addStudentToAllCourses({
       },
     });
 
-    if (!cart || cart.items.length === 0) {
-      return { success: false, error: "購物車為空或不存在" };
+    if (!cart) {
+      return { success: false, error: "購物車不存在" };
+    }
+
+    if (cart.items.length === 0) {
+      return { success: false, error: "購物車為空" };
     }
 
     if (session.user.role !== UserRole.ADMIN && cart.userId !== userId) {
       return { success: false, error: "無權操作：購物車不屬於該用戶" };
     }
 
-    // 分離 Course 和 specialCourse
-    const courseItems = cart.items.filter(item => item.product.courseId);
-    const specialCourseItems = cart.items.filter(item => item.product.specialCourse);
-
     let coursesUpdated = 0;
     let specialCoursesUpdated = 0;
 
-    // 處理 Course（字符串數組）
-    if (courseItems.length > 0) {
-      const courseResult = await addStudentToAllCourses({ cartId, userId });
-      if (courseResult.success) {
-        coursesUpdated = courseItems.length;
-      } else {
-        return { success: false, error: courseResult.error };
-      }
-    }
+    // 執行兩種更新
+    coursesUpdated = await addStudentToCourses(cartId, userName);
+    specialCoursesUpdated = await addStudentToSpecialCourses(cartId, userId);
 
-    // 處理 specialCourse（User 關係）
-    if (specialCourseItems.length > 0) {
-      const specialCourseResult = await addStudentToAllCourses({ cartId, userId });
-      if (specialCourseResult.success) {
-        specialCoursesUpdated = specialCourseItems.length;
-      } else {
-        return { success: false, error: specialCourseResult.error };
-      }
+    console.log(`[addStudent] Course 更新: ${coursesUpdated} 筆`);
+    console.log(`[addStudent] specialCourse 更新: ${specialCoursesUpdated} 筆`);
+
+    if (coursesUpdated === 0 && specialCoursesUpdated === 0) {
+      return { success: false, error: "沒有找到需要添加的課程" };
     }
 
     return {
       success: true,
-      details: {
-        coursesUpdated,
-        specialCoursesUpdated,
-      },
+      details: { coursesUpdated, specialCoursesUpdated },
     };
   } catch (error) {
     console.error("添加學生到所有課程失敗:", error);

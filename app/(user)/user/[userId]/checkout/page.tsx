@@ -3,11 +3,12 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
-import { getCart } from '../../../../actions/cart/shop-cart';
-import { addStudentToAllCourses } from '../../../../actions/cart/add-student-to-course';
+
 import axios, { AxiosError } from 'axios';
 import { toast } from 'react-toastify';
 import { useSession } from 'next-auth/react';
+import { addStudentToAllCourses } from '@/app/actions/cart/add-student-to-course';
+import { getCart } from '@/app/actions/cart/shop-cart';
 
 // 介面定義保持不變
 interface CheckoutSessionErrorResponse {

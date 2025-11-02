@@ -497,19 +497,28 @@ export const CreateProductAction = async (
 
         const product = await db.$transaction(async (tx) => {
           const newProduct = await tx.product.create({
-            data: {
-              title,
-              description,
-              price,
-              real_price,
-              IsPublic,
-              CourseProductTypeArray: CourseProductTypeArray || [],
-              CourseProductStatusArray: CourseProductStatusArray || [],
-              courseId: courseId || undefined,
-              Target_Audience: Target_Audience || null,
-              Course_Objective: Course_Objective || null,
-              Applicable_Scenarios: Applicable_Scenarios || null,
-            },
+data: {
+    title,
+    description,
+    price,
+    real_price,
+    IsPublic,
+    CourseProductTypeArray: CourseProductTypeArray || [],
+    CourseProductStatusArray: CourseProductStatusArray || [],
+    courseId: courseId || undefined,
+    Target_Audience: Target_Audience || null,
+    Course_Objective: Course_Objective || null,
+    Applicable_Scenarios: Applicable_Scenarios || null,
+
+    // === 新增：多對多關聯 ===
+    CourseProductType: CourseProductTypeArray?.length
+      ? { connect: CourseProductTypeArray.map(id => ({ id })) }
+      : undefined,
+
+    CourseProductStatus: CourseProductStatusArray?.length
+      ? { connect: CourseProductStatusArray.map(id => ({ id })) }
+      : undefined,
+  },
           });
 
           if (imageUrls && imageUrls.length > 0) {

@@ -298,39 +298,43 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
-    // 準備課程創建數據
-    const courseData: Prisma.CourseCreateInput = {
-      title,
-      description,
-      courseCode,
-      schoolName,
-      numberOfDays,
-      timeHours,
-      teacher,
-      isPublic,
-      isProduct,
-      Producted: false, // 直接設置為 false，不從 validatedData 解構
-      isProductItem: false,
-      type,
-      startDate,
-      endDate,
-      Coursedates: courseDates,
-      classroom,
-      weekday,
-      Teacher: {
-        connect: { id: teacherId },
-      },
-      CourseTimeRanges: {
-        create: timeRanges.map((range) => ({
-          timeRange: range.timeRange,
-          starttime: range.starttime,
-          endtime: range.endtime,
-        })),
-      },
-      ...(courseModuleId && {
-        CourseModul: { connect: { id: courseModuleId } },
-      }),
-    };
+    // === 在創建 courseData 時，加入 CoursePorductType connect ===
+const courseData: Prisma.CourseCreateInput = {
+  title,
+  description,
+  courseCode,
+  schoolName,
+  numberOfDays,
+  timeHours,
+  teacher,
+  isPublic,
+  isProduct,
+  Producted: false,
+  isProductItem: false,
+  type,
+  startDate,
+  endDate,
+  Coursedates: courseDates,
+  classroom,
+  weekday,
+  Teacher: {
+    connect: { id: teacherId },
+  },
+  CourseTimeRanges: {
+    create: timeRanges.map((range) => ({
+      timeRange: range.timeRange,
+      starttime: range.starttime,
+      endtime: range.endtime,
+    })),
+  },
+  // === 新增：關聯 CoursePorductType ===
+  CoursePorductType: {
+    connect: type.map((id) => ({ id })),
+  },
+  ...(courseModuleId && {
+    CourseModul: { connect: { id: courseModuleId } },
+  }),
+};
 
     // 創建課程
     const course = await db.course.create({

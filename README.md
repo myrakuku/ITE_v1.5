@@ -207,3 +207,13 @@ user
 現在specialCourse create 時間要修改
 
 已完成修改　可deploy
+
+02112025
+
+比唔到錢(load死了比錢) -done
+
+建立Course時，沒有了科目標記-done
+Course
+上限不見了 這個我看data是存在的
+
+

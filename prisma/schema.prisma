@@ -254,7 +254,7 @@ model CourseModul {
   TeacherId          String
   Teacher            User     @relation(fields: [TeacherId], references: [id])
   Courses            Course[] // 反向關係，指向引用此 CourseModul 的所有 Course
-  specialCourse         specialCourse[]
+  specialCourse      specialCourse[]
 }
 
 model Message_Box {
