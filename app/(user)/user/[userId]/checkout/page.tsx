@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { getCart } from '../../../../actions/cart/shop-cart';
-import { addStudentToCourse } from '../../../../actions/cart/add-student-to-course';
+import { addStudentToAllCourses } from '../../../../actions/cart/add-student-to-course';
 import axios, { AxiosError } from 'axios';
 import { toast } from 'react-toastify';
 import { useSession } from 'next-auth/react';
@@ -147,7 +147,7 @@ export default function CheckoutPage() {
       try {
         // 傳遞 userId 給 addStudentToCourse
         console.log('Calling addStudentToCourse:', { cartId: cart.id, userId });
-        const addStudentResult = await addStudentToCourse({ cartId: cart.id, userId });
+        const addStudentResult = await addStudentToAllCourses({ cartId: cart.id, userId });
         if (!addStudentResult.success) {
           setError(addStudentResult.error || '無法將用戶添加到課程');
           toast.error(addStudentResult.error || '無法將用戶添加到課程');

@@ -1,13 +1,16 @@
-// "use server";
 
-// import { db } from "@/lib/db";
-// import { CreateCourseTeacherSchema } from "./schema";
-// import { InputType, ReturnType, CourseReturnType } from "./types";
-// import { CreateSafeAction } from "@/lib/create-safe-action";
+
+// // app/actions/Create/Create_CourseTeacher/index.ts
+// 'use server';
+
+// import { db } from '@/lib/db';
+// import { CreateCourseTeacherSchema } from './schema';
+// import { InputType, ReturnType, CourseReturnType } from './types';
+// import { CreateSafeAction } from '@/lib/create-safe-action';
+// import { Prisma } from '@prisma/client';
 
 // const handler = async (data: InputType): Promise<ReturnType> => {
 //   try {
-//     // 驗證輸入資料
 //     const validatedData = CreateCourseTeacherSchema.parse(data);
 
 //     const {
@@ -17,7 +20,7 @@
 //       schoolName,
 //       numberOfDays,
 //       timeHours,
-//       timeRange = [], // 確保 TimeRange 有預設值
+//       timeRanges,
 //       teacher,
 //       isPublic,
 //       isProduct,
@@ -26,12 +29,12 @@
 //       teacherId,
 //       startDate,
 //       endDate,
-//       Coursedates = [],
+//       courseDates ,
 //       classroom,
 //       weekday,
 //     } = validatedData;
 
-//     // 驗證 courseModulId 是否存在
+//     // 驗證 courseModuleId
 //     let courseModul = null;
 //     if (courseModuleId) {
 //       courseModul = await db.courseModul.findUnique({
@@ -41,12 +44,12 @@
 
 //       if (!courseModul) {
 //         return {
-//           error: "課程模組不存在",
+//           error: '課程模組不存在',
 //         };
 //       }
 //     }
 
-//     // 驗證 teacher_id 是否存在
+//     // 驗證教師 ID
 //     const teacherExists = await db.user.findUnique({
 //       where: { id: teacherId },
 //       select: { id: true, name: true },
@@ -54,27 +57,27 @@
 
 //     if (!teacherExists) {
 //       return {
-//         error: "教師 ID 不存在",
+//         error: '教師 ID 不存在',
 //       };
 //     }
 
-//     // 驗證教師名稱是否有效且角色為 TEACHER
+//     // 驗證教師名稱
 //     const validTeachers = await db.user.findMany({
 //       where: {
 //         name: { in: teacher },
-//         role: "TEACHER",
+//         role: 'TEACHER',
 //       },
 //       select: { name: true },
 //     });
 
 //     if (validTeachers.length !== teacher.length) {
 //       return {
-//         error: "部分教師名稱無效或不是教師角色",
+//         error: '部分教師名稱無效或不是教師角色',
 //       };
 //     }
 
-//     // 驗證課程類型是否有效
-//     const validTypes = await db.coursePorductType.findMany({
+//     // 驗證課程類型
+//     const validTypes = await db.courseProductType.findMany({
 //       where: {
 //         id: { in: type },
 //       },
@@ -83,50 +86,63 @@
 
 //     if (validTypes.length !== type.length) {
 //       return {
-//         error: "部分課程類型無效",
+//         error: '部分課程類型無效',
 //       };
 //     }
 
-//     // 驗證 TimeRange 值
-//     const validTimeRangeValues = ["morning", "afternoon", "evening", "full_day"];
-//     const isValidTimeRange = timeRange.every((value) => validTimeRangeValues.includes(value));
-//     if (!isValidTimeRange) {
+//     // 驗證 timeRanges
+//     const validTimeRangeValues = ['morning', 'afternoon', 'evening', 'full_day'];
+//     const isValidTimeRange = timeRanges.every((range) =>
+//       validTimeRangeValues.includes(range.timeRange)
+//     );
+//     if (timeRanges.length > 0 && !isValidTimeRange) {
 //       return {
-//         error: "無效的 TimeRange 值",
+//         error: '無效的 TimeRange 值',
 //       };
 //     }
 
-//     // 創建課程
-//   const course = await db.course.create({
-//       data: {
-//         title,
-//         description,
-//         courseCode,
-//         schoolName,
-//         numberOfDays,
-//         timeHours,
-//         timeRange,
-//         teacher,
-//         teacherId,
-//         isPublic,
-//         isProduct,
-//         type,
-//         startDate,
-//         endDate,
-//         Coursedates,
-//         classroom,
-//         weekday,
-//         CourseModul: courseModuleId ? { connect: { id: courseModuleId } } : undefined,
+//      // 在创建 CourseTimeRanges 时检查是否存在
+//     const courseData: Prisma.CourseCreateInput = {
+//       title,
+//       description,
+//       courseCode,
+//       schoolName,
+//       numberOfDays,
+//       timeHours,
+//       teacher,
+//       isPublic,
+//       isProduct,
+//       Producted: false,
+//       isProductItem: false,
+//       type,
+//       startDate,
+//       endDate,
+//       Coursedates: courseDates || [], // 确保有默认值在这里设置
+//       classroom,
+//       weekday,
+//       Teacher: {
+//         connect: { id: teacherId },
+//       },
+//       // 只在 timeRanges 存在时创建关联
+//       ...(timeRanges && timeRanges.length > 0 && {
 //         CourseTimeRanges: {
-//           create: timeRange.map((range) => ({
-//             timeRange: range,
-//             starttime: starttime,
-//             endtime: endtime,
+//           create: timeRanges.map((range) => ({
+//             timeRange: range.timeRange,
+//             starttime: range.starttime,
+//             endtime: range.endtime,
 //           })),
 //         },
-//       },
+//       }),
+//       ...(courseModuleId && {
+//         CourseModul: { connect: { id: courseModuleId } },
+//       }),
+//     };
+
+//     // 創建課程
+//     const course = await db.course.create({
+//       data: courseData,
 //       include: {
-//         CourseTimeRanges: true, // 包含關聯的 CourseTimeRange 數據
+//         CourseTimeRanges: true,
 //       },
 //     });
 
@@ -138,14 +154,22 @@
 //       courseCode: course.courseCode,
 //       schoolName: course.schoolName,
 //       numberOfDays: course.numberOfDays,
-//       courseModuleId: course.courseModulId,
 //       timeHours: course.timeHours,
+//       timeRanges: course.CourseTimeRanges.map((range) => ({
+//         id: range.id,
+//         timeRange: range.timeRange as 'morning' | 'afternoon' | 'evening' | 'full_day',
+//         starttime: range.starttime,
+//         endtime: range.endtime,
+//         createdAt: range.createdAt,
+//         updatedAt: range.updatedAt,
+//       })),
 //       teacher: course.teacher,
+//       teacherId: course.teacherId,
 //       isPublic: course.isPublic,
 //       isProduct: course.isProduct,
-//       timeRange: course.timeRange as ("morning" | "afternoon" | "evening" | "full_day")[],
+//       Producted: course.Producted,
 //       type: course.type,
-//       teacherId: course.teacherId,
+//       courseModuleId: course.courseModulId,
 //       startDate: course.startDate,
 //       endDate: course.endDate,
 //       courseDates: course.Coursedates,
@@ -153,28 +177,24 @@
 //       weekday: course.weekday,
 //       createdAt: course.createdAt,
 //       updatedAt: course.updatedAt,
-//       CourseTimeRanges: course.CourseTimeRanges.map((range) => ({
-//         id: range.id,
-//         timeRange: range.timeRange,
-//         starttime: range.starttime,
-//         endtime: range.endtime,
-//       })),
 //     };
 
-//     console.log("-- Create course on server -- : ", formattedCourseData, "-- End --");
+//     console.log('-- Create course on server -- : ', formattedCourseData, '-- End --');
 
 //     return {
 //       data: formattedCourseData,
 //     };
 //   } catch (error) {
-//     console.error("CreateCourseTeacherAction error: ", error);
+//     console.error('CreateCourseTeacherAction error: ', error);
 //     return {
-//       error: error instanceof Error ? error.message : "創建課程失敗，請稍後重試",
+//       error: error instanceof Error ? error.message : '創建課程失敗，請稍後重試',
 //     };
 //   }
 // };
 
 // export const CreateCourseTeacherAction = CreateSafeAction(CreateCourseTeacherSchema, handler);
+
+
 
 
 // app/actions/Create/Create_CourseTeacher/index.ts

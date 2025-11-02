@@ -42,6 +42,10 @@ const nextConfig = {
         port: '',
         pathname: '/vi/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.aliyuncs.com',
+      },
     ],
   },
   unoptimized: true, // 禁用圖片優化（僅用於開發環境）

@@ -48,6 +48,7 @@ export async function GET(req: Request) {
                 },
                 Product_Img: true,
                 Product_video: true,
+                specialCourse:true,
               },
             });
 

@@ -195,3 +195,15 @@ user
 修改了google login bug 
 可刪商品 bug
 自動生成codeCourse
+
+改了特別商店圖片顯示方式
+
+改了字眼
+
+01112025
+
+修改了create課程 的bug
+
+現在specialCourse create 時間要修改
+
+已完成修改　可deploy

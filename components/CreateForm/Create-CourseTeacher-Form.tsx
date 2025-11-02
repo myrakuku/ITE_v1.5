@@ -1,5 +1,8 @@
+
+
+
 // // components/CreateForm/Create-CourseTeacher-Form.tsx
-// "use client";
+// 'use client';
 
 // import {
 //   Form,
@@ -30,7 +33,6 @@
 // import { CreateCourseTeacherSchema } from "@/app/actions/Create/Create_CourseTeacher/schema";
 // import { CreateCourseTeacherAction } from "@/app/actions/Create/Create_CourseTeacher";
 
-// // 定義型別
 // interface CourseType {
 //   id: string;
 //   typename: string;
@@ -40,31 +42,31 @@
 //   id: string;
 //   title: string;
 //   description: string;
-//   TeacherId: string; // 新增 TeacherId
+//   TeacherId: string;
 // }
 
 // interface Teacher {
 //   name: string;
+//   Course?: { id: string }[]; // 加入 Course 關聯
 // }
 
 // const timeOptions = [
 //   { id: "morning" as const, label: "上午" },
 //   { id: "afternoon" as const, label: "下午" },
 //   { id: "evening" as const, label: "晚上" },
-//   // { id: "full_day" as const, label: "全日" },
 // ] as const;
 
-// // type TimeRangeValue = "morning" | "afternoon" | "evening" | "full_day";
-
 // const CreateCourseTeacherForm = () => {
-// const [isPending, startTransition] = useTransition();
+//   const [isPending, startTransition] = useTransition();
 //   const router = useRouter();
 //   const params = useParams();
 //   const teacherId = params.Teacherid as string;
 //   const [courseTypes, setCourseTypes] = useState<CourseType[]>([]);
 //   const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
-//   const [filteredCourseModules, setFilteredCourseModules] = useState<CourseModule[]>([]); // 新增狀態
+//   const [filteredCourseModules, setFilteredCourseModules] = useState<CourseModule[]>([]);
 //   const [teacherData, setTeacherData] = useState<Teacher | null>(null);
+//   // === 新增：獲取教師現有課程 ===
+//   const [existingCourses, setExistingCourses] = useState<any[]>([]);
 
 //   const form = useForm<z.infer<typeof CreateCourseTeacherSchema>>({
 //     resolver: zodResolver(CreateCourseTeacherSchema),
@@ -72,7 +74,7 @@
 //     defaultValues: {
 //       title: "",
 //       description: "",
-//       courseCode: "",
+//       courseCode: "", // 自動生成
 //       schoolName: "",
 //       numberOfDays: 0,
 //       courseModuleId: null,
@@ -80,7 +82,7 @@
 //       teacher: [],
 //       isPublic: false,
 //       isProduct: false,
-//       timeRanges: [], // 使用 timeRanges
+//       timeRanges: [],
 //       type: [],
 //       teacherId,
 //       startDate: null,
@@ -91,66 +93,70 @@
 //     },
 //   });
 
-//   // 使用 useFieldArray 管理 timeRanges 陣列
 //   const { fields, append, remove } = useFieldArray({
 //     control: form.control,
 //     name: "timeRanges",
 //   });
 
-//   // 驗證 teacherId
-//   useEffect(() => {
-//     if (!teacherId) {
-//       toast.error("無效的教師 ID");
-//       router.push("/teachers");
-//     }
-//   }, [teacherId, router]);
+// // 監聽 type 變化 + 教師資料 + 現有課程 → 生成 courseCode
+// const selectedTypes = form.watch("type");
 
-//   // 監聽 courseModuleId 的變化，動態設置 description
-//   const selectedCourseModuleId = form.watch("courseModuleId");
-//   useEffect(() => {
-//     if (selectedCourseModuleId && selectedCourseModuleId !== "none") {
-//       const selectedModule = courseModules.find(
-//         (module) => module.id === selectedCourseModuleId
-//       );
-//       if (selectedModule) {
-//         form.setValue("description", selectedModule.description);
-//       }
-//     } else {
-//       form.setValue("description", "");
-//     }
-//   }, [selectedCourseModuleId, courseModules, form]);
+// useEffect(() => {
+//   if (!teacherData?.name || selectedTypes.length === 0 || !courseTypes.length) {
+//     form.setValue("courseCode", "");
+//     return;
+//   }
 
-//   // 設置 teacher 字段的默認值
+//   // 找出選中的類型名稱
+//   const selectedTypeIds = selectedTypes;
+//   const selectedTypeNames = courseTypes
+//     .filter(t => selectedTypeIds.includes(t.id))
+//     .map(t => t.typename);
+
+//   if (selectedTypeNames.length === 0) {
+//     form.setValue("courseCode", "");
+//     return;
+//   }
+
+//   // === 關鍵：從現有課程中，找出「同類型」的最大序號 ===
+//   let maxSeq = 0;
+
+//   existingCourses.forEach(course => {
+//     if (!course.courseCode || !course.type) return;
+
+//     // 檢查是否包含選中的任一類型
+//     const hasMatchingType = course.type.some((typeId: string) =>
+//       selectedTypeIds.includes(typeId)
+//     );
+//     if (!hasMatchingType) return;
+
+//     // 解析 courseCode：假設格式為 "數字_類型_教師"
+//     const match = course.courseCode.match(/^(\d+)_/);
+//     if (match) {
+//       const seq = parseInt(match[1], 10);
+//       if (seq > maxSeq) maxSeq = seq;
+//     }
+//   });
+
+//   const nextSeq = maxSeq + 1;
+//   const typePart = selectedTypeNames.join("+"); // 多類型用 + 連接
+//   const code = `${nextSeq}_${typePart}_${teacherData.name}`;
+
+//   form.setValue("courseCode", code);
+// }, [selectedTypes, teacherData, courseTypes, existingCourses, form]);
+
 //   useEffect(() => {
 //     if (teacherData?.name) {
 //       form.setValue("teacher", [teacherData.name]);
 //     }
 //   }, [teacherData, form]);
 
-//   // 獲取數據
-//   // useEffect(() => {
-//   //   const fetchTypesData = async () => {
-//   //     try {
-//   //       const res = await fetch("/api/Type/Get_Type_Lists");
-//   //       if (!res.ok) {
-//   //         throw new Error(`無法獲取課程類型: ${res.status}`);
-//   //       }
-//   //       const data: CourseType[] = await res.json();
-//   //       setCourseTypes(data);
-//   //     } catch (error) {
-//   //       toast.error(error instanceof Error ? error.message : "無法載入課程類型");
-//   //       setCourseTypes([]);
-//   //     }
-//   //   };
-
-// // 獲取數據並篩選 courseModules
+//   // 獲取所有資料
 //   useEffect(() => {
 //     const fetchTypesData = async () => {
 //       try {
 //         const res = await fetch("/api/Type/Get_Type_Lists");
-//         if (!res.ok) {
-//           throw new Error(`無法獲取課程類型: ${res.status}`);
-//         }
+//         if (!res.ok) throw new Error(`無法獲取課程類型: ${res.status}`);
 //         const data: CourseType[] = await res.json();
 //         setCourseTypes(data);
 //       } catch (error) {
@@ -159,29 +165,13 @@
 //       }
 //     };
 
-//     // const fetchCourseModules = async () => {
-//     //   try {
-//     //     const res = await fetch("/api/Course/Get_CourseModul_Lists");
-//     //     if (!res.ok) {
-//     //       throw new Error(`無法獲取課程模組: ${res.status}`);
-//     //     }
-//     //     const data: CourseModule[] = await res.json();
-//     //     setCourseModules(data);
-//     //   } catch (error) {
-//     //     toast.error(error instanceof Error ? error.message : "無法載入課程模組");
-//     //     setCourseModules([]);
-//     //   }
-//     // };
 //     const fetchCourseModules = async () => {
 //       try {
 //         const res = await fetch("/api/Course/Get_CourseModul_Lists");
-//         if (!res.ok) {
-//           throw new Error(`無法獲取課程模組: ${res.status}`);
-//         }
+//         if (!res.ok) throw new Error(`無法獲取課程模組: ${res.status}`);
 //         const data: CourseModule[] = await res.json();
 //         setCourseModules(data);
-//         // 篩選出 TeacherId 與 teacherId 匹配的模組
-//         const filtered = data.filter((module) => module.TeacherId === teacherId);
+//         const filtered = data.filter(m => m.TeacherId === teacherId);
 //         setFilteredCourseModules(filtered);
 //       } catch (error) {
 //         toast.error(error instanceof Error ? error.message : "無法載入課程模組");
@@ -190,31 +180,10 @@
 //       }
 //     };
 
-//   //   const fetchTeacherData = async () => {
-//   //     try {
-//   //       const res = await fetch(`/api/user/Get_User_Lists_by_Id/${teacherId}`);
-//   //       if (!res.ok) {
-//   //         throw new Error(`無法獲取教師資料: ${res.status}`);
-//   //       }
-//   //       const data: Teacher = await res.json();
-//   //       setTeacherData(data);
-//   //     } catch (error) {
-//   //       toast.error(error instanceof Error ? error.message : "無法載入教師資料");
-//   //       setTeacherData(null);
-//   //     }
-//   //   };
-
-//   //   fetchTeacherData();
-//   //   fetchTypesData();
-//   //   fetchCourseModules();
-//   // }, [teacherId]);
-
-//   const fetchTeacherData = async () => {
+//     const fetchTeacherData = async () => {
 //       try {
 //         const res = await fetch(`/api/user/Get_User_Lists_by_Id/${teacherId}`);
-//         if (!res.ok) {
-//           throw new Error(`無法獲取教師資料: ${res.status}`);
-//         }
+//         if (!res.ok) throw new Error(`無法獲取教師資料: ${res.status}`);
 //         const data: Teacher = await res.json();
 //         setTeacherData(data);
 //       } catch (error) {
@@ -227,6 +196,22 @@
 //     fetchTypesData();
 //     fetchCourseModules();
 //   }, [teacherId]);
+
+// // 在 useEffect 載入資料時，加上：
+// useEffect(() => {
+//   const fetchExistingCourses = async () => {
+//     try {
+//       const res = await fetch(`/api/user/teacher/${teacherId}/CourseLists`);
+//       if (!res.ok) return;
+//       const data = await res.json();
+//       setExistingCourses(Array.isArray(data) ? data : []);
+//     } catch (error) {
+//       console.error("無法載入現有課程", error);
+//     }
+//   };
+
+//   if (teacherId) fetchExistingCourses();
+// }, [teacherId]);
 
 //   const onSubmit: SubmitHandler<z.infer<typeof CreateCourseTeacherSchema>> = (values) => {
 //     startTransition(() => {
@@ -244,7 +229,6 @@
 //   console.log("courseTypes : " ,courseTypes , "-- End --");
 //   console.log("courseModules : " ,courseModules , "-- End --");
 //   console.log("teacherData: ",teacherData ,"-- End --")
-
 //   console.log(" -- Bug -- ", form.formState.errors ,"-- End --")
 
 //   return (
@@ -293,6 +277,7 @@
 //                   </FormItem>
 //                 )}
 //               />
+//               {/* 課程代碼：唯讀 + 自動生成 */}
 //               <FormField
 //                 control={form.control}
 //                 name="courseCode"
@@ -302,9 +287,9 @@
 //                     <FormControl>
 //                       <Input
 //                         {...field}
-//                         disabled={isPending}
-//                         placeholder="輸入課程代碼"
-//                         className="bg-gray-700 text-white border-gray-600 focus:border-gray-500"
+//                         disabled={true} // 禁止手動編輯
+//                         placeholder="自動生成"
+//                         className="bg-gray-700 text-white border-gray-600 opacity-75"
 //                         aria-label="課程代碼"
 //                       />
 //                     </FormControl>
@@ -443,38 +428,7 @@
 //                   </FormItem>
 //                 )}
 //               />
-//               {/* <FormField
-//                 control={form.control}
-//                 name="courseModuleId"
-//                 render={({ field }) => (
-//                   <FormItem>
-//                     <FormLabel className="text-white">課程模組</FormLabel>
-//                     <FormControl>
-//                       <Select
-//                         onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-//                         value={field.value ?? "none"}
-//                         disabled={isPending}
-//                       >
-//                         <SelectTrigger
-//                           className="bg-gray-700 text-white border-gray-600 focus:border-gray-500"
-//                           aria-label="課程模組"
-//                         >
-//                           <SelectValue placeholder="選擇課程模組" />
-//                         </SelectTrigger>
-//                         <SelectContent className="bg-gray-700 text-white border-gray-600">
-//                           <SelectItem value="none">無模組</SelectItem>
-//                           {courseModules.map((module) => (
-//                             <SelectItem key={module.id} value={module.id}>
-//                               {module.title}
-//                             </SelectItem>
-//                           ))}
-//                         </SelectContent>
-//                       </Select>
-//                     </FormControl>
-//                     <FormMessage className="text-red-400" />
-//                   </FormItem>
-//                 )}
-//               /> */}
+
 
 // <FormField
 //   control={form.control}
@@ -509,6 +463,7 @@
 //   )}
 // />
 
+// {/* 課程類型：選取後觸發 courseCode 更新 */}
 //               <FormField
 //                 control={form.control}
 //                 name="type"
@@ -523,25 +478,17 @@
 //                               id={type.id}
 //                               checked={field.value.includes(type.id)}
 //                               onCheckedChange={(checked) => {
-//                                 const currentValues = Array.isArray(field.value)
-//                                   ? field.value
-//                                   : [];
+//                                 const current = Array.isArray(field.value) ? field.value : [];
 //                                 if (checked) {
-//                                   field.onChange([...currentValues, type.id]);
+//                                   field.onChange([...current, type.id]);
 //                                 } else {
-//                                   field.onChange(
-//                                     currentValues.filter((v) => v !== type.id)
-//                                   );
+//                                   field.onChange(current.filter(v => v !== type.id));
 //                                 }
 //                               }}
 //                               disabled={isPending}
 //                               className="border-gray-600 data-[state=checked]:bg-gray-600"
-//                               aria-label={type.typename}
 //                             />
-//                             <label
-//                               htmlFor={type.id}
-//                               className="text-sm font-medium text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-//                             >
+//                             <label htmlFor={type.id} className="text-sm font-medium text-white">
 //                               {type.typename}
 //                             </label>
 //                           </div>
@@ -808,8 +755,6 @@
 
 
 
-
-
 // components/CreateForm/Create-CourseTeacher-Form.tsx
 'use client';
 
@@ -874,6 +819,8 @@ const CreateCourseTeacherForm = () => {
   const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
   const [filteredCourseModules, setFilteredCourseModules] = useState<CourseModule[]>([]);
   const [teacherData, setTeacherData] = useState<Teacher | null>(null);
+  // === 新增：獲取教師現有課程 ===
+  const [existingCourses, setExistingCourses] = useState<any[]>([]);
 
   const form = useForm<z.infer<typeof CreateCourseTeacherSchema>>({
     resolver: zodResolver(CreateCourseTeacherSchema),
@@ -905,46 +852,52 @@ const CreateCourseTeacherForm = () => {
     name: "timeRanges",
   });
 
-  // 監聽 type 與 teacherData 變化 → 自動生成 courseCode
-  const selectedTypes = form.watch("type");
-  useEffect(() => {
-    if (!teacherData?.name || selectedTypes.length === 0) {
-      form.setValue("courseCode", "");
-      return;
+// 監聽 type 變化 + 教師資料 + 現有課程 → 生成 courseCode
+const selectedTypes = form.watch("type");
+
+useEffect(() => {
+  if (!teacherData?.name || selectedTypes.length === 0 || !courseTypes.length) {
+    form.setValue("courseCode", "");
+    return;
+  }
+
+  // 找出選中的類型名稱
+  const selectedTypeIds = selectedTypes;
+  const selectedTypeNames = courseTypes
+    .filter(t => selectedTypeIds.includes(t.id))
+    .map(t => t.typename);
+
+  if (selectedTypeNames.length === 0) {
+    form.setValue("courseCode", "");
+    return;
+  }
+
+  // === 關鍵：從現有課程中，找出「同類型」的最大序號 ===
+  let maxSeq = 0;
+
+  existingCourses.forEach(course => {
+    if (!course.courseCode || !course.type) return;
+
+    // 檢查是否包含選中的任一類型
+    const hasMatchingType = course.type.some((typeId: string) =>
+      selectedTypeIds.includes(typeId)
+    );
+    if (!hasMatchingType) return;
+
+    // 解析 courseCode：假設格式為 "數字_類型_教師"
+    const match = course.courseCode.match(/^(\d+)_/);
+    if (match) {
+      const seq = parseInt(match[1], 10);
+      if (seq > maxSeq) maxSeq = seq;
     }
+  });
 
-    const selectedType = courseTypes.find(t => selectedTypes.includes(t.id));
-    if (!selectedType) {
-      form.setValue("courseCode", "");
-      return;
-    }
+  const nextSeq = maxSeq + 1;
+  const typePart = selectedTypeNames.join("+"); // 多類型用 + 連接
+  const code = `${nextSeq}_${typePart}_${teacherData.name}`;
 
-    // 計算序號：教師現有課程數 + 1
-    const courseCount = teacherData.Course?.length ?? 0;
-    const sequence = courseCount + 1;
-
-    const code = `${sequence}_${selectedType.typename}_${teacherData.name}`;
-    form.setValue("courseCode", code);
-  }, [selectedTypes, teacherData, courseTypes, form]);
-
-  useEffect(() => {
-    if (!teacherId) {
-      toast.error("無效的教師 ID");
-      router.push("/teachers");
-    }
-  }, [teacherId, router]);
-
-  const selectedCourseModuleId = form.watch("courseModuleId");
-  useEffect(() => {
-    if (selectedCourseModuleId && selectedCourseModuleId !== "none") {
-      const selectedModule = courseModules.find(m => m.id === selectedCourseModuleId);
-      if (selectedModule) {
-        form.setValue("description", selectedModule.description);
-      }
-    } else {
-      form.setValue("description", "");
-    }
-  }, [selectedCourseModuleId, courseModules, form]);
+  form.setValue("courseCode", code);
+}, [selectedTypes, teacherData, courseTypes, existingCourses, form]);
 
   useEffect(() => {
     if (teacherData?.name) {
@@ -998,6 +951,22 @@ const CreateCourseTeacherForm = () => {
     fetchCourseModules();
   }, [teacherId]);
 
+// 在 useEffect 載入資料時，加上：
+useEffect(() => {
+  const fetchExistingCourses = async () => {
+    try {
+      const res = await fetch(`/api/user/teacher/${teacherId}/CourseLists`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setExistingCourses(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("無法載入現有課程", error);
+    }
+  };
+
+  if (teacherId) fetchExistingCourses();
+}, [teacherId]);
+
   const onSubmit: SubmitHandler<z.infer<typeof CreateCourseTeacherSchema>> = (values) => {
     startTransition(() => {
       CreateCourseTeacherAction(values).then((result) => {
@@ -1014,7 +983,6 @@ const CreateCourseTeacherForm = () => {
   console.log("courseTypes : " ,courseTypes , "-- End --");
   console.log("courseModules : " ,courseModules , "-- End --");
   console.log("teacherData: ",teacherData ,"-- End --")
-
   console.log(" -- Bug -- ", form.formState.errors ,"-- End --")
 
   return (
@@ -1214,38 +1182,7 @@ const CreateCourseTeacherForm = () => {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="courseModuleId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">課程模組</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-                        value={field.value ?? "none"}
-                        disabled={isPending}
-                      >
-                        <SelectTrigger
-                          className="bg-gray-700 text-white border-gray-600 focus:border-gray-500"
-                          aria-label="課程模組"
-                        >
-                          <SelectValue placeholder="選擇課程模組" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-700 text-white border-gray-600">
-                          <SelectItem value="none">無模組</SelectItem>
-                          {courseModules.map((module) => (
-                            <SelectItem key={module.id} value={module.id}>
-                              {module.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              /> */}
+
 
 <FormField
   control={form.control}

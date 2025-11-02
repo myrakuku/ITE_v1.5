@@ -10,47 +10,16 @@
 // import { zodResolver } from "@hookform/resolvers/zod";
 // import { format, parseISO, addDays, differenceInDays, getDay, addWeeks } from "date-fns";
 // import { toast } from "sonner";
-// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+// import { Label } from "@/components/ui/label"; // 導入 Label 組件
 // import { Button } from "@/components/ui/button";
-// // import Create_Product_Form from "./Create-Product-Form";
+// import { Input } from "@/components/ui/input";
+// import { Textarea } from "@/components/ui/textarea";
 // import { useRouter } from "next/navigation";
 // import Link from "next/link";
-// import { Course } from "@/types/course";
-// import Create_SpecialCourse_Product_Form from "./Create-SpecialCourse-Product-Form";
+// import Image from "next/image";
+// import { SpecialCourse } from "@/types/Specialcourse";
 
-// // 定義時間段 schema
-// const TimeRangeSchema = z.object({
-//   timeRange: z.string(),
-//   startTime: z.string().optional().nullable(),
-//   endTime: z.string().optional().nullable(),
-// });
-
-// // 定義表單 schema
-// const CourseDateSchema = z.object({
-//   startDate: z.string().refine((val) => !val || !isNaN(Date.parse(val)), {
-//     message: "無效的開始日期",
-//   }).optional().nullable(),
-//   endDate: z.string().refine((val) => !val || !isNaN(Date.parse(val)), {
-//     message: "無效的結束日期",
-//   }).optional().nullable(),
-//   weekday: z.string().optional().nullable(),
-//   classroom: z.string().optional().nullable(),
-//   timeRanges: z.array(TimeRangeSchema).optional(),
-// }).refine(
-//   (data) => {
-//     if (data.startDate && data.endDate && data.startDate !== "" && data.endDate !== "") {
-//       return parseISO(data.startDate) <= parseISO(data.endDate);
-//     }
-//     return true;
-//   },
-//   {
-//     message: "結束日期必須晚於或等於開始日期",
-//     path: ["endDate"],
-//   }
-// );
-
-// type CourseDateForm = z.infer<typeof CourseDateSchema>;
-
+// // === 時間段選項 ===
 // const timeRangeOptions = {
 //   morning: { label: "上午", start: "09:00", end: "13:00" },
 //   afternoon: { label: "下午", start: "14:00", end: "18:00" },
@@ -58,32 +27,107 @@
 //   full_day: { label: "全天", start: "00:00", end: "23:59" },
 // };
 
+// // === Zod Schema ===
+// const CourseDateSchema = z.object({
+//   startDate: z.string().optional().nullable(),
+//   endDate: z.string().optional().nullable(),
+//   weekday: z.string().optional().nullable(),
+//   classroom: z.string().optional().nullable(),
+//   timeRanges: z.array(z.object({
+//     timeRange: z.string(),
+//     startTime: z.string().optional().nullable(),
+//     endTime: z.string().optional().nullable(),
+//   })).optional(),
+//   maxStudents: z.number().int().min(1).optional().nullable(),
+
+//   // === Product 欄位 ===
+//   price: z.number().min(0, { message: "價格不能為負數" }), // 改為必填
+//   real_price: z.number().min(0, { message: "實價不能為負數" }), // 改為必填
+//   Target_Audience: z.string().optional().nullable(),
+//   Course_Objective: z.string().optional().nullable(),
+//   Applicable_Scenarios: z.string().optional().nullable(),
+// }).refine(
+//   (data) => {
+//     if (data.startDate && data.endDate && data.startDate !== "" && data.endDate !== "") {
+//       return parseISO(data.startDate) <= parseISO(data.endDate);
+//     }
+//     return true;
+//   },
+//   { message: "結束日期必須晚於或等於開始日期", path: ["endDate"] }
+// );
+
+// type CourseDateForm = z.infer<typeof CourseDateSchema>;
+
+// // API 返回的課程類型
+// interface ApiCourse {
+//   id: string;
+//   title: string;
+//   description: string;
+//   courseCode: string;
+//   startDate: string | null;
+//   endDate: string | null;
+//   weekday: string | null;
+//   classroom: string | null;
+//   numberOfDays: number;
+//   timeHours: number;
+//   isPublic: boolean;
+//   Producted: boolean;
+//   Coursedates: string[];
+//   CourseTimeRanges: { // 注意：這裡是大寫 C
+//     id: string;
+//     timeRange: string;
+//     starttime: string | null;
+//     endtime: string | null;
+//   }[];
+//   type: string[];
+//   schoolName?: string;
+//   teacher?: string[];
+//   teacherId?: string;
+//   numberOfStudents?: number | null;
+//   maxStudents?: number | null;
+//   courseModulId?: string | null;
+//   createdAt?: string | Date;
+//   updatedAt?: string | Date;
+//   Students?: string[];
+//   price?: number | null;
+//   real_price?: number | null;
+//   Target_Audience?: string | null;
+//   Course_Objective?: string | null;
+//   Applicable_Scenarios?: string | null;
+// }
+
 // const ArrangeSpecialCoursePage = () => {
-//   const [courses, setCourses] = useState<Course[]>([]);
-//   const [specialCourses, setSpecialCourses] = useState<Course[]>([]);
-//   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+//   const [courses, setCourses] = useState<SpecialCourse[]>([]);
+//   const [specialCourses, setSpecialCourses] = useState<SpecialCourse[]>([]);
+//   const [selectedCourse, setSelectedCourse] = useState<SpecialCourse | null>(null);
 //   const [calendarDates, setCalendarDates] = useState<string[]>([]);
 //   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
 //   const [isLoading, setIsLoading] = useState(true);
-//   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+//   const [imageFiles, setImageFiles] = useState<File[]>([]);
+//   const [videoFiles, setVideoFiles] = useState<File[]>([]);
+//   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+//   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
 //   const calendarRef = useRef<FullCalendar>(null);
 //   const router = useRouter();
 
-//   const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm<CourseDateForm>({
-//     resolver: zodResolver(CourseDateSchema),
-//     defaultValues: {
-//       startDate: "",
-//       endDate: "",
-//       weekday: null,
-//       classroom: null,
-//       timeRanges: [],
-//     },
-//   });
+// const { register, handleSubmit, reset, watch, control, formState: { errors }, setValue } = useForm<CourseDateForm>({
+//   resolver: zodResolver(CourseDateSchema),
+//   defaultValues: {
+//     startDate: "",
+//     endDate: "",
+//     weekday: null,
+//     classroom: null,
+//     timeRanges: [],
+//     maxStudents: null,
+//     price: 0, // 改為必填，提供默認值
+//     real_price: 0, // 改為必填，提供默認值
+//     Target_Audience: null,
+//     Course_Objective: null,
+//     Applicable_Scenarios: null,
+//   },
+// });
 
-//   const { fields, append, remove } = useFieldArray({
-//     control,
-//     name: "timeRanges",
-//   });
+//   const { fields, append, remove } = useFieldArray({ control, name: "timeRanges" });
 
 //   const startDate = watch("startDate");
 //   const endDate = watch("endDate");
@@ -100,82 +144,110 @@
 //     { value: "6", label: "星期六" },
 //   ];
 
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       setIsLoading(true);
-//       try {
-//         // 獲取普通課程
-//         const courseResponse = await fetch("/api/Course/Get_Course_Lists");
-//         if (!courseResponse.ok) {
-//           throw new Error(`普通課程請求失敗: ${courseResponse.status}`);
-//         }
-//         const courseData = await courseResponse.json();
-//         const normalizedCourses = Array.isArray(courseData) ? courseData.map((course: any) => ({
-//           ...course,
-//           Producted: course.Producted ?? false,
-//           isProduct: course.isProduct ?? false,
-//           courseDates: course.Coursedates || [],
-//           courseTimeRanges: course.CourseTimeRanges || [],
-//         })) : [];
-//         setCourses(normalizedCourses);
+// // === 載入課程 ===
+// useEffect(() => {
+//   const fetchData = async () => {
+//     setIsLoading(true);
+//     try {
+//       const [courseRes, specialRes] = await Promise.all([
+//         fetch("/api/Course/Get_Course_Lists"),
+//         fetch("/api/SpecialCourse/SpecialCourse_Lists"),
+//       ]);
 
-//         // 獲取特殊課程
-//         const specialCourseResponse = await fetch("/api/SpecialCourse/SpecialCourse_Lists");
-//         if (!specialCourseResponse.ok) {
-//           throw new Error(`特殊課程請求失敗: ${specialCourseResponse.status}`);
-//         }
-//         const specialData = await specialCourseResponse.json();
-//         const normalizedSpecialCourses = Array.isArray(specialData) ? specialData.map((course: any) => ({
-//           ...course,
-//           Producted: course.Producted ?? false,
-//           isProduct: course.isProduct ?? false,
-//           courseDates: course.Coursedates || [],
-//           courseTimeRanges: course.CourseTimeRanges || [],
-//           numberOfStudents: course.numberOfStudents || 0,
-//         })) : [];
-//         setSpecialCourses(normalizedSpecialCourses);
+//       const coursesData = await courseRes.json();
+//       const specialCoursesData = await specialRes.json();
 
-//         if (normalizedCourses.length > 0) {
-//           setSelectedCourse(normalizedCourses[0]);
-//           setCalendarDates(normalizedCourses[0].courseDates || []);
-//           reset({
-//             startDate: normalizedCourses[0].startDate || "",
-//             endDate: normalizedCourses[0].endDate || "",
-//             weekday: normalizedCourses[0].weekday || null,
-//             classroom: normalizedCourses[0].classroom || "",
-//             timeRanges: normalizedCourses[0].courseTimeRanges.map((range: any) => ({
-//               timeRange: range.timeRange,
-//               startTime: range.starttime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.start || "",
-//               endTime: range.endtime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end || "",
-//             })),
-//           });
-//         }
-//       } catch (error) {
-//         toast.error(error instanceof Error ? error.message : "無法載入課程數據");
-//       } finally {
-//         setIsLoading(false);
+//       // 正確映射數據：將 API 的 CourseTimeRanges 映射到 client 的 courseTimeRanges
+//       const mappedCourses: SpecialCourse[] = Array.isArray(coursesData) 
+//         ? coursesData.map((course: ApiCourse) => ({
+//             ...course,
+//             courseTimeRanges: course.CourseTimeRanges || [],
+//             courseDates: course.Coursedates || [],
+//             isProduct: course.Producted ?? false,
+//             Students: course.Students || [],
+//             schoolName: course.schoolName || "未命名學校",
+//             teacher: course.teacher || [],
+//             teacherId: course.teacherId || "",
+//             price: course.price || 0, // 提供默認值
+//             real_price: course.real_price || 0, // 提供默認值
+//             Target_Audience: course.Target_Audience || null,
+//             Course_Objective: course.Course_Objective || null,
+//             Applicable_Scenarios: course.Applicable_Scenarios || null,
+//             numberOfStudents: course.numberOfStudents || null,
+//             maxStudents: course.maxStudents || null,
+//             courseModulId: course.courseModulId || null,
+//             createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+//             updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date(),
+//           }))
+//         : [];
+
+//       const mappedSpecialCourses: SpecialCourse[] = Array.isArray(specialCoursesData)
+//         ? specialCoursesData.map((course: any) => ({
+//             ...course,
+//             courseTimeRanges: course.SpecialCourseTimeRanges || course.CourseTimeRanges || [],
+//             courseDates: course.Coursedates || [],
+//             isProduct: course.Producted ?? false,
+//             Students: course.Students || [],
+//             schoolName: course.schoolName || "未命名學校",
+//             teacher: course.teacher || [],
+//             teacherId: course.teacherId || "",
+//             price: course.price || 0, // 提供默認值
+//             real_price: course.real_price || 0, // 提供默認值
+//             Target_Audience: course.Target_Audience || null,
+//             Course_Objective: course.Course_Objective || null,
+//             Applicable_Scenarios: course.Applicable_Scenarios || null,
+//             numberOfStudents: course.numberOfStudents || null,
+//             maxStudents: course.maxStudents || null,
+//             courseModulId: course.courseModulId || null,
+//             createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+//             updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date(),
+//           }))
+//         : [];
+
+//       setCourses(mappedCourses);
+//       setSpecialCourses(mappedSpecialCourses);
+
+//       if (mappedCourses.length > 0) {
+//         setSelectedCourse(mappedCourses[0]);
+//         setCalendarDates(mappedCourses[0].courseDates || []);
 //       }
-//     };
-//     fetchData();
-//   }, [reset]);
-
-//   useEffect(() => {
-//     if (selectedCourse) {
-//       reset({
-//         startDate: selectedCourse.startDate || "",
-//         endDate: selectedCourse.endDate || "",
-//         weekday: selectedCourse.weekday || null,
-//         classroom: selectedCourse.classroom || "",
-//         timeRanges: selectedCourse.courseTimeRanges.map((range) => ({
-//           timeRange: range.timeRange,
-//           startTime: range.starttime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.start || "",
-//           endTime: range.endtime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end || "",
-//         })),
-//       });
-//       setCalendarDates(selectedCourse.courseDates || []);
+//     } catch (error) {
+//       console.error("載入失敗:", error);
+//       toast.error("載入失敗");
+//     } finally {
+//       setIsLoading(false);
 //     }
-//   }, [selectedCourse, reset]);
+//   };
+//   fetchData();
+// }, [reset]);
 
+// // === 同步選課 ===
+// useEffect(() => {
+//   if (selectedCourse) {
+//     console.log("選中課程的時間段:", selectedCourse.courseTimeRanges);
+    
+//     reset({
+//       startDate: selectedCourse.startDate || "",
+//       endDate: selectedCourse.endDate || "",
+//       weekday: selectedCourse.weekday || null,
+//       classroom: selectedCourse.classroom || "",
+//       timeRanges: selectedCourse.courseTimeRanges?.map((range: any) => ({
+//         timeRange: range.timeRange,
+//         startTime: range.starttime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.start || "",
+//         endTime: range.endtime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end || "",
+//       })) || [],
+//       maxStudents: selectedCourse.maxStudents || null,
+//       price: selectedCourse.price || 0, // 提供默認值
+//       real_price: selectedCourse.real_price || 0, // 提供默認值
+//       Target_Audience: selectedCourse.Target_Audience || null,
+//       Course_Objective: selectedCourse.Course_Objective || null,
+//       Applicable_Scenarios: selectedCourse.Applicable_Scenarios || null,
+//     });
+//     setCalendarDates(selectedCourse.courseDates || []);
+//   }
+// }, [selectedCourse, reset]);
+
+//   // === 日期邏輯 ===
 //   useEffect(() => {
 //     if (selectedCourse && startDate && startDate !== "") {
 //       const start = parseISO(startDate);
@@ -184,12 +256,10 @@
 //       if (selectedWeekday && selectedWeekday !== "") {
 //         const targetWeekday = parseInt(selectedWeekday);
 //         let currentDate = start;
-//         let count = 0;
-
 //         while (getDay(currentDate) !== targetWeekday) {
 //           currentDate = addDays(currentDate, 1);
 //         }
-
+//         let count = 0;
 //         while (count < selectedCourse.numberOfDays) {
 //           newDates.push(format(currentDate, "yyyy-MM-dd"));
 //           currentDate = addWeeks(currentDate, 1);
@@ -197,11 +267,9 @@
 //         }
 //       } else {
 //         for (let i = 0; i < selectedCourse.numberOfDays; i++) {
-//           const date = addDays(start, i);
-//           newDates.push(format(date, "yyyy-MM-dd"));
+//           newDates.push(format(addDays(start, i), "yyyy-MM-dd"));
 //         }
 //       }
-
 //       setCalendarDates(newDates);
 //     } else {
 //       setCalendarDates([]);
@@ -209,14 +277,10 @@
 //   }, [startDate, selectedWeekday, selectedCourse]);
 
 //   useEffect(() => {
-//     if (selectedCourse && startDate && startDate !== "" && endDate && endDate !== "") {
-//       const start = parseISO(startDate);
-//       const end = parseISO(endDate);
-//       const daysDifference = differenceInDays(end, start) + 1;
+//     if (selectedCourse && startDate && endDate && startDate !== "" && endDate !== "") {
+//       const daysDifference = differenceInDays(parseISO(endDate), parseISO(startDate)) + 1;
 //       if (daysDifference < selectedCourse.numberOfDays) {
-//         setDateRangeError(
-//           `日期範圍（${daysDifference} 天）少於課程持續天數（${selectedCourse.numberOfDays} 天）`
-//         );
+//         setDateRangeError(`日期範圍（${daysDifference} 天）少於課程天數（${selectedCourse.numberOfDays} 天）`);
 //       } else {
 //         setDateRangeError(null);
 //       }
@@ -225,6 +289,7 @@
 //     }
 //   }, [startDate, endDate, selectedCourse]);
 
+//   // === 時間段切換 ===
 //   const handleTimeRangeToggle = (timeRange: string) => {
 //     const index = formTimeRanges?.findIndex((tr) => tr.timeRange === timeRange) ?? -1;
 //     if (index >= 0) {
@@ -235,138 +300,99 @@
 //     }
 //   };
 
-//   const onSubmit = async (data: CourseDateForm) => {
-//     if (!selectedCourse) {
-//       toast.info("請選擇課程");
-//       return;
-//     }
-
-//     if (dateRangeError) {
-//       toast.error(dateRangeError);
-//       return;
-//     }
-
-//     try {
-//       const response = await fetch(`/api/Course/Update_SpecialCourse/${selectedCourse.id}`, {
-//         method: "PATCH",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           ...data,
-//           CourseTimeRanges: data.timeRanges?.map((tr) => ({
-//             timeRange: tr.timeRange,
-//             starttime: tr.startTime,
-//             endtime: tr.endTime,
-//           })) || [],
-//           Coursedates: calendarDates,
-//         }),
-//       });
-//       if (!response.ok) {
-//         throw new Error(`更新失敗: ${response.status}`);
-//       }
-//       const updatedCourse = await response.json();
-//       setSpecialCourses(specialCourses.map((course) =>
-//         course.id === updatedCourse.id ? { ...updatedCourse, courseDates: updatedCourse.Coursedates || [] } : course
-//       ));
-//       setSelectedCourse({ ...updatedCourse, courseDates: updatedCourse.Coursedates || [] });
-//       toast.success("課程更新成功");
-//       router.push("/admin/SpecialCourseLists");
-//     } catch (error) {
-//       toast.error(error instanceof Error ? error.message : "更新課程失敗，請稍後重試");
-//     }
+//   const isCourseFull = (course: SpecialCourse) => {
+//     if (!course.maxStudents) return false;
+//     return (course.Students?.length || 0) >= course.maxStudents;
 //   };
 
-//   const handleCreateCourse = async (data: CourseDateForm) => {
-//     if (!selectedCourse) {
-//       toast.info("請選擇課程");
-//       return;
-//     }
-
-//     if (dateRangeError) {
-//       toast.error(dateRangeError);
-//       return;
-//     }
-
-//     try {
-//       const response = await fetch(`/api/SpecialCourse/Create_SpecialCourse`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           title: selectedCourse.title,
-//           description: selectedCourse.description,
-//           courseCode: selectedCourse.courseCode,
-//           schoolName: selectedCourse.schoolName,
-//           numberOfDays: selectedCourse.numberOfDays,
-//           numberOfStudents: selectedCourse.numberOfStudents || 1, // 默認值，必要時可改為表單輸入
-//           timeHours: selectedCourse.timeHours,
-//           teacher: selectedCourse.teacher,
-//           teacherId: selectedCourse.teacherId,
-//           isPublic: selectedCourse.isPublic,
-//           isProduct: selectedCourse.isProduct,
-//           Producted: selectedCourse.Producted,
-//           type: selectedCourse.type,
-//           courseModulId: selectedCourse.courseModulId,
-//           startDate: data.startDate,
-//           endDate: data.endDate,
-//           Coursedates: calendarDates,
-//           weekday: data.weekday,
-//           classroom: data.classroom,
-//           CourseTimeRanges: data.timeRanges?.map((tr) => ({
-//             timeRange: tr.timeRange,
-//             starttime: tr.startTime,
-//             endtime: tr.endTime,
-//           })) || [],
-//         }),
-//       });
-//       if (!response.ok) {
-//         throw new Error(`創建失敗: ${response.status}`);
-//       }
-//       const newCourse = await response.json();
-//       setSpecialCourses([...specialCourses, { ...newCourse, courseDates: newCourse.Coursedates || [], courseTimeRanges: newCourse.CourseTimeRanges || [] }]);
-//       setSelectedCourse({ ...newCourse, courseDates: newCourse.Coursedates || [], courseTimeRanges: newCourse.CourseTimeRanges || [] });
-//       toast.success("特殊課程創建成功");
-//       router.push("/admin/SpecialCourseLists");
-//     } catch (error) {
-//       toast.error(error instanceof Error ? error.message : "創建課程失敗，請稍後重試");
-//     }
+//   // === 圖片/影片處理 ===
+//   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
+//     setImageFiles(files);
+//     const previews = files.map(f => URL.createObjectURL(f));
+//     setImagePreviews(previews);
 //   };
 
+//   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("video/"));
+//     setVideoFiles(files);
+//     const previews = files.map(f => URL.createObjectURL(f));
+//     setVideoPreviews(previews);
+//   };
+
+// // === 建立特殊課程 ===
+// const handleCreateCourse = async (data: CourseDateForm) => {
+//   if (!selectedCourse || dateRangeError) {
+//     toast.error(dateRangeError || "請選擇課程");
+//     return;
+//   }
+
+//   const formData = new FormData();
+//   formData.append("title", selectedCourse.title);
+//   formData.append("description", selectedCourse.description);
+//   formData.append("courseCode", selectedCourse.courseCode);
+//   formData.append("schoolName", selectedCourse.schoolName);
+//   formData.append("numberOfDays", String(selectedCourse.numberOfDays));
+//   formData.append("timeHours", String(selectedCourse.timeHours));
+//   formData.append("teacher", JSON.stringify(selectedCourse.teacher));
+//   formData.append("teacherId", selectedCourse.teacherId);
+//   formData.append("isPublic", String(selectedCourse.isPublic));
+//   formData.append("isProduct", String(selectedCourse.isProduct));
+//   formData.append("type", JSON.stringify(selectedCourse.type));
+//   formData.append("courseModulId", selectedCourse.courseModulId || "");
+//   formData.append("startDate", data.startDate || "");
+//   formData.append("endDate", data.endDate || "");
+//   formData.append("Coursedates", JSON.stringify(calendarDates));
+//   formData.append("weekday", data.weekday || "");
+//   formData.append("classroom", data.classroom || "");
+//   formData.append("maxStudents", data.maxStudents?.toString() || "");
+
+//   // Product 欄位
+//   formData.append("price", data.price.toString());
+//   formData.append("real_price", data.real_price.toString());
+//   if (data.Target_Audience) formData.append("Target_Audience", data.Target_Audience);
+//   if (data.Course_Objective) formData.append("Course_Objective", data.Course_Objective);
+//   if (data.Applicable_Scenarios) formData.append("Applicable_Scenarios", data.Applicable_Scenarios);
+
+//   // === 修正：時間段數據發送方式 ===
+//   // 方法1：直接發送 JSON 數組
+//   const timeRangesData = data.timeRanges?.map((tr) => ({
+//     timeRange: tr.timeRange,
+//     starttime: tr.startTime,
+//     endtime: tr.endTime,
+//   })) || [];
+  
+//   formData.append("SpecialCourseTimeRanges", JSON.stringify(timeRangesData));
+
+//   // 檔案
+//   imageFiles.forEach(f => formData.append("images", f));
+//   videoFiles.forEach(f => formData.append("videos", f));
+
+//   try {
+//     const res = await fetch("/api/SpecialCourse/Create_SpecialCourse", {
+//       method: "POST",
+//       body: formData,
+//     });
+//     if (!res.ok) throw new Error("創建失敗");
+//     toast.success("特殊課程創建成功");
+//     router.push("/admin/SpecialCourseLists");
+//   } catch (error) {
+//     toast.error("創建失敗");
+//   }
+// };
+
+//   // === 月曆事件 ===
 //   const handleDateClick = (arg: { dateStr: string }) => {
-//     if (!selectedCourse) {
-//       toast.info("請選擇課程");
-//       return;
-//     }
-
+//     if (!selectedCourse) return toast.info("請選擇課程");
 //     const clickedDate = arg.dateStr;
-//     if (startDate && startDate !== "" && endDate && endDate !== "") {
-//       const start = parseISO(startDate);
-//       const end = parseISO(endDate);
-//       const clicked = parseISO(clickedDate);
-//       if (clicked < start || clicked > end) {
-//         toast.info("只能在開始日期和結束日期之間選擇日期");
-//         return;
-//       }
-//     }
-
-//     if (selectedWeekday && selectedWeekday !== "") {
-//       const clicked = parseISO(clickedDate);
-//       if (getDay(clicked) !== parseInt(selectedWeekday)) {
-//         toast.info(`只能選擇${weekdays.find(w => w.value === selectedWeekday)?.label}的日期`);
-//         return;
-//       }
-//     }
-
-//     let updatedDates: string[];
-//     if (calendarDates.includes(clickedDate)) {
-//       updatedDates = calendarDates.filter((date) => date !== clickedDate);
-//     } else {
-//       updatedDates = [...calendarDates, clickedDate];
-//     }
+//     let updatedDates = calendarDates.includes(clickedDate)
+//       ? calendarDates.filter(d => d !== clickedDate)
+//       : [...calendarDates, clickedDate];
 
 //     if (updatedDates.length > selectedCourse.numberOfDays) {
-//       toast.info(`課程日期數量不能超過 ${selectedCourse.numberOfDays} 天`);
+//       toast.info(`最多 ${selectedCourse.numberOfDays} 天`);
 //       return;
 //     }
-
 //     setCalendarDates(updatedDates);
 //   };
 
@@ -380,7 +406,7 @@
 //     const newDate = format(info.event.start!, "yyyy-MM-dd");
 //     const oldDate = info.oldEvent.start ? format(info.oldEvent.start, "yyyy-MM-dd") : null;
 
-//     if (startDate && startDate !== "" && endDate && endDate !== "") {
+//     if (startDate && endDate && startDate !== "" && endDate !== "") {
 //       const start = parseISO(startDate);
 //       const end = parseISO(endDate);
 //       const newDateParsed = parseISO(newDate);
@@ -417,18 +443,7 @@
 //     setCalendarDates(updatedDates);
 //   };
 
-//   useEffect(() => {
-//     const handleProductCreated = () => {
-//       setIsProductModalOpen(false);
-//       toast.success("產品已成功創建，modal 已關閉");
-//     };
-//     window.addEventListener("productCreated", handleProductCreated);
-//     return () => {
-//       window.removeEventListener("productCreated", handleProductCreated);
-//     };
-//   }, []);
-
-//   const calendarEvents = calendarDates.map((date) => ({
+//   const calendarEvents = calendarDates.map(date => ({
 //     title: selectedCourse?.title || "課程",
 //     date,
 //     allDay: true,
@@ -437,210 +452,209 @@
 //     textColor: "#ffffff",
 //   }));
 
-//   if (isLoading) {
-//     return <div className="text-center py-10 text-white">載入中...</div>;
-//   }
+//   if (isLoading) return <div className="text-center py-10 text-white">載入中...</div>;
+
+//   console.log("courses : ", courses , "-- End --");
+//   console.log("selectedCourse timeRanges:", selectedCourse?.courseTimeRanges);
 
 //   return (
 //     <div className="bg-gray-800 text-white min-h-screen">
 //       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//         <Link href="/admin/CourseLists" className="text-blue-400 hover:underline mb-4 inline-block">
-//           返回
-//         </Link>
+//         <Link href="/admin/SpecialCourseLists" className="text-blue-400 hover:underline mb-4 inline-block">返回</Link>
 //         <h1 className="text-2xl font-bold mb-6">安排特別課程</h1>
-//         {dateRangeError && (
-//           <div className="bg-red-600 text-white p-4 rounded-md mb-6">
-//             {dateRangeError}
-//           </div>
-//         )}
+
+//         {dateRangeError && <div className="bg-red-600 text-white p-4 rounded-md mb-6">{dateRangeError}</div>}
+
 //         <div className="flex flex-col md:flex-row gap-6">
+//           {/* 左側：課程選擇 + 表單 */}
 //           <div className="md:w-1/2 flex flex-col gap-6">
 //             <div className="bg-gray-700 rounded-md p-4 shadow-lg">
 //               <h2 className="text-lg font-semibold mb-4">課程列表</h2>
 //               <div className="flex gap-4">
 //                 <div className="w-1/2 space-y-2 max-h-96 overflow-y-auto">
 //                   <h3 className="text-md font-medium">普通課程</h3>
-//                   {courses.length > 0 ? (
-//                     courses.map((course) => (
-//                       <div
-//                         key={course.id}
-//                         onClick={() => setSelectedCourse(course)}
-//                         className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${
-//                           selectedCourse?.id === course.id ? "bg-gray-600" : ""
-//                         }`}
-//                       >
-//                         <p className="font-medium">{course.title}</p>
-//                         <p className="text-sm text-gray-300">{course.courseCode}</p>
-//                         <p className="text-sm text-gray-300">
-//                           狀態: {course.Producted ? "已成為產品" : "未成為產品"}
-//                         </p>
-//                       </div>
-//                     ))
-//                   ) : (
-//                     <p className="text-gray-400">沒有普通課程</p>
-//                   )}
+//                   {courses.map(course => (
+//                     <div
+//                       key={course.id}
+//                       onClick={() => setSelectedCourse(course)}
+//                       className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${selectedCourse?.id === course.id ? "bg-gray-600" : ""}`}
+//                     >
+//                       <p className="font-medium">{course.title}</p>
+//                       <p className="text-sm text-gray-300">{course.courseCode}</p>
+//                       <p className="text-sm text-gray-300">學生: {(course.Students?.length || 0)} / {course.maxStudents ?? "無上限"}</p>
+//                       <p className="text-xs text-gray-400">時間段: {course.courseTimeRanges?.length || 0} 個</p>
+//                     </div>
+//                   ))}
 //                 </div>
 //                 <div className="w-1/2 space-y-2 max-h-96 overflow-y-auto">
 //                   <h3 className="text-md font-medium">特殊課程</h3>
-//                   {specialCourses.length > 0 ? (
-//                     specialCourses.map((course) => (
-//                       <div
-//                         key={course.id}
-//                         onClick={() => setSelectedCourse(course)}
-//                         className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${
-//                           selectedCourse?.id === course.id ? "bg-gray-600" : ""
-//                         }`}
-//                       >
-//                         <p className="font-medium">{course.title}</p>
-//                         <p className="text-sm text-gray-300">{course.courseCode}</p>
-//                         <p className="text-sm text-gray-300">
-//                           狀態: {course.Producted ? "已成為產品" : "未成為產品"}
-//                         </p>
-//                         <p className="text-sm text-gray-300">
-//                           學生數: {course.numberOfStudents ?? "N/A"}
-//                         </p>
-//                       </div>
-//                     ))
-//                   ) : (
-//                     <p className="text-gray-400">沒有特殊課程</p>
-//                   )}
+//                   {specialCourses.map(course => (
+//                     <div
+//                       key={course.id}
+//                       onClick={() => setSelectedCourse(course)}
+//                       className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${selectedCourse?.id === course.id ? "bg-gray-600" : ""}`}
+//                     >
+//                       <p className="font-medium">{course.title}</p>
+//                       <p className="text-sm text-gray-300">{course.courseCode}</p>
+//                       <p className="text-xs text-gray-400">時間段: {course.courseTimeRanges?.length || 0} 個</p>
+//                     </div>
+//                   ))}
 //                 </div>
 //               </div>
 //             </div>
 
 //             {selectedCourse && (
 //               <div className="bg-gray-700 rounded-md p-4 shadow-lg">
-//                 <h2 className="text-lg font-semibold mb-4">課程詳情</h2>
-//                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+//                 <h2 className="text-lg font-semibold mb-4">課程詳情 - {selectedCourse.title}</h2>
+//                 <form onSubmit={handleSubmit(handleCreateCourse)} className="space-y-4">
+//                   <Input type="date" {...register("startDate")} placeholder="開始日期" />
+//                   <Input type="date" {...register("endDate")} placeholder="結束日期" />
+// <Input 
+//   type="number" 
+//   {...register("maxStudents", { valueAsNumber: true })} 
+// />
+// <Label htmlFor="maxStudents" className="text-sm font-medium text-gray-300">
+//   人數上限
+// </Label>
+
+// {/* Product 欄位 */}
+// <div className="grid grid-cols-2 gap-4">
+//   <div className="space-y-2">
+//     <Input 
+//       type="number" 
+//       {...register("price", { valueAsNumber: true })} 
+//     />
+//     <Label htmlFor="price" className="text-sm font-medium text-gray-300">
+//       原價
+//     </Label>
+//   </div>
+//   <div className="space-y-2">
+//     <Input 
+//       type="number" 
+//       {...register("real_price", { valueAsNumber: true })} 
+//     />
+//     <Label htmlFor="real_price" className="text-sm font-medium text-gray-300">
+//       實價
+//     </Label>
+//   </div>
+// </div>
+//                   <Textarea {...register("Target_Audience")} placeholder="目標觀眾" />
+//                   <Textarea {...register("Course_Objective")} placeholder="課程目標" />
+//                   <Textarea {...register("Applicable_Scenarios")} placeholder="適用場景" />
+
+//                   {/* === 時間段 === */}
 //                   <div>
-//                     <label className="block text-sm font-medium">開始日期</label>
-//                     <input
-//                       type="date"
-//                       {...register("startDate")}
-//                       className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                     />
-//                     {errors.startDate && (
-//                       <p className="text-red-500 text-sm">{errors.startDate.message}</p>
-//                     )}
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-medium">結束日期</label>
-//                     <input
-//                       type="date"
-//                       {...register("endDate")}
-//                       className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                     />
-//                     {errors.endDate && (
-//                       <p className="text-red-500 text-sm">{errors.endDate.message}</p>
-//                     )}
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-medium">時間段</label>
-//                     <div className="mt-1 flex flex-wrap gap-2">
-//                       {selectedCourse &&
-//                       Array.isArray(selectedCourse.courseTimeRanges) &&
-//                       selectedCourse.courseTimeRanges.length > 0 ? (
+//                     <label className="block text-sm font-medium mb-2">時間段</label>
+//                     <div className="flex flex-wrap gap-2 mb-4">
+//                       {selectedCourse.courseTimeRanges && selectedCourse.courseTimeRanges.length > 0 ? (
 //                         selectedCourse.courseTimeRanges.map((range) => (
-//                           <button
+//                           <Button
 //                             key={range.id}
 //                             type="button"
 //                             onClick={() => handleTimeRangeToggle(range.timeRange)}
-//                             className={`px-4 py-2 rounded-md ${
-//                               formTimeRanges && formTimeRanges.findIndex((tr) => tr.timeRange === range.timeRange) >= 0
-//                                 ? "bg-blue-600"
+//                             className={`px-4 py-2 rounded-md transition-colors ${
+//                               formTimeRanges?.some((tr) => tr.timeRange === range.timeRange)
+//                                 ? "bg-blue-600 hover:bg-blue-700"
 //                                 : "bg-gray-600 hover:bg-gray-500"
 //                             }`}
 //                           >
 //                             {timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.label || range.timeRange}
-//                           </button>
+//                           </Button>
 //                         ))
 //                       ) : (
-//                         <p className="text-gray-400">無可用時間段</p>
+//                         <p className="text-gray-400 text-sm">此課程未定義可用時間段</p>
 //                       )}
 //                     </div>
+
+//                     {fields.map((field, index) => {
+//                       const timeRangeKey = field.timeRange as keyof typeof timeRangeOptions;
+//                       const defaultRange = timeRangeOptions[timeRangeKey];
+
+//                       return (
+//                         <div
+//                           key={field.id}
+//                           className="space-y-3 border border-gray-600 rounded-md p-4 mb-4 bg-gray-750"
+//                         >
+//                           <div className="flex justify-between items-center">
+//                             <h4 className="text-sm font-medium text-blue-400">
+//                               {defaultRange?.label || field.timeRange}
+//                             </h4>
+//                             <Button
+//                               type="button"
+//                               variant="ghost"
+//                               size="sm"
+//                               onClick={() => remove(index)}
+//                               className="text-red-400 hover:text-red-300"
+//                             >
+//                               移除
+//                             </Button>
+//                           </div>
+
+//                           <div className="grid grid-cols-2 gap-3">
+//                             <div>
+//                               <label className="block text-xs font-medium text-gray-300">開始時間</label>
+//                               <Input
+//                                 type="time"
+//                                 {...register(`timeRanges.${index}.startTime`)}
+//                                 min={defaultRange?.start}
+//                                 max={defaultRange?.end}
+//                                 className="mt-1 bg-gray-800 border-gray-600 text-white text-sm"
+//                                 placeholder={defaultRange?.start}
+//                               />
+//                             </div>
+
+//                             <div>
+//                               <label className="block text-xs font-medium text-gray-300">結束時間</label>
+//                               <Input
+//                                 type="time"
+//                                 {...register(`timeRanges.${index}.endTime`)}
+//                                 min={watch(`timeRanges.${index}.startTime`) || defaultRange?.start}
+//                                 max={defaultRange?.end}
+//                                 className="mt-1 bg-gray-800 border-gray-600 text-white text-sm"
+//                                 placeholder={defaultRange?.end}
+//                               />
+//                             </div>
+//                           </div>
+//                         </div>
+//                       );
+//                     })}
 //                   </div>
-//                   {fields.map((field, index) => (
-//                     <div key={field.id} className="space-y-2 border-b border-gray-600 pb-4">
-//                       <h3 className="text-sm font-medium">
-//                         {timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.label || field.timeRange}
-//                       </h3>
-//                       <div>
-//                         <label className="block text-sm font-medium">開始時間</label>
-//                         <input
-//                           type="time"
-//                           {...register(`timeRanges.${index}.startTime`)}
-//                           min={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.start}
-//                           max={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.end}
-//                           className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                         />
-//                         {errors.timeRanges?.[index]?.startTime && (
-//                           <p className="text-red-500 text-sm">{errors.timeRanges[index]?.startTime?.message}</p>
-//                         )}
-//                       </div>
-//                       <div>
-//                         <label className="block text-sm font-medium">結束時間</label>
-//                         <input
-//                           type="time"
-//                           {...register(`timeRanges.${index}.endTime`)}
-//                           min={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.start}
-//                           max={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.end}
-//                           className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                         />
-//                         {errors.timeRanges?.[index]?.endTime && (
-//                           <p className="text-red-500 text-sm">{errors.timeRanges[index]?.endTime?.message}</p>
-//                         )}
-//                       </div>
-//                     </div>
-//                   ))}
+
+//                   {/* 圖片上傳 */}
 //                   <div>
-//                     <label className="block text-sm font-medium">週份</label>
-//                     <select
-//                       {...register("weekday")}
-//                       className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                     >
-//                       <option value="">選擇星期</option>
-//                       {weekdays.map((weekday) => (
-//                         <option key={weekday.value} value={weekday.value}>
-//                           {weekday.label}
-//                         </option>
-//                       ))}
-//                     </select>
-//                     {errors.weekday && (
-//                       <p className="text-red-500 text-sm">{errors.weekday.message}</p>
+//                     <label className="block text-sm font-medium mb-1">課程圖片</label>
+//                     <Input type="file" multiple accept="image/*" onChange={handleImageChange} />
+//                     {imagePreviews.length > 0 && (
+//                       <div className="grid grid-cols-3 gap-2 mt-2">
+//                         {imagePreviews.map((src, i) => (
+//                           <Image key={i} src={src} alt="" width={100} height={100} className="rounded object-cover" />
+//                         ))}
+//                       </div>
 //                     )}
 //                   </div>
+
+//                   {/* 影片上傳 */}
 //                   <div>
-//                     <label className="block text-sm font-medium">課室</label>
-//                     <input
-//                       type="text"
-//                       {...register("classroom")}
-//                       className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-//                       placeholder="輸入課室名稱（可選）"
-//                     />
-//                     {errors.classroom && (
-//                       <p className="text-red-500 text-sm">{errors.classroom.message}</p>
+//                     <label className="block text-sm font-medium mb-1">課程影片</label>
+//                     <Input type="file" multiple accept="video/*" onChange={handleVideoChange} />
+//                     {videoPreviews.length > 0 && (
+//                       <div className="grid grid-cols-3 gap-2 mt-2">
+//                         {videoPreviews.map((src, i) => (
+//                           <video key={i} src={src} controls className="w-full h-24 rounded object-cover" />
+//                         ))}
+//                       </div>
 //                     )}
 //                   </div>
-//                   <div className="flex gap-4">
-//                     <button
-//                       type="submit"
-//                       className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700"
-//                     >
-//                       更新課程
-//                     </button>
-//                     <button
-//                       type="button"
-//                       onClick={handleSubmit(handleCreateCourse)}
-//                       className="px-4 py-2 bg-green-600 rounded-md hover:bg-green-700"
-//                     >
-//                       建立課程
-//                     </button>
-//                   </div>
+
+//                   <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+//                     建立課程
+//                   </Button>
 //                 </form>
 //               </div>
 //             )}
 //           </div>
 
+//           {/* 右側：月曆 */}
 //           <div className="md:w-1/2">
 //             <div className="bg-gray-700 rounded-md p-4 shadow-lg">
 //               <h2 className="text-lg font-semibold mb-4">課程月曆</h2>
@@ -652,9 +666,6 @@
 //                 dateClick={handleDateClick}
 //                 editable={true}
 //                 selectable={true}
-//                 eventBackgroundColor="#2563eb"
-//                 eventBorderColor="#2563eb"
-//                 eventTextColor="#ffffff"
 //                 headerToolbar={{
 //                   left: "prev,next today",
 //                   center: "title",
@@ -663,35 +674,12 @@
 //                 height="auto"
 //                 eventDrop={handleEventDrop}
 //                 validRange={
-//                   startDate && startDate !== "" && endDate && endDate !== ""
-//                     ? {
-//                         start: parseISO(startDate),
-//                         end: addDays(parseISO(endDate), 1),
-//                       }
+//                   startDate && endDate && startDate !== "" && endDate !== ""
+//                     ? { start: parseISO(startDate), end: addDays(parseISO(endDate), 1) }
 //                     : undefined
 //                 }
 //               />
 //             </div>
-//             {selectedCourse && (
-//               <div className="mt-4">
-//                 <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
-//                   <DialogTrigger asChild>
-//                     <Button
-//                       onClick={() => setIsProductModalOpen(true)}
-//                       className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700"
-//                     >
-//                       建立商品
-//                     </Button>
-//                   </DialogTrigger>
-//                   <DialogContent className="max-w-4xl">
-//                     <DialogHeader>
-//                       <DialogTitle>基於課程建立商品</DialogTitle>
-//                     </DialogHeader>
-//                     <Create_SpecialCourse_Product_Form initialCourse={selectedCourse} />
-//                   </DialogContent>
-//                 </Dialog>
-//               </div>
-//             )}
 //           </div>
 //         </div>
 //       </div>
@@ -704,6 +692,7 @@
 
 
 "use client";
+
 import { useEffect, useState, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import { EventDropArg } from "@fullcalendar/core";
@@ -714,48 +703,40 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, parseISO, addDays, differenceInDays, getDay, addWeeks } from "date-fns";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // 新增：Shadcn UI 的 Input 組件
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Course } from "@/types/course";
-import Create_SpecialCourse_Product_Form from "./Create-SpecialCourse-Product-Form";
+import Image from "next/image";
+import { SpecialCourse } from "@/types/Specialcourse";
 
-// 定義時間段接口
-interface TimeRange {
-  timeRange: string;
-  starttime?: string | null;
-  endtime?: string | null;
-}
+// === 時間段選項 ===
+const timeRangeOptions = {
+  morning: { label: "上午", start: "09:00", end: "13:00" },
+  afternoon: { label: "下午", start: "14:00", end: "18:00" },
+  evening: { label: "晚上", start: "19:00", end: "22:00" },
+  full_day: { label: "全天", start: "00:00", end: "23:59" },
+};
 
-// 定義時間段 schema
-const TimeRangeSchema = z.object({
-  timeRange: z.string(),
-  startTime: z.string().optional().nullable(),
-  endTime: z.string().optional().nullable(),
-});
-
-// 定義表單 schema
+// === Zod Schema ===
 const CourseDateSchema = z.object({
-  startDate: z
-    .string()
-    .refine((val) => !val || !isNaN(Date.parse(val)), {
-      message: "無效的開始日期",
-    })
-    .optional()
-    .nullable(),
-  endDate: z
-    .string()
-    .refine((val) => !val || !isNaN(Date.parse(val)), {
-      message: "無效的結束日期",
-    })
-    .optional()
-    .nullable(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
   weekday: z.string().optional().nullable(),
   classroom: z.string().optional().nullable(),
-  timeRanges: z.array(TimeRangeSchema).optional(),
-  maxStudents: z.number().int().min(1, { message: "人數上限必須為正整數" }).optional().nullable(), // 新增
+  timeRanges: z.array(z.object({
+    timeRange: z.string(),
+    startTime: z.string().optional().nullable(),
+    endTime: z.string().optional().nullable(),
+  })).optional(),
+  maxStudents: z.number().int().min(1).optional().nullable(),
+  price: z.number().min(0, { message: "價格不能為負數" }),
+  real_price: z.number().min(0, { message: "實價不能為負數" }),
+  Target_Audience: z.string().optional().nullable(),
+  Course_Objective: z.string().optional().nullable(),
+  Applicable_Scenarios: z.string().optional().nullable(),
 }).refine(
   (data) => {
     if (data.startDate && data.endDate && data.startDate !== "" && data.endDate !== "") {
@@ -763,32 +744,65 @@ const CourseDateSchema = z.object({
     }
     return true;
   },
-  {
-    message: "結束日期必須晚於或等於開始日期",
-    path: ["endDate"],
-  }
+  { message: "結束日期必須晚於或等於開始日期", path: ["endDate"] }
 );
 
 type CourseDateForm = z.infer<typeof CourseDateSchema>;
 
-const timeRangeOptions = {
-  morning: { label: "上午", start: "09:00", end: "13:00" },
-  afternoon: { label: "下午", start: "14:00", end: "18:00" },
-  evening: { label: "晚上", start: "19:00", end: "22:00" },
-  full_day: { label: "全天", start: "00:00", end: "23:59" },
-};
+// API 返回的課程類型
+interface ApiCourse {
+  id: string;
+  title: string;
+  description: string;
+  courseCode: string;
+  startDate: string | null;
+  endDate: string | null;
+  weekday: string | null;
+  classroom: string | null;
+  numberOfDays: number;
+  timeHours: number;
+  isPublic: boolean;
+  Producted: boolean;
+  Coursedates: string[];
+  CourseTimeRanges: {
+    id: string;
+    timeRange: string;
+    starttime: string | null;
+    endtime: string | null;
+  }[];
+  type: string[];
+  schoolName?: string;
+  teacher?: string[];
+  teacherId?: string;
+  numberOfStudents?: number | null;
+  maxStudents?: number | null;
+  courseModulId?: string | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  Students?: string[];
+  price?: number | null;
+  real_price?: number | null;
+  Target_Audience?: string | null;
+  Course_Objective?: string | null;
+  Applicable_Scenarios?: string | null;
+}
+
 const ArrangeSpecialCoursePage = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [specialCourses, setSpecialCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [courses, setCourses] = useState<SpecialCourse[]>([]);
+  const [specialCourses, setSpecialCourses] = useState<SpecialCourse[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<SpecialCourse | null>(null);
   const [calendarDates, setCalendarDates] = useState<string[]>([]);
   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const calendarRef = useRef<FullCalendar>(null);
   const router = useRouter();
 
-  const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm<CourseDateForm>({
+  // 修復：添加下劃線前綴表示未使用
+  const { register, handleSubmit, reset, watch, control, formState: { errors: _errors }, setValue: _setValue } = useForm<CourseDateForm>({
     resolver: zodResolver(CourseDateSchema),
     defaultValues: {
       startDate: "",
@@ -796,14 +810,16 @@ const ArrangeSpecialCoursePage = () => {
       weekday: null,
       classroom: null,
       timeRanges: [],
-      maxStudents: null, // 新增
+      maxStudents: null,
+      price: 0,
+      real_price: 0,
+      Target_Audience: null,
+      Course_Objective: null,
+      Applicable_Scenarios: null,
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "timeRanges",
-  });
+  const { fields, append, remove } = useFieldArray({ control, name: "timeRanges" });
 
   const startDate = watch("startDate");
   const endDate = watch("endDate");
@@ -820,66 +836,75 @@ const ArrangeSpecialCoursePage = () => {
     { value: "6", label: "星期六" },
   ];
 
- useEffect(() => {
+  // === 載入課程 ===
+  useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // 獲取普通課程
-        const courseResponse = await fetch("/api/Course/Get_Course_Lists");
-        if (!courseResponse.ok) {
-          throw new Error(`普通課程請求失敗: ${courseResponse.status}`);
-        }
-        const courseData = await courseResponse.json();
-        const normalizedCourses = Array.isArray(courseData)
-          ? courseData.map((course: Course) => ({
-              ...course,
-              Producted: course.Producted ?? false,
-              isProduct: course.isProduct ?? false,
-              courseDates: course.courseDates || [],
-              courseTimeRanges: course.courseTimeRanges || [],
-              maxStudents: course.maxStudents ?? null, // 新增
-              Students: course.Students ?? [], // 新增
-            }))
-          : [];
-        setCourses(normalizedCourses);
-// 獲取特殊課程
-        const specialCourseResponse = await fetch("/api/SpecialCourse/SpecialCourse_Lists");
-        if (!specialCourseResponse.ok) {
-          throw new Error(`特殊課程請求失敗: ${specialCourseResponse.status}`);
-        }
-        const specialData = await specialCourseResponse.json();
-        const normalizedSpecialCourses = Array.isArray(specialData)
-          ? specialData.map((course: Course) => ({
-              ...course,
-              Producted: course.Producted ?? false,
-              isProduct: course.isProduct ?? false,
-              courseDates: course.courseDates || [],
-              courseTimeRanges: course.courseTimeRanges || [],
-              numberOfStudents: course.numberOfStudents || 0,
-              maxStudents: course.maxStudents ?? null, // 新增
-              Students: course.Students ?? [], // 新增
-            }))
-          : [];
-        setSpecialCourses(normalizedSpecialCourses);
+        const [courseRes, specialRes] = await Promise.all([
+          fetch("/api/Course/Get_Course_Lists"),
+          fetch("/api/SpecialCourse/SpecialCourse_Lists"),
+        ]);
 
-        if (normalizedCourses.length > 0) {
-          setSelectedCourse(normalizedCourses[0]);
-          setCalendarDates(normalizedCourses[0].courseDates || []);
-          reset({
-            startDate: normalizedCourses[0].startDate || "",
-            endDate: normalizedCourses[0].endDate || "",
-            weekday: normalizedCourses[0].weekday || null,
-            classroom: normalizedCourses[0].classroom || "",
-            timeRanges: normalizedCourses[0].courseTimeRanges.map((range: TimeRange) => ({
-              timeRange: range.timeRange,
-              startTime: range.starttime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.start || "",
-              endTime: range.endtime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end || "",
-            })),
-            maxStudents: normalizedCourses[0].maxStudents || null, // 新增
-          });
+        const coursesData = await courseRes.json();
+        const specialCoursesData = await specialRes.json();
+
+        const mappedCourses: SpecialCourse[] = Array.isArray(coursesData) 
+          ? coursesData.map((course: ApiCourse) => ({
+              ...course,
+              courseTimeRanges: course.CourseTimeRanges || [],
+              courseDates: course.Coursedates || [],
+              isProduct: course.Producted ?? false,
+              Students: course.Students || [],
+              schoolName: course.schoolName || "未命名學校",
+              teacher: course.teacher || [],
+              teacherId: course.teacherId || "",
+              price: course.price || 0,
+              real_price: course.real_price || 0,
+              Target_Audience: course.Target_Audience || null,
+              Course_Objective: course.Course_Objective || null,
+              Applicable_Scenarios: course.Applicable_Scenarios || null,
+              numberOfStudents: course.numberOfStudents || null,
+              maxStudents: course.maxStudents || null,
+              courseModulId: course.courseModulId || null,
+              createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+              updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date(),
+            }))
+          : [];
+
+        const mappedSpecialCourses: SpecialCourse[] = Array.isArray(specialCoursesData)
+          ? specialCoursesData.map((course: any) => ({
+              ...course,
+              courseTimeRanges: course.SpecialCourseTimeRanges || course.CourseTimeRanges || [],
+              courseDates: course.Coursedates || [],
+              isProduct: course.Producted ?? false,
+              Students: course.Students || [],
+              schoolName: course.schoolName || "未命名學校",
+              teacher: course.teacher || [],
+              teacherId: course.teacherId || "",
+              price: course.price || 0,
+              real_price: course.real_price || 0,
+              Target_Audience: course.Target_Audience || null,
+              Course_Objective: course.Course_Objective || null,
+              Applicable_Scenarios: course.Applicable_Scenarios || null,
+              numberOfStudents: course.numberOfStudents || null,
+              maxStudents: course.maxStudents || null,
+              courseModulId: course.courseModulId || null,
+              createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+              updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date(),
+            }))
+          : [];
+
+        setCourses(mappedCourses);
+        setSpecialCourses(mappedSpecialCourses);
+
+        if (mappedCourses.length > 0) {
+          setSelectedCourse(mappedCourses[0]);
+          setCalendarDates(mappedCourses[0].courseDates || []);
         }
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "無法載入課程數據");
+        console.error("載入失敗:", error);
+        toast.error("載入失敗");
       } finally {
         setIsLoading(false);
       }
@@ -887,25 +912,34 @@ const ArrangeSpecialCoursePage = () => {
     fetchData();
   }, [reset]);
 
-useEffect(() => {
+  // === 同步選課 ===
+  useEffect(() => {
     if (selectedCourse) {
+      console.log("選中課程的時間段:", selectedCourse.courseTimeRanges);
+      
       reset({
         startDate: selectedCourse.startDate || "",
         endDate: selectedCourse.endDate || "",
         weekday: selectedCourse.weekday || null,
         classroom: selectedCourse.classroom || "",
-        timeRanges: selectedCourse.courseTimeRanges.map((range: TimeRange) => ({
+        timeRanges: selectedCourse.courseTimeRanges?.map((range: any) => ({
           timeRange: range.timeRange,
           startTime: range.starttime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.start || "",
           endTime: range.endtime || timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end || "",
-        })),
-        maxStudents: selectedCourse.maxStudents || null, // 新增
+        })) || [],
+        maxStudents: selectedCourse.maxStudents || null,
+        price: selectedCourse.price || 0,
+        real_price: selectedCourse.real_price || 0,
+        Target_Audience: selectedCourse.Target_Audience || null,
+        Course_Objective: selectedCourse.Course_Objective || null,
+        Applicable_Scenarios: selectedCourse.Applicable_Scenarios || null,
       });
       setCalendarDates(selectedCourse.courseDates || []);
     }
   }, [selectedCourse, reset]);
 
-useEffect(() => {
+  // === 日期邏輯 ===
+  useEffect(() => {
     if (selectedCourse && startDate && startDate !== "") {
       const start = parseISO(startDate);
       const newDates: string[] = [];
@@ -913,12 +947,10 @@ useEffect(() => {
       if (selectedWeekday && selectedWeekday !== "") {
         const targetWeekday = parseInt(selectedWeekday);
         let currentDate = start;
-        let count = 0;
-
         while (getDay(currentDate) !== targetWeekday) {
           currentDate = addDays(currentDate, 1);
         }
-
+        let count = 0;
         while (count < selectedCourse.numberOfDays) {
           newDates.push(format(currentDate, "yyyy-MM-dd"));
           currentDate = addWeeks(currentDate, 1);
@@ -926,11 +958,9 @@ useEffect(() => {
         }
       } else {
         for (let i = 0; i < selectedCourse.numberOfDays; i++) {
-          const date = addDays(start, i);
-          newDates.push(format(date, "yyyy-MM-dd"));
+          newDates.push(format(addDays(start, i), "yyyy-MM-dd"));
         }
       }
-
       setCalendarDates(newDates);
     } else {
       setCalendarDates([]);
@@ -938,14 +968,10 @@ useEffect(() => {
   }, [startDate, selectedWeekday, selectedCourse]);
 
   useEffect(() => {
-    if (selectedCourse && startDate && startDate !== "" && endDate && endDate !== "") {
-      const start = parseISO(startDate);
-      const end = parseISO(endDate);
-      const daysDifference = differenceInDays(end, start) + 1;
+    if (selectedCourse && startDate && endDate && startDate !== "" && endDate !== "") {
+      const daysDifference = differenceInDays(parseISO(endDate), parseISO(startDate)) + 1;
       if (daysDifference < selectedCourse.numberOfDays) {
-        setDateRangeError(
-          `日期範圍（${daysDifference} 天）少於課程持續天數（${selectedCourse.numberOfDays} 天）`
-        );
+        setDateRangeError(`日期範圍（${daysDifference} 天）少於課程天數（${selectedCourse.numberOfDays} 天）`);
       } else {
         setDateRangeError(null);
       }
@@ -954,6 +980,7 @@ useEffect(() => {
     }
   }, [startDate, endDate, selectedCourse]);
 
+  // === 時間段切換 ===
   const handleTimeRangeToggle = (timeRange: string) => {
     const index = formTimeRanges?.findIndex((tr) => tr.timeRange === timeRange) ?? -1;
     if (index >= 0) {
@@ -964,162 +991,101 @@ useEffect(() => {
     }
   };
 
-// 檢查課程是否已滿
-  const isCourseFull = (course: Course) => {
-    if (course.maxStudents === null || course.maxStudents === undefined) {
-      return false; // 無上限，視為未滿
-    }
-    return course.Students.length >= course.maxStudents;
+  // 修復：添加下劃線前綴表示未使用
+  const _isCourseFull = (course: SpecialCourse) => {
+    if (!course.maxStudents) return false;
+    return (course.Students?.length || 0) >= course.maxStudents;
   };
 
-  const onSubmit = async (data: CourseDateForm) => {
-    if (!selectedCourse) {
-      toast.info("請選擇課程");
-      return;
-    }
-
-    if (dateRangeError) {
-      toast.error(dateRangeError);
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/Course/Update_SpecialCourse/${selectedCourse.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          CourseTimeRanges: data.timeRanges?.map((tr) => ({
-            timeRange: tr.timeRange,
-            starttime: tr.startTime,
-            endtime: tr.endTime,
-          })) || [],
-          Coursedates: calendarDates,
-          maxStudents: data.maxStudents, // 新增
-        }),
-      });
-      if (!response.ok) {
-        throw new Error(`更新失敗: ${response.status}`);
-      }
-      const updatedCourse = await response.json();
-      setSpecialCourses(specialCourses.map((course) =>
-        course.id === updatedCourse.id
-          ? { ...updatedCourse, courseDates: updatedCourse.Coursedates || [], maxStudents: updatedCourse.maxStudents }
-          : course
-      ));
-      setSelectedCourse({ ...updatedCourse, courseDates: updatedCourse.Coursedates || [], maxStudents: updatedCourse.maxStudents });
-      toast.success("課程更新成功");
-      router.push("/admin/SpecialCourseLists");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "更新課程失敗，請稍後重試");
-    }
+  // === 圖片/影片處理 ===
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
+    setImageFiles(files);
+    const previews = files.map(f => URL.createObjectURL(f));
+    setImagePreviews(previews);
   };
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("video/"));
+    setVideoFiles(files);
+    const previews = files.map(f => URL.createObjectURL(f));
+    setVideoPreviews(previews);
+  };
+
+  // === 建立特殊課程 ===
   const handleCreateCourse = async (data: CourseDateForm) => {
-    if (!selectedCourse) {
-      toast.info("請選擇課程");
+    if (!selectedCourse || dateRangeError) {
+      toast.error(dateRangeError || "請選擇課程");
       return;
     }
 
-    if (dateRangeError) {
-      toast.error(dateRangeError);
-      return;
-    }
+    const formData = new FormData();
+    formData.append("title", selectedCourse.title);
+    formData.append("description", selectedCourse.description);
+    formData.append("courseCode", selectedCourse.courseCode);
+    formData.append("schoolName", selectedCourse.schoolName);
+    formData.append("numberOfDays", String(selectedCourse.numberOfDays));
+    formData.append("timeHours", String(selectedCourse.timeHours));
+    formData.append("teacher", JSON.stringify(selectedCourse.teacher));
+    formData.append("teacherId", selectedCourse.teacherId);
+    formData.append("isPublic", String(selectedCourse.isPublic));
+    formData.append("isProduct", String(selectedCourse.isProduct));
+    formData.append("type", JSON.stringify(selectedCourse.type));
+    formData.append("courseModulId", selectedCourse.courseModulId || "");
+    formData.append("startDate", data.startDate || "");
+    formData.append("endDate", data.endDate || "");
+    formData.append("Coursedates", JSON.stringify(calendarDates));
+    formData.append("weekday", data.weekday || "");
+    formData.append("classroom", data.classroom || "");
+    formData.append("maxStudents", data.maxStudents?.toString() || "");
+
+    // Product 欄位
+    formData.append("price", data.price.toString());
+    formData.append("real_price", data.real_price.toString());
+    if (data.Target_Audience) formData.append("Target_Audience", data.Target_Audience);
+    if (data.Course_Objective) formData.append("Course_Objective", data.Course_Objective);
+    if (data.Applicable_Scenarios) formData.append("Applicable_Scenarios", data.Applicable_Scenarios);
+
+    // 時間段數據
+    const timeRangesData = data.timeRanges?.map((tr) => ({
+      timeRange: tr.timeRange,
+      starttime: tr.startTime,
+      endtime: tr.endTime,
+    })) || [];
+    
+    formData.append("SpecialCourseTimeRanges", JSON.stringify(timeRangesData));
+
+    // 檔案
+    imageFiles.forEach(f => formData.append("images", f));
+    videoFiles.forEach(f => formData.append("videos", f));
 
     try {
-      const response = await fetch(`/api/SpecialCourse/Create_SpecialCourse`, {
+      const res = await fetch("/api/SpecialCourse/Create_SpecialCourse", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: selectedCourse.title,
-          description: selectedCourse.description,
-          courseCode: selectedCourse.courseCode,
-          schoolName: selectedCourse.schoolName,
-          numberOfDays: selectedCourse.numberOfDays,
-          numberOfStudents: selectedCourse.numberOfStudents || 1,
-          maxStudents: data.maxStudents, // 新增
-          timeHours: selectedCourse.timeHours,
-          teacher: selectedCourse.teacher,
-          teacherId: selectedCourse.teacherId,
-          isPublic: selectedCourse.isPublic,
-          isProduct: selectedCourse.isProduct,
-          Producted: selectedCourse.Producted,
-          type: selectedCourse.type,
-          courseModulId: selectedCourse.courseModulId,
-          startDate: data.startDate,
-          endDate: data.endDate,
-          Coursedates: calendarDates,
-          weekday: data.weekday,
-          classroom: data.classroom,
-          CourseTimeRanges: data.timeRanges?.map((tr) => ({
-            timeRange: tr.timeRange,
-            starttime: tr.startTime,
-            endtime: tr.endTime,
-          })) || [],
-        }),
+        body: formData,
       });
-      if (!response.ok) {
-        throw new Error(`創建失敗: ${response.status}`);
-      }
-      const newCourse = await response.json();
-      setSpecialCourses([...specialCourses, {
-        ...newCourse,
-        courseDates: newCourse.Coursedates || [],
-        courseTimeRanges: newCourse.CourseTimeRanges || [],
-        maxStudents: newCourse.maxStudents, // 新增
-        Students: newCourse.Students || [], // 新增
-      }]);
-      setSelectedCourse({
-        ...newCourse,
-        courseDates: newCourse.Coursedates || [],
-        courseTimeRanges: newCourse.CourseTimeRanges || [],
-        maxStudents: newCourse.maxStudents, // 新增
-        Students: newCourse.Students || [], // 新增
-      });
+      if (!res.ok) throw new Error("創建失敗");
       toast.success("特殊課程創建成功");
       router.push("/admin/SpecialCourseLists");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "創建課程失敗，請稍後重試");
+    } catch {
+      toast.error("創建失敗");
     }
   };
 
+  // === 月曆事件 ===
   const handleDateClick = (arg: { dateStr: string }) => {
-    if (!selectedCourse) {
-      toast.info("請選擇課程");
-      return;
-    }
-
+    if (!selectedCourse) return toast.info("請選擇課程");
     const clickedDate = arg.dateStr;
-    if (startDate && startDate !== "" && endDate && endDate !== "") {
-      const start = parseISO(startDate);
-      const end = parseISO(endDate);
-      const clicked = parseISO(clickedDate);
-      if (clicked < start || clicked > end) {
-        toast.info("只能在開始日期和結束日期之間選擇日期");
-        return;
-      }
-    }
-
-    if (selectedWeekday && selectedWeekday !== "") {
-      const clicked = parseISO(clickedDate);
-      if (getDay(clicked) !== parseInt(selectedWeekday)) {
-        toast.info(`只能選擇${weekdays.find(w => w.value === selectedWeekday)?.label}的日期`);
-        return;
-      }
-    }
-
-    let updatedDates: string[];
-    if (calendarDates.includes(clickedDate)) {
-      updatedDates = calendarDates.filter((date) => date !== clickedDate);
-    } else {
-      updatedDates = [...calendarDates, clickedDate];
-    }
+    
+    // 修復：使用 const 而不是 let
+    const updatedDates = calendarDates.includes(clickedDate)
+      ? calendarDates.filter(d => d !== clickedDate)
+      : [...calendarDates, clickedDate];
 
     if (updatedDates.length > selectedCourse.numberOfDays) {
-      toast.info(`課程日期數量不能超過 ${selectedCourse.numberOfDays} 天`);
+      toast.info(`最多 ${selectedCourse.numberOfDays} 天`);
       return;
     }
-
     setCalendarDates(updatedDates);
   };
 
@@ -1133,7 +1099,7 @@ useEffect(() => {
     const newDate = format(info.event.start!, "yyyy-MM-dd");
     const oldDate = info.oldEvent.start ? format(info.oldEvent.start, "yyyy-MM-dd") : null;
 
-    if (startDate && startDate !== "" && endDate && endDate !== "") {
+    if (startDate && endDate && startDate !== "" && endDate !== "") {
       const start = parseISO(startDate);
       const end = parseISO(endDate);
       const newDateParsed = parseISO(newDate);
@@ -1153,9 +1119,10 @@ useEffect(() => {
       }
     }
 
-    let updatedDates = [...calendarDates];
+    // 修復：使用 const 而不是 let
+    const updatedDates = [...calendarDates];
     if (oldDate && calendarDates.includes(oldDate)) {
-      updatedDates = updatedDates.filter((date) => date !== oldDate);
+      updatedDates.splice(updatedDates.indexOf(oldDate), 1);
     }
     if (!updatedDates.includes(newDate)) {
       updatedDates.push(newDate);
@@ -1170,18 +1137,7 @@ useEffect(() => {
     setCalendarDates(updatedDates);
   };
 
-  useEffect(() => {
-    const handleProductCreated = () => {
-      setIsProductModalOpen(false);
-      toast.success("產品已成功創建，modal 已關閉");
-    };
-    window.addEventListener("productCreated", handleProductCreated);
-    return () => {
-      window.removeEventListener("productCreated", handleProductCreated);
-    };
-  }, []);
-
-  const calendarEvents = calendarDates.map((date) => ({
+  const calendarEvents = calendarDates.map(date => ({
     title: selectedCourse?.title || "課程",
     date,
     allDay: true,
@@ -1190,138 +1146,109 @@ useEffect(() => {
     textColor: "#ffffff",
   }));
 
-  if (isLoading) {
-    return <div className="text-center py-10 text-white">載入中...</div>;
-  }
+  if (isLoading) return <div className="text-center py-10 text-white">載入中...</div>;
+
+  console.log("courses : ", courses , "-- End --");
+  console.log("selectedCourse timeRanges:", selectedCourse?.courseTimeRanges);
 
   return (
     <div className="bg-gray-800 text-white min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link href="/admin/CourseLists" className="text-blue-400 hover:underline mb-4 inline-block">
-          返回
-        </Link>
+        <Link href="/admin/SpecialCourseLists" className="text-blue-400 hover:underline mb-4 inline-block">返回</Link>
         <h1 className="text-2xl font-bold mb-6">安排特別課程</h1>
-        {dateRangeError && (
-          <div className="bg-red-600 text-white p-4 rounded-md mb-6">
-            {dateRangeError}
-          </div>
-        )}
+
+        {dateRangeError && <div className="bg-red-600 text-white p-4 rounded-md mb-6">{dateRangeError}</div>}
+
         <div className="flex flex-col md:flex-row gap-6">
+          {/* 左側：課程選擇 + 表單 */}
           <div className="md:w-1/2 flex flex-col gap-6">
             <div className="bg-gray-700 rounded-md p-4 shadow-lg">
               <h2 className="text-lg font-semibold mb-4">課程列表</h2>
               <div className="flex gap-4">
                 <div className="w-1/2 space-y-2 max-h-96 overflow-y-auto">
                   <h3 className="text-md font-medium">普通課程</h3>
-                  {courses.length > 0 ? (
-                    courses.map((course) => (
-                      <div
-                        key={course.id}
-                        onClick={() => setSelectedCourse(course)}
-                        className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${
-                          selectedCourse?.id === course.id ? "bg-gray-600" : ""
-                        }`}
-                      >
-                        <p className="font-medium">{course.title}</p>
-                        <p className="text-sm text-gray-300">{course.courseCode}</p>
-                        <p className="text-sm text-gray-300">
-                          狀態: {course.Producted ? "已成為產品" : "未成為產品"}
-                        </p>
-                        <p className="text-sm text-gray-300">
-                          學生數: {course.Students.length} / {course.maxStudents ?? "無上限"}
-                          {isCourseFull(course) && (
-                            <span className="ml-2 text-red-400 font-medium">已滿</span>
-                          )}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400">沒有普通課程</p>
-                  )}
+                  {courses.map(course => (
+                    <div
+                      key={course.id}
+                      onClick={() => setSelectedCourse(course)}
+                      className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${selectedCourse?.id === course.id ? "bg-gray-600" : ""}`}
+                    >
+                      <p className="font-medium">{course.title}</p>
+                      <p className="text-sm text-gray-300">{course.courseCode}</p>
+                      <p className="text-sm text-gray-300">學生: {(course.Students?.length || 0)} / {course.maxStudents ?? "無上限"}</p>
+                      <p className="text-xs text-gray-400">時間段: {course.courseTimeRanges?.length || 0} 個</p>
+                    </div>
+                  ))}
                 </div>
                 <div className="w-1/2 space-y-2 max-h-96 overflow-y-auto">
                   <h3 className="text-md font-medium">特殊課程</h3>
-                  {specialCourses.length > 0 ? (
-                    specialCourses.map((course) => (
-                      <div
-                        key={course.id}
-                        onClick={() => setSelectedCourse(course)}
-                        className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${
-                          selectedCourse?.id === course.id ? "bg-gray-600" : ""
-                        }`}
-                      >
-                        <p className="font-medium">{course.title}</p>
-                        <p className="text-sm text-gray-300">{course.courseCode}</p>
-                        <p className="text-sm text-gray-300">
-                          狀態: {course.Producted ? "已成為產品" : "未成為產品"}
-                        </p>
-                        <p className="text-sm text-gray-300">
-                          學生數: {course.Students.length} / {course.maxStudents ?? "無上限"}
-                          {isCourseFull(course) && (
-                            <span className="ml-2 text-red-400 font-medium">已滿</span>
-                          )}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400">沒有特殊課程</p>
-                  )}
+                  {specialCourses.map(course => (
+                    <div
+                      key={course.id}
+                      onClick={() => setSelectedCourse(course)}
+                      className={`p-3 rounded-md cursor-pointer hover:bg-gray-600 ${selectedCourse?.id === course.id ? "bg-gray-600" : ""}`}
+                    >
+                      <p className="font-medium">{course.title}</p>
+                      <p className="text-sm text-gray-300">{course.courseCode}</p>
+                      <p className="text-xs text-gray-400">時間段: {course.courseTimeRanges?.length || 0} 個</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {selectedCourse && (
               <div className="bg-gray-700 rounded-md p-4 shadow-lg">
-                <h2 className="text-lg font-semibold mb-4">課程詳情</h2>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium">開始日期</label>
-                    <Input
-                      type="date"
-                      {...register("startDate")}
-                      className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                    />
-                    {errors.startDate && (
-                      <p className="text-red-500 text-sm">{errors.startDate.message}</p>
-                    )}
+                <h2 className="text-lg font-semibold mb-4">課程詳情 - {selectedCourse.title}</h2>
+                <form onSubmit={handleSubmit(handleCreateCourse)} className="space-y-4">
+                  <Input type="date" {...register("startDate")} placeholder="開始日期" />
+                  <Input type="date" {...register("endDate")} placeholder="結束日期" />
+                  <Input 
+                    type="number" 
+                    {...register("maxStudents", { valueAsNumber: true })} 
+                  />
+                  <Label htmlFor="maxStudents" className="text-sm font-medium text-gray-300">
+                    人數上限
+                  </Label>
+
+                  {/* Product 欄位 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Input 
+                        type="number" 
+                        {...register("price", { valueAsNumber: true })} 
+                      />
+                      <Label htmlFor="price" className="text-sm font-medium text-gray-300">
+                        原價
+                      </Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Input 
+                        type="number" 
+                        {...register("real_price", { valueAsNumber: true })} 
+                      />
+                      <Label htmlFor="real_price" className="text-sm font-medium text-gray-300">
+                        實價
+                      </Label>
+                    </div>
                   </div>
+                  <Textarea {...register("Target_Audience")} placeholder="目標觀眾" />
+                  <Textarea {...register("Course_Objective")} placeholder="課程目標" />
+                  <Textarea {...register("Applicable_Scenarios")} placeholder="適用場景" />
+
+                  {/* === 時間段 === */}
                   <div>
-                    <label className="block text-sm font-medium">結束日期</label>
-                    <Input
-                      type="date"
-                      {...register("endDate")}
-                      className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                    />
-                    {errors.endDate && (
-                      <p className="text-red-500 text-sm">{errors.endDate.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">人數上限（可選）</label>
-                    <Input
-                      type="number"
-                      {...register("maxStudents", { valueAsNumber: true })}
-                      className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                      placeholder="輸入人數上限（可選）"
-                    />
-                    {errors.maxStudents && (
-                      <p className="text-red-500 text-sm">{errors.maxStudents.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium">時間段</label>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {selectedCourse &&
-                      Array.isArray(selectedCourse.courseTimeRanges) &&
-                      selectedCourse.courseTimeRanges.length > 0 ? (
+                    <label className="block text-sm font-medium mb-2">時間段</label>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedCourse.courseTimeRanges && selectedCourse.courseTimeRanges.length > 0 ? (
                         selectedCourse.courseTimeRanges.map((range) => (
                           <Button
                             key={range.id}
                             type="button"
                             onClick={() => handleTimeRangeToggle(range.timeRange)}
-                            className={`px-4 py-2 rounded-md ${
-                              formTimeRanges && formTimeRanges.findIndex((tr) => tr.timeRange === range.timeRange) >= 0
-                                ? "bg-blue-600"
+                            className={`px-4 py-2 rounded-md transition-colors ${
+                              formTimeRanges?.some((tr) => tr.timeRange === range.timeRange)
+                                ? "bg-blue-600 hover:bg-blue-700"
                                 : "bg-gray-600 hover:bg-gray-500"
                             }`}
                           >
@@ -1329,92 +1256,99 @@ useEffect(() => {
                           </Button>
                         ))
                       ) : (
-                        <p className="text-gray-400">無可用時間段</p>
+                        <p className="text-gray-400 text-sm">此課程未定義可用時間段</p>
                       )}
                     </div>
+
+                    {fields.map((field, index) => {
+                      const timeRangeKey = field.timeRange as keyof typeof timeRangeOptions;
+                      const defaultRange = timeRangeOptions[timeRangeKey];
+
+                      return (
+                        <div
+                          key={field.id}
+                          className="space-y-3 border border-gray-600 rounded-md p-4 mb-4 bg-gray-750"
+                        >
+                          <div className="flex justify-between items-center">
+                            <h4 className="text-sm font-medium text-blue-400">
+                              {defaultRange?.label || field.timeRange}
+                            </h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => remove(index)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              移除
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-300">開始時間</label>
+                              <Input
+                                type="time"
+                                {...register(`timeRanges.${index}.startTime`)}
+                                min={defaultRange?.start}
+                                max={defaultRange?.end}
+                                className="mt-1 bg-gray-800 border-gray-600 text-white text-sm"
+                                placeholder={defaultRange?.start}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-300">結束時間</label>
+                              <Input
+                                type="time"
+                                {...register(`timeRanges.${index}.endTime`)}
+                                min={watch(`timeRanges.${index}.startTime`) || defaultRange?.start}
+                                max={defaultRange?.end}
+                                className="mt-1 bg-gray-800 border-gray-600 text-white text-sm"
+                                placeholder={defaultRange?.end}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="space-y-2 border-b border-gray-600 pb-4">
-                      <h3 className="text-sm font-medium">
-                        {timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.label || field.timeRange}
-                      </h3>
-                      <div>
-                        <label className="block text-sm font-medium">開始時間</label>
-                        <Input
-                          type="time"
-                          {...register(`timeRanges.${index}.startTime`)}
-                          min={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.start}
-                          max={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.end}
-                          className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                        />
-                        {errors.timeRanges?.[index]?.startTime && (
-                          <p className="text-red-500 text-sm">{errors.timeRanges[index]?.startTime?.message}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium">結束時間</label>
-                        <Input
-                          type="time"
-                          {...register(`timeRanges.${index}.endTime`)}
-                          min={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.start}
-                          max={timeRangeOptions[field.timeRange as keyof typeof timeRangeOptions]?.end}
-                          className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                        />
-                        {errors.timeRanges?.[index]?.endTime && (
-                          <p className="text-red-500 text-sm">{errors.timeRanges[index]?.endTime?.message}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+
+                  {/* 圖片上傳 */}
                   <div>
-                    <label className="block text-sm font-medium">週份</label>
-                    <select
-                      {...register("weekday")}
-                      className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                    >
-                      <option value="">選擇星期</option>
-                      {weekdays.map((weekday) => (
-                        <option key={weekday.value} value={weekday.value}>
-                          {weekday.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.weekday && (
-                      <p className="text-red-500 text-sm">{errors.weekday.message}</p>
+                    <label className="block text-sm font-medium mb-1">課程圖片</label>
+                    <Input type="file" multiple accept="image/*" onChange={handleImageChange} />
+                    {imagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        {imagePreviews.map((src, i) => (
+                          <Image key={i} src={src} alt="" width={100} height={100} className="rounded object-cover" />
+                        ))}
+                      </div>
                     )}
                   </div>
+
+                  {/* 影片上傳 */}
                   <div>
-                    <label className="block text-sm font-medium">課室</label>
-                    <Input
-                      type="text"
-                      {...register("classroom")}
-                      className="mt-1 block w-full rounded-md bg-gray-800 border-gray-600 text-white p-2"
-                      placeholder="輸入課室名稱（可選）"
-                    />
-                    {errors.classroom && (
-                      <p className="text-red-500 text-sm">{errors.classroom.message}</p>
+                    <label className="block text-sm font-medium mb-1">課程影片</label>
+                    <Input type="file" multiple accept="video/*" onChange={handleVideoChange} />
+                    {videoPreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        {videoPreviews.map((src, i) => (
+                          <video key={i} src={src} controls className="w-full h-24 rounded object-cover" />
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-4">
-                    <Button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700"
-                    >
-                      更新課程
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSubmit(handleCreateCourse)}
-                      className="px-4 py-2 bg-green-600 rounded-md hover:bg-green-700"
-                    >
-                      建立課程
-                    </Button>
-                  </div>
+
+                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                    建立課程
+                  </Button>
                 </form>
               </div>
             )}
           </div>
 
+          {/* 右側：月曆 */}
           <div className="md:w-1/2">
             <div className="bg-gray-700 rounded-md p-4 shadow-lg">
               <h2 className="text-lg font-semibold mb-4">課程月曆</h2>
@@ -1426,9 +1360,6 @@ useEffect(() => {
                 dateClick={handleDateClick}
                 editable={true}
                 selectable={true}
-                eventBackgroundColor="#2563eb"
-                eventBorderColor="#2563eb"
-                eventTextColor="#ffffff"
                 headerToolbar={{
                   left: "prev,next today",
                   center: "title",
@@ -1437,35 +1368,12 @@ useEffect(() => {
                 height="auto"
                 eventDrop={handleEventDrop}
                 validRange={
-                  startDate && startDate !== "" && endDate && endDate !== ""
-                    ? {
-                        start: parseISO(startDate),
-                        end: addDays(parseISO(endDate), 1),
-                      }
+                  startDate && endDate && startDate !== "" && endDate !== ""
+                    ? { start: parseISO(startDate), end: addDays(parseISO(endDate), 1) }
                     : undefined
                 }
               />
             </div>
-            {selectedCourse && (
-              <div className="mt-4">
-                <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={() => setIsProductModalOpen(true)}
-                      className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700"
-                    >
-                      建立商品
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>基於課程建立商品</DialogTitle>
-                    </DialogHeader>
-                    <Create_SpecialCourse_Product_Form initialCourse={selectedCourse} />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
           </div>
         </div>
       </div>

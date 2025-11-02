@@ -1,23 +1,27 @@
+// app/api/SpecialCourse/Get_SpecialCourse_by_ID/[id]/route.ts
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params; // 等待 params Promise 解析
+    const { id } = await params;
 
-    const res = await db.specialCourse.findUnique({
-      where: {
-        id: String(id), // 確保 id 是字符串類型
+    const course = await db.specialCourse.findUnique({
+      where: { id: String(id) },
+      include: {
+        SpecialCourseTimeRanges: {
+          select: { id: true, timeRange: true, starttime: true, endtime: true },
+        },
       },
     });
 
-    if (!res) {
-      return NextResponse.json({ error: "申請記錄未找到" }, { status: 404 });
+    if (!course) {
+      return NextResponse.json({ error: "課程不存在" }, { status: 404 });
     }
 
-    return NextResponse.json(res);
+    return NextResponse.json(course);
   } catch (error) {
-    console.error("獲取申請記錄失敗：", error);
-    return NextResponse.json({ error: "內部服務器錯誤" }, { status: 500 });
+    console.error("獲取課程失敗：", error);
+    return NextResponse.json({ error: "內部錯誤" }, { status: 500 });
   }
 }

@@ -1,276 +1,3 @@
-// "use client";
-
-// import { useEffect, useState, useTransition } from 'react';
-
-// import { useParams, useRouter } from 'next/navigation';
-// import { useSession } from 'next-auth/react';
-// import toast from 'react-hot-toast';
-// import YouTube from 'react-youtube';
-// import { addSpcialCourseToCart } from '@/app/actions/cart/add-spcialCourse-cart';
-
-// // 定義 specialCourseData 的接口，與回傳數據匹配
-// interface SpecialCourseData {
-//   id: string;
-//   title: string;
-//   description: string;
-//   courseCode: string;
-//   schoolName: string;
-//   numberOfDays: number;
-//   numberOfStudents: number;
-//   timeHours: number;
-//   timeRange: string[];
-//   startDate: string | null;
-//   endDate: string | null;
-//   Coursedates: string[];
-//   weekday: string | null;
-//   classroom: string | null;
-//   teacher: string[];
-//   teacherId: string;
-//   isPublic: boolean;
-//   isProduct: boolean;
-//   Producted: boolean;
-//   type: string[];
-//   courseModulId: string | null;
-//   createdAt: string;
-//   updatedAt: string;
-//   price: number | null;
-//   IMG_URL: string | null;
-//   Video_URL: string | null;
-//   SpecialCourseTimeRanges?: {
-//     id: string;
-//     timeRange: "morning" | "afternoon" | "evening" | "full_day";
-//     starttime: string | null;
-//     endtime: string | null;
-//   }[];
-// }
-
-// // 輔助函數：從 YouTube URL 提取影片 ID
-// const getYouTubeVideoId = (url: string | null): string | null => {
-//   if (!url) return null;
-//   const regex = /[?&]v=([^&#]*)/;
-//   const match = url.match(regex);
-//   return match ? match[1] : null;
-// };
-
-// const SpecialCourseById = () => {
-//   const params = useParams();
-//   const router = useRouter();
-//   const specialCourseId = params.specialCourseId as string;
-//   const [specialCourseData, setSpecialCourseData] = useState<SpecialCourseData | null>(null);
-//   const { data: session, status } = useSession();
-//   const [error, setError] = useState<string | null>(null);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [isPending, startTransition] = useTransition();
-
-//   useEffect(() => {
-//     const fetchSpecialCourseData = async () => {
-//       try {
-//         setIsLoading(true);
-//         const response = await fetch(`/api/SpecialCourse/Get_SpecialCourse_by_ID/${specialCourseId}`);
-//         if (!response.ok) {
-//           throw new Error(`請求失敗: ${response.status}`);
-//         }
-//         const data = await response.json();
-//         setSpecialCourseData(data);
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "無法獲取特殊課程數據");
-//         toast.error(err instanceof Error ? err.message : "無法獲取特殊課程數據");
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-
-//     if (specialCourseId) {
-//       fetchSpecialCourseData();
-//     }
-//   }, [specialCourseId]);
-
-//   console.log("specialCourseData : ", specialCourseData, "-- End --");
-
-//   const handleAddToCart = () => {
-//     if (!specialCourseData?.isPublic) {
-//       toast.error("此課程不公開，無法加入購物車");
-//       return;
-//     }
-
-//     if (specialCourseData?.price == null) {
-//       toast.error("此課程未設置價格，無法加入購物車");
-//       return;
-//     }
-
-//     if (status === 'unauthenticated') {
-//       toast.error('請先登入以加入購物車');
-//       router.push('/login');
-//       return;
-//     }
-
-//     startTransition(async () => {
-//       try {
-//         await addSpcialCourseToCart(specialCourseId, 1);
-//         toast.success("課程已加入購物車");
-//         const userId = session?.user?.id;
-//         if (userId) {
-//           router.push(`/user/${userId}/cart`);
-//         }
-//       } catch (error) {
-//         console.error('加入購物車失敗:', error);
-//         toast.error(
-//           error instanceof Error ? `加入購物車失敗：${error.message}` : '無法加入購物車'
-//         );
-//       }
-//     });
-//   };
-
-//   // YouTube 播放器配置
-//   const youtubeOpts = {
-//     height: '360',
-//     width: '640',
-//     playerVars: {
-//       autoplay: 0,
-//     },
-//   };
-
-//   return (
-//     <div className="bg-gray-800 text-white min-h-screen">
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//         <div className="flex justify-between items-center mb-6">
-//           <h1 className="text-2xl font-bold">特殊課程詳情</h1>
-//         </div>
-
-//         {error && (
-//           <div className="bg-red-600 text-white p-4 rounded-md mb-6">
-//             {error}
-//           </div>
-//         )}
-
-//         {isLoading ? (
-//           <div className="text-center py-10">載入中...</div>
-//         ) : !specialCourseData ? (
-//           <div className="text-center py-10 text-gray-400">未找到課程數據</div>
-//         ) : (
-//           <div className="bg-gray-700 rounded-md p-6 shadow-lg">
-//             <h2 className="text-lg font-semibold mb-4">{specialCourseData.title}</h2>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">課程代碼:</span> {specialCourseData.courseCode}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">描述:</span> {specialCourseData.description}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">價格:</span>{" "}
-//               {specialCourseData.price != null ? `$${specialCourseData.price}` : "未設置"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">學校:</span> {specialCourseData.schoolName}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">天數:</span> {specialCourseData.numberOfDays}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">學生數:</span> {specialCourseData.numberOfStudents}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">課程時數:</span> {specialCourseData.timeHours}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">開始日期:</span>{" "}
-//               {specialCourseData.startDate || "未設置"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">結束日期:</span>{" "}
-//               {specialCourseData.endDate || "未設置"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">教師:</span>{" "}
-//               {specialCourseData.teacher.join(", ") || "無"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">課室:</span>{" "}
-//               {specialCourseData.classroom || "未設置"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">星期:</span>{" "}
-//               {specialCourseData.weekday || "未設置"}
-//             </p>
-//             <p className="text-sm text-gray-300 mb-2">
-//               <span className="font-medium">課程日期:</span>{" "}
-//               {specialCourseData.Coursedates.length > 0
-//                 ? specialCourseData.Coursedates.join(", ")
-//                 : "無"}
-//             </p>
-
-//             {/* 顯示圖片 */}
-//             {specialCourseData.IMG_URL ? (
-//               <div className="mt-4">
-//                 <img
-//                   src={specialCourseData.IMG_URL}
-//                   alt={specialCourseData.title}
-//                   className="max-w-full h-auto rounded-md object-cover"
-//                   onError={(e) => {
-//                     e.currentTarget.src = '/placeholder-image.jpg'; // 圖片載入失敗時的備用圖片
-//                     toast.error('無法載入課程圖片');
-//                   }}
-//                 />
-//               </div>
-//             ) : (
-//               <div className="mt-4 text-sm text-gray-400">無課程圖片</div>
-//             )}
-
-//             {/* 顯示 YouTube 影片 */}
-//             {specialCourseData.Video_URL && (
-//               <div className="mt-4">
-//                 <h3 className="text-md font-semibold mb-2">課程影片</h3>
-//                 {getYouTubeVideoId(specialCourseData.Video_URL) ? (
-//                   <div className="relative w-full" style={{ paddingTop: '56.25%' /* 16:9 長寬比 */ }}>
-//                     <YouTube
-//                       videoId={getYouTubeVideoId(specialCourseData.Video_URL)!}
-//                       opts={youtubeOpts}
-//                       className="absolute top-0 left-0 w-full h-full"
-//                       onError={() => toast.error('無法載入 YouTube 影片')}
-//                     />
-//                   </div>
-//                 ) : (
-//                   <div className="text-sm text-gray-400">無效的 YouTube 影片網址</div>
-//                 )}
-//               </div>
-//             )}
-
-//             {specialCourseData.SpecialCourseTimeRanges && specialCourseData.SpecialCourseTimeRanges.length > 0 && (
-//               <div className="mt-4">
-//                 <h3 className="text-md font-semibold mb-2">時間範圍</h3>
-//                 {specialCourseData.SpecialCourseTimeRanges.map((tr) => (
-//                   <p key={tr.id} className="text-sm text-gray-300 mb-1">
-//                     <span className="font-medium">{tr.timeRange}:</span>{" "}
-//                     {tr.starttime || "未設置"} - {tr.endtime || "未設置"}
-//                   </p>
-//                 ))}
-//               </div>
-//             )}
-
-//             <div className="mt-6 flex justify-center space-x-4">
-//               <button
-//                 onClick={handleAddToCart}
-//                 className={`px-6 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition ${
-//                   isPending || !session || specialCourseData.price == null
-//                     ? 'opacity-50 cursor-not-allowed'
-//                     : ''
-//                 }`}
-//                 disabled={isPending || !session || specialCourseData.price == null}
-//               >
-//                 {isPending ? '加入中...' : '加入購物車'}
-//               </button>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SpecialCourseById;
-
-
-
 "use client";
 
 import { useEffect, useState, useTransition } from 'react';
@@ -281,10 +8,27 @@ import Image from 'next/image';
 import YouTube from 'react-youtube';
 import { addSpcialCourseToCart } from '@/app/actions/cart/add-spcialCourse-cart';
 import { format } from 'date-fns';
-import { zhHK } from 'date-fns/locale'; // 引入中文（香港）語言環境
+import { zhHK } from 'date-fns/locale';
+import { Play } from 'lucide-react';
 
+// === 介面定義 ===
+interface ProductImg {
+  id: string;
+  img_url: string;
+}
 
-// 定義 specialCourseData 的接口，與回傳數據匹配
+interface ProductVideo {
+  id: string;
+  video_url: string;
+}
+
+interface SpecialCourseTimeRange {
+  id: string;
+  timeRange: "morning" | "afternoon" | "evening" | "full_day";
+  starttime: string | null;
+  endtime: string | null;
+}
+
 interface SpecialCourseData {
   id: string;
   title: string;
@@ -294,7 +38,11 @@ interface SpecialCourseData {
   numberOfDays: number;
   numberOfStudents: number;
   timeHours: number;
-  timeRange: string[];
+  price: number | null;
+  real_price: number | null;
+  Target_Audience?: string | null;
+  Course_Objective?: string | null;
+  Applicable_Scenarios?: string | null;
   startDate: string | null;
   endDate: string | null;
   Coursedates: string[];
@@ -302,30 +50,43 @@ interface SpecialCourseData {
   classroom: string | null;
   teacher: string[];
   teacherId: string;
-  isPublic: boolean;
-  isProduct: boolean;
-  Producted: boolean;
-  type: string[];
-  courseModulId: string | null;
   createdAt: string;
   updatedAt: string;
-  price: number | null;
-  IMG_URL: string | null;
-  Video_URL: string | null;
-  SpecialCourseTimeRanges?: {
-    id: string;
-    timeRange: "morning" | "afternoon" | "evening" | "full_day";
-    starttime: string | null;
-    endtime: string | null;
-  }[];
+
+IMG_URL?: ProductImg[] | string;      // ← 允許 string
+  Video_URL?: ProductVideo[] | string;  // ← 允許 string
+  SpecialCourseTimeRanges?: SpecialCourseTimeRange[];
 }
 
-// 輔助函數：從 YouTube URL 提取影片 ID
-const getYouTubeVideoId = (url: string | null): string | null => {
-  if (!url) return null;
-  const regex = /[?&]v=([^&#]*)/;
+// === 工具函數 ===
+const getYouTubeId = (url: string): string | null => {
+  const regex =
+    /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const match = url.match(regex);
   return match ? match[1] : null;
+};
+
+const formatDateWithDay = (dateStr?: string | null) => {
+  if (!dateStr) return '未設置';
+  try {
+    const date = new Date(dateStr);
+    return `${format(date, 'yyyy-MM-dd', { locale: zhHK })} (${format(date, 'EEEE', { locale: zhHK })})`;
+  } catch {
+    return '無效日期';
+  }
+};
+
+const formatTime = (time: string | null | undefined): string => {
+  if (time == null) return '未設置';
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+  return timeRegex.test(time) ? time : '無效時間';
+};
+
+// === 驗證圖片 URL 是否有效 ===
+const isValidImageUrl = (url: string): boolean => {
+  if (!url || url.trim() === '') return false;
+  // 必須以 http(s) 開頭，且有副檔名 (jpg, jpeg, png, gif, webp)
+  return /^https?:\/\/.+\.(jpe?g|png|gif|webp|svg)$/i.test(url);
 };
 
 const SpecialCourseById = () => {
@@ -343,33 +104,23 @@ const SpecialCourseById = () => {
       try {
         setIsLoading(true);
         const response = await fetch(`/api/SpecialCourse/Get_SpecialCourse_by_ID/${specialCourseId}`);
-        if (!response.ok) {
-          throw new Error(`請求失敗: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`請求失敗: ${response.status}`);
         const data = await response.json();
         setSpecialCourseData(data);
-      } catch (_err) {
-        setError(_err instanceof Error ? _err.message : "無法獲取特殊課程數據");
-        toast.error(_err instanceof Error ? _err.message : "無法獲取特殊課程數據");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "無法獲取特殊課程數據");
+        toast.error(err instanceof Error ? err.message : "無法獲取特殊課程數據");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (specialCourseId) {
-      fetchSpecialCourseData();
-    }
+    if (specialCourseId) fetchSpecialCourseData();
   }, [specialCourseId]);
 
-  console.log("specialCourseData : ", specialCourseData, "-- End --");
-
   const handleAddToCart = () => {
-    if (!specialCourseData?.isPublic) {
-      toast.error("此課程不公開，無法加入購物車");
-      return;
-    }
-
-    if (specialCourseData?.price == null) {
+    const displayPrice = specialCourseData?.real_price ?? specialCourseData?.price;
+    if (displayPrice == null) {
       toast.error("此課程未設置價格，無法加入購物車");
       return;
     }
@@ -385,172 +136,213 @@ const SpecialCourseById = () => {
         await addSpcialCourseToCart(specialCourseId, 1);
         toast.success("課程已加入購物車");
         const userId = session?.user?.id;
-        if (userId) {
-          router.push(`/user/${userId}/cart`);
-        }
+        if (userId) router.push(`/user/${userId}/cart`);
       } catch (error) {
         console.error('加入購物車失敗:', error);
-        toast.error(
-          error instanceof Error ? `加入購物車失敗：${error.message}` : '無法加入購物車'
-        );
+        toast.error(error instanceof Error ? `加入購物車失敗：${error.message}` : '無法加入購物車');
       }
     });
   };
 
-  // YouTube 播放器配置
-  const youtubeOpts = {
-    height: '360',
-    width: '640',
-    playerVars: {
-      autoplay: 0,
-    },
+  const opts = {
+    height: '315',
+    width: '100%',
+    playerVars: { autoplay: 0, rel: 0, modestbranding: 1 },
   };
 
-// 格式化日期並添加星期
-const formatDateWithDay = (dateStr?: string | null) => {
-  if (!dateStr) return '未設置';
-  try {
-    const date = new Date(dateStr);
-    return `${format(date, 'yyyy-MM-dd', { locale: zhHK })} (${format(date, 'EEEE', { locale: zhHK })})`;
-  } catch {
-    return '無效日期';
-  }
-};
+    // === 安全處理：圖片、影片（支援字串或陣列）===
+  const rawImages = specialCourseData?.IMG_URL;
+  const rawVideos = specialCourseData?.Video_URL;
 
+  let images: ProductImg[] = [];
+
+  // 明確檢查：rawImages 是否為 string
+  if (typeof rawImages === 'string') {
+    const trimmed = rawImages.trim();
+    if (trimmed !== '') {
+      images = [{ id: '1', img_url: trimmed }];
+    }
+  } 
+  // 檢查是否為陣列
+  else if (Array.isArray(rawImages)) {
+    images = rawImages.filter((img): img is ProductImg => 
+      typeof img === 'object' && img !== null && typeof img.img_url === 'string'
+    );
+  }
+
+  let videos: ProductVideo[] = [];
+
+  if (typeof rawVideos === 'string') {
+    const trimmed = rawVideos.trim();
+    if (trimmed !== '') {
+      videos = [{ id: '1', video_url: trimmed }];
+    }
+  } 
+  else if (Array.isArray(rawVideos)) {
+    videos = rawVideos.filter((vid): vid is ProductVideo => 
+      typeof vid === 'object' && vid !== null && typeof vid.video_url === 'string'
+    );
+  }
+
+  //找出第一張有效圖片
+  const firstValidImage = images.find(img => 
+    typeof img.img_url === 'string' && isValidImageUrl(img.img_url)
+  ) || null;
+
+
+
+
+  const firstVideo = videos[0];
+  const firstVideoId = firstVideo && typeof firstVideo.video_url === 'string' 
+    ? getYouTubeId(firstVideo.video_url) 
+    : null;
+
+
+  if (isLoading) return <div className="text-center py-10">載入中...</div>;
+
+  if (error || !specialCourseData) {
+    return (
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="bg-red-50 text-red-600 p-4 rounded mb-6">
+          {error || "未找到課程數據"}
+        </div>
+      </div>
+    );
+  }
+  console.log("specialCourseData : ", specialCourseData , "-- End --")
+  console.log("IMG_URL : ", specialCourseData.IMG_URL , "-- End --")
 
   return (
-    <div className="bg-gray-800 text-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">特殊課程詳情</h1>
-        </div>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <h1 className="text-3xl font-bold mb-6">特殊課程詳情</h1>
 
-        {error && (
-          <div className="bg-red-600 text-white p-4 rounded-md mb-6">
-            {error}
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="text-center py-10">載入中...</div>
-        ) : !specialCourseData ? (
-          <div className="text-center py-10 text-gray-400">未找到課程數據</div>
-        ) : (
-          <div className="bg-gray-700 rounded-md p-6 shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">{specialCourseData.title}</h2>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">課程代碼:</span> {specialCourseData.courseCode}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">描述:</span> {specialCourseData.description}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">價格:</span>{" "}
-              {specialCourseData.price != null ? `$${specialCourseData.price}` : "未設置"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">學校:</span> {specialCourseData.schoolName}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">天數:</span> {specialCourseData.numberOfDays}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">學生數:</span> {specialCourseData.numberOfStudents}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">課程時數:</span> {specialCourseData.timeHours}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">開始日期:</span>{" "}
-              {specialCourseData.startDate || "未設置"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">結束日期:</span>{" "}
-              {specialCourseData.endDate || "未設置"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">教師:</span>{" "}
-              {specialCourseData.teacher.join(", ") || "無"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">課室:</span>{" "}
-              {specialCourseData.classroom || "未設置"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">星期:</span>{" "}
-              {specialCourseData.weekday || "未設置"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">課程日期:</span>{" "}
-              {specialCourseData.Coursedates.length > 0
-                ? specialCourseData.Coursedates.map(formatDateWithDay).join(", ")
-                : "無"}
-            </p>
-
-            {/* 顯示圖片 */}
-            {specialCourseData.IMG_URL ? (
-              <div className="mt-4 relative w-full h-64">
-                <Image
-                  src={specialCourseData.IMG_URL}
-                  alt={specialCourseData.title}
-                  fill
-                  className="rounded-md object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  placeholder="blur"
-                  blurDataURL="/placeholder-image.jpg"
-                  onError={() => toast.error('無法載入課程圖片')}
-                />
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 左側 */}
+        <div className="space-y-6">
+          <div>
+            {/* === 僅在有有效圖片時渲染 Image === */}
+            {firstValidImage ? (
+              <Image
+                src={firstValidImage.img_url}
+                alt={specialCourseData.title}
+                width={600}
+                height={450}
+                className="w-full h-auto rounded-lg shadow-md object-cover"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={() => toast.error('無法載入課程圖片')}
+              />
             ) : (
-              <div className="mt-4 text-sm text-gray-400">無課程圖片</div>
-            )}
-
-            {/* 顯示 YouTube 影片 */}
-            {specialCourseData.Video_URL && (
-              <div className="mt-4">
-                <h3 className="text-md font-semibold mb-2">課程影片</h3>
-                {getYouTubeVideoId(specialCourseData.Video_URL) ? (
-                  <div className="relative w-full" style={{ paddingTop: '56.25%' /* 16:9 長寬比 */ }}>
-                    <YouTube
-                      videoId={getYouTubeVideoId(specialCourseData.Video_URL)!}
-                      opts={youtubeOpts}
-                      className="absolute top-0 left-0 w-full h-full"
-                      onError={() => toast.error('無法載入 YouTube 影片')}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-400">無效的 YouTube 影片網址</div>
-                )}
+              <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-96 flex items-center justify-center">
+                <span className="text-gray-500">無圖片</span>
               </div>
             )}
+          </div>
 
-            {specialCourseData.SpecialCourseTimeRanges && specialCourseData.SpecialCourseTimeRanges.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-md font-semibold mb-2">時間範圍</h3>
-                {specialCourseData.SpecialCourseTimeRanges.map((tr) => (
-                  <p key={tr.id} className="text-sm text-gray-300 mb-1">
-                    <span className="font-medium">{tr.timeRange}:</span>{" "}
-                    {tr.starttime || "未設置"} - {tr.endtime || "未設置"}
-                  </p>
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-1">目標觀眾</h4>
+              <p className="text-gray-700 whitespace-pre-line">
+                {specialCourseData.Target_Audience || '未提供'}
+              </p>
+            </div>
 
-            <div className="mt-6 flex justify-center space-x-4">
-              <button
-                onClick={handleAddToCart}
-                className={`px-6 py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition ${
-                  isPending || !session || specialCourseData.price == null
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-                disabled={isPending || !session || specialCourseData.price == null}
-              >
-                {isPending ? '加入中...' : '加入購物車'}
-              </button>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-900 mb-1">課程目標</h4>
+              <p className="text-gray-700 whitespace-pre-line">
+                {specialCourseData.Course_Objective || '未提供'}
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+              <h4 className="font-semibold text-purple-900 mb-1">適用場景</h4>
+              <p className="text-gray-700 whitespace-pre-line">
+                {specialCourseData.Applicable_Scenarios || '未提供'}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* 右側 */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">{specialCourseData.title}</h2>
+            <p className="text-gray-600 mb-4">{specialCourseData.description}</p>
+
+            {/* 安全價格顯示 */}
+            {(() => {
+              const displayPrice = specialCourseData.real_price ?? specialCourseData.price;
+              const formattedPrice = displayPrice != null ? `HK$${displayPrice.toFixed(2)}` : '價格未設置';
+              return (
+                <p className="text-2xl font-bold text-blue-600">
+                  {formattedPrice}
+                </p>
+              );
+            })()}
+          </div>
+
+          {/* 課程資訊 */}
+          <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+            <p><span className="font-semibold">課程代碼：</span> {specialCourseData.courseCode}</p>
+            <p><span className="font-semibold">學校：</span> {specialCourseData.schoolName}</p>
+            <p><span className="font-semibold">天數：</span> {specialCourseData.numberOfDays}</p>
+            <p><span className="font-semibold">學生數：</span> {specialCourseData.numberOfStudents}</p>
+            <p><span className="font-semibold">總時數：</span> {specialCourseData.timeHours} 小時</p>
+            <p><span className="font-semibold">開始日期：</span> {formatDateWithDay(specialCourseData.startDate)}</p>
+            <p><span className="font-semibold">結束日期：</span> {formatDateWithDay(specialCourseData.endDate)}</p>
+            <p><span className="font-semibold">上課日期：</span>
+              {specialCourseData.Coursedates.length > 0
+                ? specialCourseData.Coursedates.map(formatDateWithDay).join(', ')
+                : '無具體日期'}
+            </p>
+            <p><span className="font-semibold">課室：</span> {specialCourseData.classroom || '未設置'}</p>
+            <p><span className="font-semibold">星期：</span> {specialCourseData.weekday || '未設置'}</p>
+            <p><span className="font-semibold">教師：</span> {specialCourseData.teacher.join(', ') || '無'}</p>
+
+            {(specialCourseData.SpecialCourseTimeRanges ?? []).length > 0 ? (
+              specialCourseData.SpecialCourseTimeRanges!.map((t) => (
+                <p key={t.id}>
+                  <span className="font-semibold">{t.timeRange}：</span>
+                  {formatTime(t.starttime)} - {formatTime(t.endtime)}
+                </p>
+              ))
+            ) : (
+              <p><span className="font-semibold">時間範圍：</span>未設置</p>
+            )}
+          </div>
+
+          {/* 影片 */}
+          {videos.length > 0 && firstVideoId && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Play className="w-5 h-5" /> 課程影片
+              </h3>
+              <div className="relative bg-black rounded-lg overflow-hidden">
+                <YouTube
+                  videoId={firstVideoId}
+                  opts={opts}
+                  className="aspect-video"
+                  iframeClassName="w-full h-full"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 加入購物車 */}
+          <div className="flex items-center gap-3 pt-4 border-t">
+            <button
+              onClick={handleAddToCart}
+              disabled={isPending || !session || (specialCourseData.real_price ?? specialCourseData.price) == null}
+              className={`flex-1 py-3 rounded font-medium transition ${
+                isPending || !session || (specialCourseData.real_price ?? specialCourseData.price) == null
+                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isPending ? '加入中...' : '加入課程'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

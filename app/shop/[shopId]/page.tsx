@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { zhHK } from 'date-fns/locale';
 import Image from 'next/image';
 import YouTube from 'react-youtube';
-import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 interface CourseTimeRange {
   id: string;
@@ -80,18 +80,18 @@ export default function ShopPagebyId() {
   const [getProduct, setGetProduct] = useState<ProductDetail | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+
 
   useEffect(() => {
     const fetchProductDataLists = async (id: string) => {
       try {
         const response = await fetch(`/api/product/Get_Product_Lists_by_ID/${id}`);
-        if (!response.ok) throw new Error('無法獲取商品數據');
+        if (!response.ok) throw new Error('無法獲取課程數據');
         const data = await response.json();
         setGetProduct(data);
       } catch (err) {
-        console.error('獲取商品數據失敗:', err);
-        setError('無法載入商品詳情');
+        console.error('獲取課程數據失敗:', err);
+        setError('無法載入課程詳情');
       }
     };
 
@@ -100,7 +100,7 @@ export default function ShopPagebyId() {
 
   const handleAddToCart = () => {
     if (status === 'unauthenticated') {
-      alert('請先登入以加入購物車');
+      alert('請先登入以加入課程');
       router.push('/login');
       return;
     }
@@ -112,7 +112,7 @@ export default function ShopPagebyId() {
         // await addToCart(productId, quantity);
         router.push(`/user/${userId}/cart`);
       } catch (err) {
-        setError(err instanceof Error ? `加入購物車失敗：${err.message}` : '無法加入購物車');
+        setError(err instanceof Error ? `加入課程失敗：${err.message}` : '無法加入課程');
       }
     });
   };
@@ -124,16 +124,19 @@ export default function ShopPagebyId() {
   };
 
   const videos = getProduct?.Product_video || [];
-  const currentVideo = videos[currentVideoIndex];
-  const currentVideoId = currentVideo ? getYouTubeId(currentVideo.video_url) : null;
+const firstVideo = videos[0];
+const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
 
   if (!getProduct) {
     return <div className="text-center py-10">{error ?? '載入中...'}</div>;
   }
 
+
+  console.log("getProduct : ", getProduct , "-- End --")
+
   return (
     <div className="container mx-auto p-4 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-6">商品詳情</h1>
+      <h1 className="text-3xl font-bold mb-6">課程詳情</h1>
       {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4">{error}</div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -161,20 +164,28 @@ export default function ShopPagebyId() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
               <h4 className="font-semibold text-blue-900 mb-1">目標觀眾</h4>
-              <p className="text-gray-700">{getProduct.Target_Audience || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Target_Audience || '未提供'}
+              </p>
             </div>
+
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
               <h4 className="font-semibold text-green-900 mb-1">課程目標</h4>
-              <p className="text-gray-700">{getProduct.Course_Objective || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Course_Objective || '未提供'}
+              </p>
             </div>
+
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
               <h4 className="font-semibold text-purple-900 mb-1">適用場景</h4>
-              <p className="text-gray-700">{getProduct.Applicable_Scenarios || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Applicable_Scenarios || '未提供'}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* 右側：詳情 + 課程 + 影片 + 購物車 */}
+        {/* 右側：詳情 + 課程 + 影片 + 課程 */}
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-semibold mb-2">{getProduct.title}</h2>
@@ -210,33 +221,31 @@ export default function ShopPagebyId() {
             </div>
           )}
 
-          {/* YouTube 影片播放器 + 切換功能 */}
-          {videos.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Play className="w-5 h-5" /> 課程影片
-              </h3>
+{/* YouTube 影片播放器（僅顯示第一部）*/}
+{videos.length > 0 && (
+  <div className="space-y-4">
+    <h3 className="text-lg font-semibold flex items-center gap-2">
+      <Play className="w-5 h-5" /> 課程影片
+    </h3>
 
-              <div className="relative bg-black rounded-lg overflow-hidden">
-                {currentVideoId ? (
-                  <YouTube
-                    videoId={currentVideoId}
-                    opts={opts}
-                    className="aspect-video"
-                    iframeClassName="w-full h-full"
-                  />
-                ) : (
-                  <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
-                    無法載入影片
-                  </div>
-                )}
-              </div>
+    <div className="relative bg-black rounded-lg overflow-hidden">
+      {firstVideoId ? (
+        <YouTube
+          videoId={firstVideoId}
+          opts={opts}
+          className="aspect-video"
+          iframeClassName="w-full h-full"
+        />
+      ) : (
+        <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
+          無法載入影片
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
-           
-            </div>
-          )}
-
-          {/* 加入購物車 */}
+          {/* 加入課程 */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <input
               type="number"
@@ -255,7 +264,7 @@ export default function ShopPagebyId() {
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
-              {isPending ? '加入中...' : '加入購物車'}
+              {isPending ? '加入中...' : '加入課程'}
             </button>
           </div>
         </div>

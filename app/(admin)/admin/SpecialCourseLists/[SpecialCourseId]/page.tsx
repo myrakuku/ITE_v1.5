@@ -136,10 +136,6 @@ const formatDateWithDay = (dateStr?: string | null) => {
               {formatDateWithDay(specialCourseData.endDate) || "未設置"}
             </p>
             <p className="text-sm text-gray-300 mb-2">
-              <span className="font-medium">教師:</span>{" "}
-              {specialCourseData.teacher.join(", ") || "無"}
-            </p>
-            <p className="text-sm text-gray-300 mb-2">
               <span className="font-medium">課室:</span>{" "}
               {specialCourseData.classroom || "未設置"}
             </p>

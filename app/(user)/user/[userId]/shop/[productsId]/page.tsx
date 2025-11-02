@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { zhHK } from 'date-fns/locale';
 import Image from 'next/image';
 import YouTube from 'react-youtube';
-import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 // === 型別定義 ===
 interface CourseTimeRange {
@@ -89,7 +89,7 @@ export default function ProductPage() {
   const [getProduct, setGetProduct] = useState<ProductDetail | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+
 
   useEffect(() => {
     const fetchProductDataLists = async (id: string) => {
@@ -125,8 +125,8 @@ export default function ProductPage() {
   };
 
   const videos = getProduct?.Product_video || [];
-  const currentVideo = videos[currentVideoIndex];
-  const currentVideoId = currentVideo ? getYouTubeId(currentVideo.video_url) : null;
+const firstVideo = videos[0];
+const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
 
   if (!getProduct) {
     return (
@@ -215,31 +215,29 @@ export default function ProductPage() {
             </div>
           )}
 
-          {/* YouTube 影片播放器 + 切換器 */}
-          {videos.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Play className="w-5 h-5" /> 課程影片
-              </h3>
+{/* YouTube 影片播放器（僅顯示第一部）*/}
+{videos.length > 0 && (
+  <div className="space-y-4">
+    <h3 className="text-lg font-semibold flex items-center gap-2">
+      <Play className="w-5 h-5" /> 課程影片
+    </h3>
 
-              <div className="relative bg-black rounded-lg overflow-hidden">
-                {currentVideoId ? (
-                  <YouTube
-                    videoId={currentVideoId}
-                    opts={opts}
-                    className="aspect-video"
-                    iframeClassName="w-full h-full"
-                  />
-                ) : (
-                  <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
-                    無法載入影片
-                  </div>
-                )}
-              </div>
-
-            </div>
-          )}
-
+    <div className="relative bg-black rounded-lg overflow-hidden">
+      {firstVideoId ? (
+        <YouTube
+          videoId={firstVideoId}
+          opts={opts}
+          className="aspect-video"
+          iframeClassName="w-full h-full"
+        />
+      ) : (
+        <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
+          無法載入影片
+        </div>
+      )}
+    </div>
+  </div>
+)}
           {/* 加入購物車 */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <input

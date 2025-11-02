@@ -26,6 +26,7 @@ export async function PATCH(request: NextRequest) {
       data: {
         IsPublic: false, // 設為不公開，代表「移到垃圾桶」
         // 若未來有 isTrash 欄位，可改為：isTrash: true
+        isTrash: true
       },
     });
 

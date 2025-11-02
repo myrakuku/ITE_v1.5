@@ -49,7 +49,8 @@ const ProductListsPage = () => {
       const res = await fetch("/api/product/Get_Product_Lists");
       if (!res.ok) throw new Error("載入失敗");
       const data = await res.json();
-      setProducts(data.map((p: any) => ({ ...p, isTrash: false })));
+      // setProducts(data.map((p: any) => ({ ...p, isTrash: false })));
+      setProducts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "載入失敗");
     } finally {
@@ -61,7 +62,9 @@ const ProductListsPage = () => {
     try {
       const res = await fetch(`/api/product/move-to-trash/${id}`, { method: "PATCH" });
       if (!res.ok) throw new Error("操作失敗");
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, isTrash: true } : p));
+      // setProducts(prev => prev.map(p => p.id === id ? { ...p, isTrash: true } : p));
+      // 直接重新 fetch，確保前端與 DB 同步
+    await fetchProducts();
       toast.success("已移至垃圾桶");
     } catch {
       toast.error("移至垃圾桶失敗");
@@ -95,6 +98,8 @@ const ProductListsPage = () => {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} />;
 
+
+  console.log("products : ", products , "-- End --")
   // 修正：加入 key 給 ProductCard
   const ProductCard = (product: ProductLists) => (
     <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">

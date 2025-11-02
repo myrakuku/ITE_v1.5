@@ -200,6 +200,8 @@ model Product {
   IsPublic                 Boolean
   courseId                 String?               @map("course_id")
   Course                   Course?               @relation(fields: [courseId], references: [id])
+  isTrash                  Boolean?  @default(false)  // ← 新增欄位
+  specialCourse            specialCourse[]
   CartItem                 CartItem[]
   OrderItem                OrderItem[]
   CourseProductType        CourseProductType[]
@@ -453,6 +455,55 @@ model PaymentMethods_price {
   updatedAt               DateTime       @updatedAt
 }
 
+// schema.prisma
+model specialCourse {
+  id               String    @id @default(uuid())
+  title            String
+  description      String
+  courseCode       String
+  schoolName       String
+  numberOfDays     Int
+  numberOfStudents Int?
+  maxStudents      Int?
+  timeHours        Int
+  teacher          String[]
+  teacherId        String
+  isPublic         Boolean
+  isProduct        Boolean   @default(false)
+  Producted        Boolean   @default(false)
+  type             String[]
+  courseModulId    String?
+  startDate        DateTime?
+  endDate          DateTime?
+  Coursedates      DateTime[]
+  weekday          String?
+  classroom        String?
+
+  // === 新增：Product 欄位（直接內嵌）===
+  price            Int?
+  real_price       Int?
+  Target_Audience  String?
+  Course_Objective String?
+  Applicable_Scenarios String?
+
+  // === 圖片 & 影片（用 JSON 存）===
+  IMG_URL          Json?     // [{ id: "1", img_url: "https://..." }]
+  Video_URL        Json?     // [{ id: "1", video_url: "https://..." }] 或 YouTube ID
+
+  // === 關聯（保留，可選）===
+  product          Product?  @relation(fields: [productId], references: [id])
+  productId        String?
+
+  SpecialCourseTimeRanges SpecialCourseTimeRange[]
+  Students         User[]
+  GroupUser           GroupUser[]
+  GroupMember         GroupMember[]
+  CoursePorductType   CourseProductType[]  // 新增這行
+  CoursePorductStatue CourseProductStatus[]  // 新增這行
+  CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
+}
+
+
 // model specialCourse {
 //   id                  String                @id @default(uuid())
 //   title               String
@@ -463,10 +514,11 @@ model PaymentMethods_price {
 //   startDate           String?
 //   endDate             String?
 //   Coursedates         String[]              @default([])
-//   numberOfDays        Float // 從 Int 改為 Float
-//   numberOfStudents    Int
-//   timeHours           Float // 從 Int 改為 Float
-//   timeRange           String[]              @default([]) // 儲存可用的時間段（例如 ["morning", "afternoon"]）應該用不到
+//   numberOfDays        Float
+//   numberOfStudents    Int?
+//   maxStudents         Int?                  // 新增：人數上限字段，可選
+//   timeHours           Float
+//   timeRange           String[]              @default([])
 //   teacher             String[]              @default([])
 //   teacherId           String
 //   isPublic            Boolean
@@ -474,61 +526,24 @@ model PaymentMethods_price {
 //   Producted           Boolean
 //   Students            String[]
 //   type                String[]              @default([])
-//   classroom           String? // 可選的課室欄位
-//   weekday             String? // 可選的週份欄位
+//   classroom           String?
+//   weekday             String?
 //   createdAt           DateTime              @default(now())
 //   updatedAt           DateTime              @updatedAt
+//   IMG_URL             String?
+//   Video_URL           String?
+//   price               Float?
 //   GroupUser           GroupUser[]
 //   GroupMember         GroupMember[]
 //   CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
 //   courseModulId       String?
 //   CoursePorductType   CourseProductType[]
 //   CoursePorductStatue CourseProductStatus[]
-//   CourseTimeRanges    CourseTimeRange[] // 新增關聯到 CourseTimeRange
+//   // CourseTimeRanges    CourseTimeRange[]     // 移除此關聯，因為它與 Course 相關
+//   SpecialCourseTimeRanges SpecialCourseTimeRange[] // 新增關聯
 //   Teacher             User?                 @relation(fields: [teacherId], references: [id])
-
+//   products            Product[]
 // }
-
-
-model specialCourse {
-  id                  String                @id @default(uuid())
-  title               String
-  description         String
-  courseCode          String
-  schoolName          String
-  CourseTypes         String?
-  startDate           String?
-  endDate             String?
-  Coursedates         String[]              @default([])
-  numberOfDays        Float
-  numberOfStudents    Int?
-  maxStudents         Int?                  // 新增：人數上限字段，可選
-  timeHours           Float
-  timeRange           String[]              @default([])
-  teacher             String[]              @default([])
-  teacherId           String
-  isPublic            Boolean
-  isProduct           Boolean
-  Producted           Boolean
-  Students            String[]
-  type                String[]              @default([])
-  classroom           String?
-  weekday             String?
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  IMG_URL             String?
-  Video_URL           String?
-  price               Float?
-  GroupUser           GroupUser[]
-  GroupMember         GroupMember[]
-  CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
-  courseModulId       String?
-  CoursePorductType   CourseProductType[]
-  CoursePorductStatue CourseProductStatus[]
-  // CourseTimeRanges    CourseTimeRange[]     // 移除此關聯，因為它與 Course 相關
-  SpecialCourseTimeRanges SpecialCourseTimeRange[] // 新增關聯
-  Teacher             User?                 @relation(fields: [teacherId], references: [id])
-}
 
 
 model SpecialCourseTimeRange {

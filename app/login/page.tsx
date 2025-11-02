@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { serverLogin } from "../actions/auth/login";
-import { signIn } from "next-auth/react";
+// import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  // const [googleLoading, setGoogleLoading] = useState(false);
 
   const router = useRouter();
   const { data: session, status, update } = useSession();
@@ -54,22 +54,22 @@ export default function SignIn() {
   };
 
   // Google 登入（關鍵修正）
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError("");
+  // const handleGoogleSignIn = async () => {
+  //   setGoogleLoading(true);
+  //   setError("");
 
-    try {
-      // 不要指定 callbackUrl
-      await signIn("google");
-      // NextAuth 會回調到 /login，useEffect 會在 session 更新後導向
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Google 登入失敗";
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
+  //   try {
+  //     // 不要指定 callbackUrl
+  //     await signIn("google");
+  //     // NextAuth 會回調到 /login，useEffect 會在 session 更新後導向
+  //   } catch (err) {
+  //     const msg = err instanceof Error ? err.message : "Google 登入失敗";
+  //     setError(msg);
+  //     toast.error(msg);
+  //   } finally {
+  //     setGoogleLoading(false);
+  //   }
+  // };
 
   // 正在載入 session 時顯示
   if (status === "loading") {
@@ -116,7 +116,7 @@ export default function SignIn() {
 
         <button
           type="submit"
-          disabled={isLoading || googleLoading}
+          disabled={isLoading }
           className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md disabled:opacity-50 transition"
         >
           {isLoading ? "登入中..." : "登入"}
@@ -124,7 +124,7 @@ export default function SignIn() {
       </form>
 
       {/* Google 登入按鈕 */}
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <button
           onClick={handleGoogleSignIn}
           disabled={googleLoading || isLoading}
@@ -144,7 +144,7 @@ export default function SignIn() {
             </>
           )}
         </button>
-      </div>
+      </div> */}
 
       {/* 忘記密碼 */}
       <div className="mt-4 text-center">

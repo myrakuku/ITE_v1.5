@@ -15,8 +15,8 @@ const UpdateSpecialCourseSchema = z.object({
 // 定義 SpecialCourse 返回類型
 interface SpecialCourse {
   id: string;
-  IMG_URL: string | null;
-  Video_URL: string | null;
+  IMG_URL: Record<string, any> | null;
+  Video_URL: Record<string, any> | null;
   price: number | null;
   teacherId: string;
 }
@@ -39,10 +39,10 @@ export async function uploadImageToOSS(formData: FormData): Promise<{ url?: stri
     }
 
     const ossClient = new OSS({
-      region: process.env.OSS_REGION,
+      region: process.env.OSS_REGION!,
       accessKeyId: process.env.OSS_ACCESS_KEY_ID!,
       accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
-      bucket: process.env.OSS_BUCKET,
+      bucket: process.env.OSS_BUCKET!,
       endpoint: process.env.OSS_ENDPOINT,
     });
 
@@ -52,6 +52,33 @@ export async function uploadImageToOSS(formData: FormData): Promise<{ url?: stri
   } catch (error) {
     console.error("OSS Upload error:", error);
     return { error: "圖片上傳失敗" };
+  }
+}
+
+// 影片上傳 Server Action
+export async function uploadVideoToOSS(formData: FormData): Promise<{ url?: string | null; error?: string }> {
+  try {
+    const file = formData.get("file") as File;
+    const courseId = formData.get("courseId") as string;
+
+    if (!file || !courseId) {
+      return { error: "缺少文件或課程 ID" };
+    }
+
+    const ossClient = new OSS({
+      region: process.env.OSS_REGION!,
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID!,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
+      bucket: process.env.OSS_BUCKET!,
+      endpoint: process.env.OSS_ENDPOINT,
+    });
+
+    const fileName = `special-course/videos/${courseId}/${Date.now()}_${file.name}`;
+    const result = await ossClient.put(fileName, Buffer.from(await file.arrayBuffer()));
+    return { url: result.url || null };
+  } catch (error) {
+    console.error("OSS Video Upload error:", error);
+    return { error: "影片上傳失敗" };
   }
 }
 
@@ -84,18 +111,33 @@ export async function updateSpecialCourse(
       return { error: "無權更新此課程" };
     }
 
+    // 準備更新數據 - 將字符串 URL 轉換為 JSON 對象
+    const updateData: any = {
+      price: validatedData.price,
+    };
+
+    // 處理 IMG_URL - 轉換為 JSON 對象
+    if (validatedData.imgUrl !== undefined) {
+      updateData.IMG_URL = validatedData.imgUrl 
+        ? { url: validatedData.imgUrl, updatedAt: new Date().toISOString() }
+        : null;
+    }
+
+    // 處理 Video_URL - 轉換為 JSON 對象
+    if (validatedData.videoUrl !== undefined) {
+      updateData.Video_URL = validatedData.videoUrl 
+        ? { url: validatedData.videoUrl, updatedAt: new Date().toISOString() }
+        : null;
+    }
+
     // 更新課程數據
     const updatedCourse = await db.specialCourse.update({
       where: { id: courseId },
-      data: {
-        IMG_URL: validatedData.imgUrl,
-        Video_URL: validatedData.videoUrl,
-        price: validatedData.price,
-      },
+      data: updateData,
     });
 
     console.log("更新後的課程:", updatedCourse);
-    return { data: updatedCourse };
+    return { data: updatedCourse as SpecialCourse };
   } catch (error) {
     console.error("UpdateSpecialCourse error:", error);
     if (error instanceof z.ZodError) {
@@ -105,96 +147,95 @@ export async function updateSpecialCourse(
   }
 }
 
+// 批量上傳媒體文件並更新課程
+export async function uploadAndUpdateCourseMedia(
+  courseId: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    // 檢查權限
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { error: "未授權" };
+    }
 
+    // 檢查課程是否存在並屬於當前用戶
+    const course = await db.specialCourse.findUnique({
+      where: { id: courseId },
+      select: { id: true, teacherId: true },
+    });
 
-// // app/actions/Update/updateSpecialCourseMedia.ts
-// 'use server';
+    if (!course) {
+      return { error: "課程不存在" };
+    }
 
-// import { db } from '@/lib/db'; // 假設 Prisma 客戶端位於此路徑
-// import { z } from 'zod';
-// import OSS from 'ali-oss';
-// import { auth } from '@/auth';
+    if (course.teacherId !== session.user.id && session.user.role !== "ADMIN") {
+      return { error: "無權更新此課程" };
+    }
 
-// // 定義表單數據結構
-// const UpdateSpecialCourseSchema = z.object({
-//   imgUrl: z.string().url("請輸入有效的圖片 URL").optional().nullable(),
-//   videoUrl: z.string().url("請輸入有效的影片 URL").optional().nullable(),
-//   price: z.number().min(0, "價格必須大於或等於 0").optional().nullable(),
-// });
+    const images = formData.getAll("images") as File[];
+    const videos = formData.getAll("videos") as File[];
 
-// // 圖片上傳 Server Action
-// export async function uploadImageToOSS(formData: FormData): Promise<{ url?: string | null; error?: string }> {
-//   try {
-//     const file = formData.get('file') as File;
-//     const courseId = formData.get('courseId') as string;
+    const updateData: any = {};
 
-//     if (!file || !courseId) {
-//       return { error: '缺少文件或課程 ID' };
-//     }
+    // 上傳圖片
+    if (images.length > 0) {
+      const imageResults = await Promise.all(
+        images.map(async (file) => {
+          const imageFormData = new FormData();
+          imageFormData.append("file", file);
+          imageFormData.append("courseId", courseId);
+          return await uploadImageToOSS(imageFormData);
+        })
+      );
 
-// const ossClient = new OSS({
-//   region: process.env.OSS_REGION,
-//   accessKeyId: process.env.OSS_ACCESS_KEY_ID!,
-//   accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET!,
-//   bucket: process.env.OSS_BUCKET,
-//   endpoint: process.env.OSS_ENDPOINT,
-// });
+      const successfulImages = imageResults.filter(result => result.url);
+      if (successfulImages.length > 0) {
+        updateData.IMG_URL = {
+          images: successfulImages.map(result => ({
+            url: result.url,
+            uploadedAt: new Date().toISOString(),
+          })),
+        };
+      }
+    }
 
-//     const fileName = `special-course/${courseId}/${Date.now()}_${file.name}`;
-//     const result = await ossClient.put(fileName, Buffer.from(await file.arrayBuffer()));
-//     return { url: result.url || null }; // 確保返回 string | null
-//   } catch (error) {
-//     console.error('OSS Upload error:', error);
-//     return { error: '圖片上傳失敗' };
-//   }
-// }
+    // 上傳影片
+    if (videos.length > 0) {
+      const videoResults = await Promise.all(
+        videos.map(async (file) => {
+          const videoFormData = new FormData();
+          videoFormData.append("file", file);
+          videoFormData.append("courseId", courseId);
+          return await uploadVideoToOSS(videoFormData);
+        })
+      );
 
-// // 更新課程數據 Server Action
-// export async function updateSpecialCourse(
-//   courseId: string,
-//   data: unknown,
-// ): Promise<{ data?: any; error?: string; details?: any }> {
-//   try {
-//     // 驗證輸入數據
-//     const validatedData = UpdateSpecialCourseSchema.parse(data);
+      const successfulVideos = videoResults.filter(result => result.url);
+      if (successfulVideos.length > 0) {
+        updateData.Video_URL = {
+          videos: successfulVideos.map(result => ({
+            url: result.url,
+            uploadedAt: new Date().toISOString(),
+          })),
+        };
+      }
+    }
 
-//     // 檢查權限
-//     const session = await auth();
-//     if (!session?.user?.id) {
-//       return { error: '未授權' };
-//     }
+    // 如果有上傳的文件，更新課程
+    if (Object.keys(updateData).length > 0) {
+      const updatedCourse = await db.specialCourse.update({
+        where: { id: courseId },
+        data: updateData,
+      });
 
-//     // 檢查課程是否存在並屬於當前用戶
-//     const course = await db.specialCourse.findUnique({
-//       where: { id: courseId },
-//       select: { id: true, teacherId: true },
-//     });
+      console.log("更新媒體後的課程:", updatedCourse);
+      return { data: updatedCourse as SpecialCourse };
+    }
 
-//     if (!course) {
-//       return { error: '課程不存在' };
-//     }
-
-//     if (course.teacherId !== session.user.id && session.user.role !== 'ADMIN') {
-//       return { error: '無權更新此課程' };
-//     }
-
-//     // 更新課程數據
-//     const updatedCourse = await db.specialCourse.update({
-//       where: { id: courseId },
-//       data: {
-//         IMG_URL: validatedData.imgUrl,
-//         Video_URL: validatedData.videoUrl,
-//         price: validatedData.price,
-//       },
-//     });
-
-//     console.log('更新後的課程:', updatedCourse);
-//     return { data: updatedCourse };
-//   } catch (error) {
-//     console.error('UpdateSpecialCourse error:', error);
-//     if (error instanceof z.ZodError) {
-//       return { error: '輸入資料無效', details: error.errors };
-//     }
-//     return { error: error instanceof Error ? error.message : '更新課程失敗' };
-//   }
-// }
+    return { error: "沒有文件上傳成功" };
+  } catch (error) {
+    console.error("UploadAndUpdateCourseMedia error:", error);
+    return { error: error instanceof Error ? error.message : "上傳媒體文件失敗" };
+  }
+}
