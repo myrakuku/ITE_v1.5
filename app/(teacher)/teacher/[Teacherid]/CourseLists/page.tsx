@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// 定義課程物件的型別，根據 Prisma 的 Course model
 type Course = {
   id: string;
   title: string;
@@ -23,6 +22,7 @@ type Course = {
   courseModulId: string | null;
   createdAt: string;
   updatedAt: string;
+  isProduct: boolean; // ← 新增欄位
   CourseModul?: {
     id: string;
     title: string;
@@ -45,7 +45,6 @@ const CourseListsByTeacher = () => {
         }
         const data = await res.json();
         if (Array.isArray(data)) {
-          // 過濾出 teacherId 與 TeacherId 匹配的課程
           const filteredCourses = data.filter((course: Course) => course.teacherId === TeacherId);
           setCourses(filteredCourses);
         } else {
@@ -60,8 +59,6 @@ const CourseListsByTeacher = () => {
 
     fetchCourses();
   }, [TeacherId]);
-
-  console.log("courses: ", courses);
 
   return (
     <div className="bg-gray-800 text-white min-h-screen">
@@ -86,9 +83,16 @@ const CourseListsByTeacher = () => {
               <Link
                 key={course.id}
                 href={`/teacher/${TeacherId}/CourseLists/${course.id}`}
-                className="block bg-gray-700 p-4 rounded-md shadow-md hover:bg-gray-600 transition"
+                className="block bg-gray-700 p-4 rounded-md shadow-md hover:bg-gray-600 transition relative"
               >
-                <h2 className="text-lg font-semibold">{course.title}</h2>
+                {/* 標記：isProduct === true 時顯示 */}
+                {course.isProduct && (
+                  <span className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    已上架
+                  </span>
+                )}
+
+                <h2 className="text-lg font-semibold pr-16">{course.title}</h2>
                 <p className="text-sm text-gray-300 mt-2">課程代碼: {course.courseCode}</p>
                 <p className="text-sm text-gray-300">
                   開始日期: {course.startDate || "未設定"}
