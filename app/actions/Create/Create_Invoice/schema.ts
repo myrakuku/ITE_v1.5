@@ -1,14 +1,17 @@
-import { z } from "zod";
+// schema.ts
+import { z } from 'zod';
 
 export const Invoice_Create_Schema = z.object({
-  title: z.string().min(1, "標題為必填"),
-  content: z.array(z.string()).min(1, "至少選擇一個產品"),
-  studentname: z.string().min(1, "學生名稱為必填"),
-  student_id: z.string().min(1, "學生ID為必填"),
-  price: z.coerce.number().min(0, "價格不能為負數"),
+  title: z.string(),
+  content: z.array(z.string()),
+  studentname: z.string(),
+  student_id: z.string(),
+  price: z.number(),
+  servetype: z.string(),
   PaymentMethods: z.array(z.string()).optional(),
   Invoice_id: z.string(),
-  servetype: z.string(),
-  DB: z.coerce.number().min(0, "價格不能為負數"),
-  adminFee: z.coerce.number().min(0, "價格不能為負數"),
+  DB: z.number(),
+  adminFee: z.number(),
+  total: z.number(),
+  date: z.date(), // 改为非可选、无默认值，保证输出始终为 Date
 });

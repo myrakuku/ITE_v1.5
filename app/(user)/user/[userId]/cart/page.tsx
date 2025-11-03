@@ -43,7 +43,7 @@ export default function CartPage() {
           const cartData = await getCart();
           setCart(cartData);
         } catch (error) {
-          console.error('載入購物車失敗:', error);
+          console.error('載入願望清單失敗:', error);
         }
       }
     }
@@ -62,7 +62,7 @@ export default function CartPage() {
           };
         });
       } catch (error) {
-        console.error('移除購物車項目失敗:', error);
+        console.error('移除願望清單項目失敗:', error);
         alert(
           error instanceof Error
             ? `移除失敗：${error.message}`
@@ -85,16 +85,16 @@ export default function CartPage() {
   if (status === 'unauthenticated') return <div>請先登入</div>;
   if (!cart)  return(
     console.log("!cart : ",cart ,"-- end --") ,
-    <div>載入中...</div>
+    <div>願望清單載入中...</div>
   );
 
   console.log("cart : ",cart ,"-- end --") ;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">購物車</h1>
+      <h1 className="text-2xl font-bold mb-4">願望清單</h1>
       {cart.items.length === 0 ? (
-        <p>您的購物車為空</p>
+        <p>您的願望清單為空</p>
       ) : (
         <>
           {cart.items.map((item) => (

@@ -129,78 +129,82 @@ export default function SuccessPage() {
   const [loading, setLoading] = useState(true);
   const [addStudentDone, setAddStudentDone] = useState(false);
 
-  useEffect(() => {
-    async function handlePaymentSuccess() {
-      if (status !== 'authenticated' || !session?.user) {
-        setLoading(false);
-        return;
-      }
-
-      if (userId !== session.user.id) {
-        setError('無權操作：用戶 ID 不匹配');
-        setLoading(false);
-        return;
-      }
-
-      const sessionId = searchParams.get('session_id');
-      if (!sessionId) {
-        setError('無效的支付會話');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // === 1. 調用後端驗證支付成功 ===
-        const paymentResponse = await axios.post('/api/handle-payment-success', {
-          sessionId,
-          userId,
-          username: session.user.name || '匿名用戶',
-        });
-
-        if (paymentResponse.data.error) {
-          setError(paymentResponse.data.error);
-          setLoading(false);
-          return;
-        }
-
-        // === 2. 支付成功後：將用戶加入所有已購課程 ===
-        if (!addStudentDone) {
-          try {
-            const cartResponse = await axios.get('/api/cart_success'); // 假設有 API 取得 cartId
-            const cartId = cartResponse.data.id;
-
-            const addResult = await addStudentToAllCourses({ cartId, userId });
-            if (!addResult.success) {
-              console.warn('加入課程失敗（非致命）:', addResult.error);
-              // 可選：顯示警告但不阻擋成功流程
-            } else {
-              setAddStudentDone(true);
-            }
-          } catch (addErr) {
-            console.warn('加入課程 API 失敗:', addErr);
-            // 不阻擋成功頁面
-          }
-        }
-
-        setLoading(false);
-      } catch (err: unknown) {
-        console.error('處理支付失敗:', err);
-        let errorMessage = '無法處理支付，請聯繫支持';
-
-        if (err instanceof AxiosError && err.response) {
-          const responseData = err.response.data as PaymentSuccessErrorResponse;
-          errorMessage = responseData.error || err.message || errorMessage;
-        } else if (err instanceof Error) {
-          errorMessage = err.message || errorMessage;
-        }
-
-        setError(errorMessage);
-        setLoading(false);
-      }
+useEffect(() => {
+  async function handlePaymentSuccess() {
+    if (status !== 'authenticated' || !session?.user) {
+      setLoading(false);
+      return;
     }
 
-    handlePaymentSuccess();
-  }, [status, session, userId, searchParams, addStudentDone]);
+    if (userId !== session.user.id) {
+      setError('無權操作：用戶 ID 不匹配');
+      setLoading(false);
+      return;
+    }
+
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) {
+      setError('無效的支付會話');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // === 1. 調用後端驗證支付成功 ===
+      const paymentResponse = await axios.post('/api/handle-payment-success', {
+        sessionId,
+        userId,
+        username: session.user.name || '匿名用戶',
+      });
+
+      if (paymentResponse.data.error) {
+        setError(paymentResponse.data.error);
+        setLoading(false);
+        return;
+      }
+
+      // === 2. 支付成功後：將用戶加入所有已購課程 ===
+      if (!addStudentDone) {
+        try {
+          const cartResponse = await axios.get('/api/cart_success');
+          const cartId = cartResponse.data.id;
+
+          const addResult = await addStudentToAllCourses({ cartId, userId });
+
+          if (addResult.success) {
+            setAddStudentDone(true);
+          } else {
+            console.warn('加入課程失敗（非致命）:', addResult.error);
+          }
+        } catch (addErr: any) {
+          if (addErr.response?.status === 404) {
+            console.warn('購物車已清空，跳過加入課程');
+            setAddStudentDone(true);
+          } else {
+            console.warn('加入課程 API 失敗:', addErr);
+          }
+        }
+      }
+
+      setLoading(false);
+    } catch (err: unknown) {
+      console.error('處理支付失敗:', err);
+      let errorMessage = '無法處理支付，請聯繫支持';
+
+      if (err instanceof AxiosError && err.response) {
+        const responseData = err.response.data as PaymentSuccessErrorResponse;
+        errorMessage = responseData.error || err.message || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message || errorMessage;
+      }
+
+      setError(errorMessage);
+      setLoading(false);
+    }
+  }
+
+  handlePaymentSuccess();
+}, [status, session, userId, searchParams, addStudentDone]);
 
   if (status === 'loading' || loading) {
     return <div>載入中...</div>;

@@ -410,23 +410,27 @@ model HeaderType {
   updatedAt      DateTime @updatedAt
 }
 
+// prisma/schema.prisma
 model Invoice {
-  id          String  @id @default(cuid())
-  title       String
-  content     String[]
-  studentname  String
-  student_id   String
-  Invoice_id   String  //人做invoice code
-  price           Float
-  servetype       String
-  PaymentMethods  String[]
-  DB      Float
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  content          String[]
+  studentname      String
+  student_id       String
+  Invoice_id       String   @unique
+  price            Float
+  total            Float    // 新增：總金額（price * quantity）
+  date             DateTime // 新增：這才是你要的欄位！
+  servetype        String
+  PaymentMethods   String[]
+  DB               Float
   adminFee         Float
-  isPayment        Boolean @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  User            User[]
-  PaymentMethods_price    PaymentMethods_price[]
+  isPayment        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  User             User[]
+  PaymentMethods_price PaymentMethods_price[]
 }
 
 

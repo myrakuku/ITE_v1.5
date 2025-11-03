@@ -230,3 +230,6 @@ Course
 把checkout中的addStudentToAllCourses功能，轉放success page 中，之後把heckout中的addStudentToAllCourses功能　delete
 
 在老師位加了標記（是否商品）
+
+
+改了比錢bug
