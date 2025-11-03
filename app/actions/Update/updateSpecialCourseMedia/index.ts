@@ -9,7 +9,7 @@ import { auth } from "@/auth";
 const UpdateSpecialCourseSchema = z.object({
   imgUrl: z.string().url("請輸入有效的圖片 URL").optional().nullable(),
   videoUrl: z.string().url("請輸入有效的影片 URL").optional().nullable(),
-  price: z.number().min(0, "價格必須大於或等於 0").optional().nullable(),
+  real_price: z.number().min(0, "價格必須大於或等於 0").optional().nullable(),
 });
 
 // 定義 SpecialCourse 返回類型
@@ -17,7 +17,7 @@ interface SpecialCourse {
   id: string;
   IMG_URL: Record<string, any> | null;
   Video_URL: Record<string, any> | null;
-  price: number | null;
+  real_price: number | null;
   teacherId: string;
 }
 
@@ -83,59 +83,55 @@ export async function uploadVideoToOSS(formData: FormData): Promise<{ url?: stri
 }
 
 // 更新課程數據 Server Action
+// updateSpecialCourseMedia.ts
 export async function updateSpecialCourse(
   courseId: string,
   data: unknown,
 ): Promise<ActionResult> {
   try {
-    // 驗證輸入數據
     const validatedData = UpdateSpecialCourseSchema.parse(data);
 
-    // 檢查權限
     const session = await auth();
-    if (!session?.user?.id) {
-      return { error: "未授權" };
-    }
+    if (!session?.user?.id) return { error: "未授權" };
 
-    // 檢查課程是否存在並屬於當前用戶
     const course = await db.specialCourse.findUnique({
       where: { id: courseId },
       select: { id: true, teacherId: true },
     });
 
-    if (!course) {
-      return { error: "課程不存在" };
-    }
-
+    if (!course) return { error: "課程不存在" };
     if (course.teacherId !== session.user.id && session.user.role !== "ADMIN") {
       return { error: "無權更新此課程" };
     }
 
-    // 準備更新數據 - 將字符串 URL 轉換為 JSON 對象
-    const updateData: any = {
-      price: validatedData.price,
-    };
+    const updateData: any = {};
 
-    // 處理 IMG_URL - 轉換為 JSON 對象
+    // 關鍵修正：統一處理所有欄位
     if (validatedData.imgUrl !== undefined) {
-      updateData.IMG_URL = validatedData.imgUrl 
+      updateData.IMG_URL = validatedData.imgUrl
         ? { url: validatedData.imgUrl, updatedAt: new Date().toISOString() }
         : null;
     }
 
-    // 處理 Video_URL - 轉換為 JSON 對象
     if (validatedData.videoUrl !== undefined) {
-      updateData.Video_URL = validatedData.videoUrl 
+      updateData.Video_URL = validatedData.videoUrl
         ? { url: validatedData.videoUrl, updatedAt: new Date().toISOString() }
         : null;
     }
 
-    // 更新課程數據
+    if (validatedData.real_price !== undefined) {
+      updateData.real_price = validatedData.real_price;  // ← 加入這行！
+    }
+
+    // 只有在有變更時才更新
+    if (Object.keys(updateData).length === 0) {
+      return { data: course as SpecialCourse };
+    }
+
     const updatedCourse = await db.specialCourse.update({
       where: { id: courseId },
       data: updateData,
     });
-
     console.log("更新後的課程:", updatedCourse);
     return { data: updatedCourse as SpecialCourse };
   } catch (error) {

@@ -299,7 +299,8 @@ useEffect(() => {
                         {...field}
                         disabled={isPending}
                         placeholder="輸入課程描述"
-                        className="bg-gray-700 text-white border-gray-600 focus:border-gray-500"
+                        className="bg-gray-700 text-white border-gray-600 focus:border-gray-500 resize-none whitespace-pre-wrap"
+                        style={{ whiteSpace: "pre-wrap" }} // 雙重保險
                         rows={4}
                         aria-label="課程描述"
                       />

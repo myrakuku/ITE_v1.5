@@ -217,3 +217,12 @@ Course
 上限不見了 這個我看data是存在的
 
 
+02112025
+- [ ] 特別課程無圖
+- [ ] Filter無功能
+- [ ] 特別課程編輯Erro
+- [ ] User睇日歷Erro
+- [ ] User看到導師名
+- [ ] User 的課程Code有老師名
+
+全done 再加修改了add to cart(特別課程）)

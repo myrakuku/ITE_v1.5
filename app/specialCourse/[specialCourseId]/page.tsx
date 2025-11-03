@@ -53,8 +53,8 @@ interface SpecialCourseData {
   createdAt: string;
   updatedAt: string;
 
-IMG_URL?: ProductImg[] | string;      // ← 允許 string
-  Video_URL?: ProductVideo[] | string;  // ← 允許 string
+  IMG_URL?: any;
+  Video_URL?: any;
   SpecialCourseTimeRanges?: SpecialCourseTimeRange[];
 }
 
@@ -82,10 +82,8 @@ const formatTime = (time: string | null | undefined): string => {
   return timeRegex.test(time) ? time : '無效時間';
 };
 
-// === 驗證圖片 URL 是否有效 ===
 const isValidImageUrl = (url: string): boolean => {
   if (!url || url.trim() === '') return false;
-  // 必須以 http(s) 開頭，且有副檔名 (jpg, jpeg, png, gif, webp)
   return /^https?:\/\/.+\.(jpe?g|png|gif|webp|svg)$/i.test(url);
 };
 
@@ -103,7 +101,9 @@ const SpecialCourseById = () => {
     const fetchSpecialCourseData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/SpecialCourse/Get_SpecialCourse_by_ID/${specialCourseId}`);
+        const response = await fetch(`/api/SpecialCourse/Get_SpecialCourse_by_ID/${specialCourseId}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error(`請求失敗: ${response.status}`);
         const data = await response.json();
         setSpecialCourseData(data);
@@ -150,53 +150,52 @@ const SpecialCourseById = () => {
     playerVars: { autoplay: 0, rel: 0, modestbranding: 1 },
   };
 
-    // === 安全處理：圖片、影片（支援字串或陣列）===
+  // === 安全處理：圖片、影片（支援 3 種格式）===
   const rawImages = specialCourseData?.IMG_URL;
   const rawVideos = specialCourseData?.Video_URL;
 
   let images: ProductImg[] = [];
 
-  // 明確檢查：rawImages 是否為 string
-  if (typeof rawImages === 'string') {
+  // 1. { images: [...] }
+  if (rawImages && typeof rawImages === 'object' && 'images' in rawImages && Array.isArray(rawImages.images)) {
+    images = rawImages.images.filter((img: unknown): img is ProductImg =>
+      typeof img === 'object' && img !== null && 'img_url' in img && typeof (img as any).img_url === 'string'
+    );
+  }
+  // 2. { url: '...', updatedAt: '...' }
+  else if (rawImages && typeof rawImages === 'object' && 'url' in rawImages && typeof rawImages.url === 'string') {
+    images = [{ id: '1', img_url: rawImages.url }];
+  }
+  // 3. string
+  else if (typeof rawImages === 'string') {
     const trimmed = rawImages.trim();
     if (trimmed !== '') {
       images = [{ id: '1', img_url: trimmed }];
     }
-  } 
-  // 檢查是否為陣列
-  else if (Array.isArray(rawImages)) {
-    images = rawImages.filter((img): img is ProductImg => 
-      typeof img === 'object' && img !== null && typeof img.img_url === 'string'
-    );
   }
 
   let videos: ProductVideo[] = [];
 
-  if (typeof rawVideos === 'string') {
+  if (rawVideos && typeof rawVideos === 'object' && 'videos' in rawVideos && Array.isArray(rawVideos.videos)) {
+    videos = rawVideos.videos.filter((vid: unknown): vid is ProductVideo =>
+      typeof vid === 'object' && vid !== null && 'video_url' in vid && typeof (vid as any).video_url === 'string'
+    );
+  }
+  else if (typeof rawVideos === 'string') {
     const trimmed = rawVideos.trim();
     if (trimmed !== '') {
       videos = [{ id: '1', video_url: trimmed }];
     }
-  } 
-  else if (Array.isArray(rawVideos)) {
-    videos = rawVideos.filter((vid): vid is ProductVideo => 
-      typeof vid === 'object' && vid !== null && typeof vid.video_url === 'string'
-    );
   }
 
-  //找出第一張有效圖片
-  const firstValidImage = images.find(img => 
+  const firstValidImage = images.find(img =>
     typeof img.img_url === 'string' && isValidImageUrl(img.img_url)
   ) || null;
 
-
-
-
   const firstVideo = videos[0];
-  const firstVideoId = firstVideo && typeof firstVideo.video_url === 'string' 
-    ? getYouTubeId(firstVideo.video_url) 
+  const firstVideoId = firstVideo && typeof firstVideo.video_url === 'string'
+    ? getYouTubeId(firstVideo.video_url)
     : null;
-
 
   if (isLoading) return <div className="text-center py-10">載入中...</div>;
 
@@ -209,8 +208,8 @@ const SpecialCourseById = () => {
       </div>
     );
   }
-  console.log("specialCourseData : ", specialCourseData , "-- End --")
-  console.log("IMG_URL : ", specialCourseData.IMG_URL , "-- End --")
+
+  console.log("specialCourseData : ", specialCourseData , " -- End -- ")
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -220,7 +219,6 @@ const SpecialCourseById = () => {
         {/* 左側 */}
         <div className="space-y-6">
           <div>
-            {/* === 僅在有有效圖片時渲染 Image === */}
             {firstValidImage ? (
               <Image
                 src={firstValidImage.img_url}
@@ -269,7 +267,6 @@ const SpecialCourseById = () => {
             <h2 className="text-2xl font-semibold mb-2">{specialCourseData.title}</h2>
             <p className="text-gray-600 mb-4">{specialCourseData.description}</p>
 
-            {/* 安全價格顯示 */}
             {(() => {
               const displayPrice = specialCourseData.real_price ?? specialCourseData.price;
               const formattedPrice = displayPrice != null ? `HK$${displayPrice.toFixed(2)}` : '價格未設置';
@@ -281,7 +278,6 @@ const SpecialCourseById = () => {
             })()}
           </div>
 
-          {/* 課程資訊 */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
             <p><span className="font-semibold">課程代碼：</span> {specialCourseData.courseCode}</p>
             <p><span className="font-semibold">學校：</span> {specialCourseData.schoolName}</p>
@@ -311,7 +307,6 @@ const SpecialCourseById = () => {
             )}
           </div>
 
-          {/* 影片 */}
           {videos.length > 0 && firstVideoId && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -328,7 +323,6 @@ const SpecialCourseById = () => {
             </div>
           )}
 
-          {/* 加入購物車 */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <button
               onClick={handleAddToCart}

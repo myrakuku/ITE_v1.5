@@ -361,6 +361,7 @@ export async function createOrder(): Promise<{ orderId: string; total: number }>
   }
 }
 
+// app/actions/cart/shop-cart.ts
 export async function getCart(): Promise<CartWithItems | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -384,6 +385,8 @@ export async function getCart(): Promise<CartWithItems | null> {
                 updatedAt: true,
                 IsPublic: true,
                 courseId: true,
+                specialCourseId: true,  // ← 現在安全
+                // specialCourse: true, // ← 暫時移除，避免載入過多資料
               },
             },
           },

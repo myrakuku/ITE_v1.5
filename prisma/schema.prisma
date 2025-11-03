@@ -184,13 +184,14 @@ model CourseTimeRange {
   // 移除 specialCourse 關聯
 }
 
+// === Product 模型 ===
 model Product {
   id                       String                @id @default(uuid())
   title                    String
   description              String
-  Target_Audience          String?              // 目標觀眾
-  Course_Objective         String?              // 課程目標
-  Applicable_Scenarios     String?              // 可適用場景
+  Target_Audience          String?
+  Course_Objective         String?
+  Applicable_Scenarios     String?
   price                    Int
   real_price               Int
   CourseProductTypeArray   String[]              @default([])
@@ -199,17 +200,21 @@ model Product {
   updatedAt                DateTime              @updatedAt
   IsPublic                 Boolean
   courseId                 String?               @map("course_id")
+  specialCourseId          String?               @unique
   Course                   Course?               @relation(fields: [courseId], references: [id])
-  isTrash                  Boolean?  @default(false)  // ← 新增欄位
-  specialCourse            specialCourse[]
+  isTrash                  Boolean?              @default(false)
+  
+  // 關鍵修正：使用正確模型名稱 specialCourse
+  specialCourse            specialCourse?        @relation(fields: [specialCourseId], references: [id])
+  
   CartItem                 CartItem[]
   OrderItem                OrderItem[]
   CourseProductType        CourseProductType[]
   CourseProductStatus      CourseProductStatus[]
-  Product_Course_Dates      Product_Course_Dates[] // 新增
-  Product_Course_Time_Ranges Product_Course_Time_Ranges[] // 新增
-  Product_Img               Product_Img[]
-  Product_video             Product_video[]
+  Product_Course_Dates     Product_Course_Dates[]
+  Product_Course_Time_Ranges Product_Course_Time_Ranges[]
+  Product_Img              Product_Img[]
+  Product_video            Product_video[]
 }
 
 model Product_Course_Dates {
@@ -491,9 +496,9 @@ model specialCourse {
   Video_URL        Json?     // [{ id: "1", video_url: "https://..." }] 或 YouTube ID
 
   // === 關聯（保留，可選）===
-  product          Product?  @relation(fields: [productId], references: [id])
-  productId        String?
-
+  // product          Product?  @relation(fields: [productId], references: [id])
+  // productId        String?
+  products                 Product[]  // ← 反向關係
   SpecialCourseTimeRanges SpecialCourseTimeRange[]
   Students         User[]
   GroupUser           GroupUser[]

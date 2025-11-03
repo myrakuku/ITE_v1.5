@@ -19,7 +19,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "課程不存在" }, { status: 404 });
     }
 
-    return NextResponse.json(course);
+// 關鍵：禁用快取，強制每次重新查詢
+    const response = NextResponse.json(course);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+
+    return response;
   } catch (error) {
     console.error("獲取課程失敗：", error);
     return NextResponse.json({ error: "內部錯誤" }, { status: 500 });

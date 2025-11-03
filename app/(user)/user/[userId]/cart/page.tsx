@@ -88,6 +88,8 @@ export default function CartPage() {
     <div>載入中...</div>
   );
 
+  console.log("cart : ",cart ,"-- end --") ;
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">購物車</h1>
