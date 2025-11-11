@@ -52,6 +52,7 @@ const timeOptions = [
   { id: "morning" as const, label: "上午" },
   { id: "afternoon" as const, label: "下午" },
   { id: "evening" as const, label: "晚上" },
+  { id: "full_day" as const, label: "全天" },
 ] as const;
 
 const CreateCourseTeacherForm = () => {

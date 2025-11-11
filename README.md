@@ -233,3 +233,10 @@ Course
 
 
 改了比錢bug
+
+
+10112025
+
+加入Google Tag , Sitemap
+
+改了特別課程中的影片上傳方式

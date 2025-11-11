@@ -10,6 +10,7 @@ import { addSpcialCourseToCart } from '@/app/actions/cart/add-spcialCourse-cart'
 import { format } from 'date-fns';
 import { zhHK } from 'date-fns/locale';
 import { Play } from 'lucide-react';
+import Link from 'next/link'; // 確保已 import
 
 // === 介面定義 ===
 interface ProductImg {
@@ -150,43 +151,39 @@ const SpecialCourseById = () => {
     playerVars: { autoplay: 0, rel: 0, modestbranding: 1 },
   };
 
-  // === 安全處理：圖片、影片（支援 3 種格式）===
-  const rawImages = specialCourseData?.IMG_URL;
-  const rawVideos = specialCourseData?.Video_URL;
+// === 安全處理：圖片、影片（支援 3 種格式）===
+const rawImages = specialCourseData?.IMG_URL;
+const rawVideos = specialCourseData?.Video_URL;
 
-  let images: ProductImg[] = [];
+let images: ProductImg[] = [];
 
-  // 1. { images: [...] }
-  if (rawImages && typeof rawImages === 'object' && 'images' in rawImages && Array.isArray(rawImages.images)) {
-    images = rawImages.images.filter((img: unknown): img is ProductImg =>
-      typeof img === 'object' && img !== null && 'img_url' in img && typeof (img as any).img_url === 'string'
-    );
-  }
-  // 2. { url: '...', updatedAt: '...' }
-  else if (rawImages && typeof rawImages === 'object' && 'url' in rawImages && typeof rawImages.url === 'string') {
-    images = [{ id: '1', img_url: rawImages.url }];
-  }
-  // 3. string
-  else if (typeof rawImages === 'string') {
-    const trimmed = rawImages.trim();
-    if (trimmed !== '') {
-      images = [{ id: '1', img_url: trimmed }];
-    }
-  }
+// 圖片：支援 { images: [...] }、{ url }、string
+if (rawImages && typeof rawImages === 'object' && 'images' in rawImages && Array.isArray(rawImages.images)) {
+  images = rawImages.images.filter((img: unknown): img is ProductImg =>
+    typeof img === 'object' && img !== null && 'img_url' in img && typeof (img as any).img_url === 'string'
+  );
+} else if (rawImages && typeof rawImages === 'object' && 'url' in rawImages && typeof rawImages.url === 'string') {
+  images = [{ id: '1', img_url: rawImages.url }];
+} else if (typeof rawImages === 'string') {
+  const trimmed = rawImages.trim();
+  if (trimmed !== '') images = [{ id: '1', img_url: trimmed }];
+}
 
-  let videos: ProductVideo[] = [];
+// 影片：支援純陣列、{ videos: [...] }、string
+let videos: ProductVideo[] = [];
 
-  if (rawVideos && typeof rawVideos === 'object' && 'videos' in rawVideos && Array.isArray(rawVideos.videos)) {
-    videos = rawVideos.videos.filter((vid: unknown): vid is ProductVideo =>
-      typeof vid === 'object' && vid !== null && 'video_url' in vid && typeof (vid as any).video_url === 'string'
-    );
-  }
-  else if (typeof rawVideos === 'string') {
-    const trimmed = rawVideos.trim();
-    if (trimmed !== '') {
-      videos = [{ id: '1', video_url: trimmed }];
-    }
-  }
+if (Array.isArray(rawVideos)) {
+  videos = rawVideos.filter((vid: unknown): vid is ProductVideo =>
+    typeof vid === 'object' && vid !== null && 'video_url' in vid && typeof (vid as any).video_url === 'string'
+  );
+} else if (rawVideos && typeof rawVideos === 'object' && 'videos' in rawVideos && Array.isArray(rawVideos.videos)) {
+  videos = rawVideos.videos.filter((vid: unknown): vid is ProductVideo =>
+    typeof vid === 'object' && vid !== null && 'video_url' in vid && typeof (vid as any).video_url === 'string'
+  );
+} else if (typeof rawVideos === 'string') {
+  const trimmed = rawVideos.trim();
+  if (trimmed !== '') videos = [{ id: '1', video_url: trimmed }];
+}
 
   const firstValidImage = images.find(img =>
     typeof img.img_url === 'string' && isValidImageUrl(img.img_url)
@@ -323,19 +320,28 @@ const SpecialCourseById = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-3 pt-4 border-t">
-            <button
-              onClick={handleAddToCart}
-              disabled={isPending || !session || (specialCourseData.real_price ?? specialCourseData.price) == null}
-              className={`flex-1 py-3 rounded font-medium transition ${
-                isPending || !session || (specialCourseData.real_price ?? specialCourseData.price) == null
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-            >
-              {isPending ? '加入中...' : '加入課程'}
-            </button>
-          </div>
+            <div className="flex items-center gap-3 pt-4 border-t">
+              {session ? (
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isPending || (specialCourseData.real_price ?? specialCourseData.price) == null}
+                  className={`flex-1 py-3 rounded font-medium transition ${
+                    isPending || (specialCourseData.real_price ?? specialCourseData.price) == null
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isPending ? '加入中...' : '加入課程'}
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex-1 py-3 rounded font-medium text-center bg-blue-600 hover:bg-blue-700 text-white transition"
+                >
+                  登入以加入課程
+                </Link>
+              )}
+            </div>
         </div>
       </div>
     </div>
