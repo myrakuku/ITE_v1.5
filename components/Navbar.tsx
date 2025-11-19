@@ -50,7 +50,7 @@ export default function Navbar() {
   const userNavItems = userId
     ? [
         { name: "課程", href: `/user/${userId}/shop` },
-        { name: "日曆", href: `/user/${userId}/Calendar` },
+        // { name: "日曆", href: `/user/${userId}/Calendar` },
         { name: "課程列表", href: `/user/${userId}/CourseLists` },
         { name: "願望清單", href: `/user/${userId}/cart` },
       ]

@@ -245,21 +245,31 @@ useEffect(() => {
   }
 }, [selectedModuleId, filteredCourseModules, form]);
 
-  const onSubmit: SubmitHandler<z.infer<typeof CreateCourseTeacherSchema>> = (values) => {
-    startTransition(() => {
-      CreateCourseTeacherAction(values).then((result) => {
+const onSubmit: SubmitHandler<z.infer<typeof CreateCourseTeacherSchema>> = (values) => {
+  console.log("=== CLIENT: 表單提交開始 ===");
+  console.log("提交的 values:", values);
+
+  startTransition(() => {
+    console.log("=== CLIENT: 進入 startTransition ===");
+    CreateCourseTeacherAction(values)
+      .then((result) => {
+        console.log("=== CLIENT: Action 回傳結果 ===", result);
         if (result.data) {
           toast.success("課程創建成功");
           router.push(`/teacher/${teacherId}/CourseLists`);
         } else {
           toast.error(result.error || "創建課程失敗，請稍後重試");
         }
+      })
+      .catch((err) => {
+        console.error("=== CLIENT: Action 拋出錯誤 ===", err);
+        toast.error("系統錯誤，請聯絡管理員");
       });
-    });
-  };
+  });
+};
 
-  console.log("courseTypes : " ,courseTypes , "-- End --");
-  console.log("courseModules : " ,courseModules , "-- End --");
+  // console.log("courseTypes : " ,courseTypes , "-- End --");
+  // console.log("courseModules : " ,courseModules , "-- End --");
   console.log("teacherData: ",teacherData ,"-- End --")
   console.log(" -- Bug -- ", form.formState.errors ,"-- End --")
 

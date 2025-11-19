@@ -35,6 +35,8 @@ interface CourseProduct {
   courseId: string | null;
   Course?: Course;
   Product_Img: ProductImg[];
+    specialCourse?: boolean; // 新增字段
+  specialCourseId?: string; // 新增字段
 }
 
 interface CourseProductType {
@@ -135,40 +137,45 @@ const ShopPage: React.FC<ShopPageProps> = ({ headerTypes = [] }) => {
     fetchCourseProductTypes();
   }, []);
 
+
 const filteredProducts = useMemo(() => {
   if (!productLists.length) return [];
 
-  let filtered = productLists.filter((product) => product.IsPublic === true);
+  let filtered = productLists.filter((product) => {
+    // 必須公開
+    if (product.IsPublic !== true) return false;
 
-  // === 類型篩選：支援 ID 或 typename ===
+    // 有 specialCourse 或 specialCourseId 就隱藏
+    if (product.specialCourse || product.specialCourseId) return false;
+
+    return true;
+  });
+
+  // === 類型篩選 ===
   if (selectedTypes.length > 0) {
     filtered = filtered.filter((product) => {
       if (!Array.isArray(product.CourseProductTypeArray)) return false;
-
       return selectedTypes.some((selectedId) => {
         const type = courseProductTypes.find(t => t.id === selectedId);
         if (!type) return false;
-
         return (
-          product.CourseProductTypeArray.includes(selectedId) ||     // 比對 ID
-          product.CourseProductTypeArray.includes(type.typename)     // 比對 typename（舊資料）
+          product.CourseProductTypeArray.includes(selectedId) ||
+          product.CourseProductTypeArray.includes(type.typename)
         );
       });
     });
   }
 
-  // === 狀態篩選：支援 ID 或 statuename ===
+  // === 狀態篩選 ===
   if (selectedStatuses.length > 0) {
     filtered = filtered.filter((product) => {
       if (!Array.isArray(product.CourseProductStatusArray)) return false;
-
       return selectedStatuses.some((selectedId) => {
         const status = courseProductStatuses.find(s => s.id === selectedId);
         if (!status) return false;
-
         return (
-          product.CourseProductStatusArray.includes(selectedId) ||   // 比對 ID
-          product.CourseProductStatusArray.includes(status.statuename) // 比對 statuename
+          product.CourseProductStatusArray.includes(selectedId) ||
+          product.CourseProductStatusArray.includes(status.statuename)
         );
       });
     });
@@ -185,6 +192,59 @@ const filteredProducts = useMemo(() => {
 
   return filtered;
 }, [productLists, selectedTypes, selectedStatuses, searchQuery, courseProductTypes, courseProductStatuses]);
+
+
+
+// const filteredProducts = useMemo(() => {
+//   if (!productLists.length) return [];
+
+//   let filtered = productLists.filter((product) => product.IsPublic === true);
+
+//   // === 類型篩選：支援 ID 或 typename ===
+//   if (selectedTypes.length > 0) {
+//     filtered = filtered.filter((product) => {
+//       if (!Array.isArray(product.CourseProductTypeArray)) return false;
+
+//       return selectedTypes.some((selectedId) => {
+//         const type = courseProductTypes.find(t => t.id === selectedId);
+//         if (!type) return false;
+
+//         return (
+//           product.CourseProductTypeArray.includes(selectedId) ||     // 比對 ID
+//           product.CourseProductTypeArray.includes(type.typename)     // 比對 typename（舊資料）
+//         );
+//       });
+//     });
+//   }
+
+//   // === 狀態篩選：支援 ID 或 statuename ===
+//   if (selectedStatuses.length > 0) {
+//     filtered = filtered.filter((product) => {
+//       if (!Array.isArray(product.CourseProductStatusArray)) return false;
+
+//       return selectedStatuses.some((selectedId) => {
+//         const status = courseProductStatuses.find(s => s.id === selectedId);
+//         if (!status) return false;
+
+//         return (
+//           product.CourseProductStatusArray.includes(selectedId) ||   // 比對 ID
+//           product.CourseProductStatusArray.includes(status.statuename) // 比對 statuename
+//         );
+//       });
+//     });
+//   }
+
+//   // === 搜尋 ===
+//   if (searchQuery) {
+//     filtered = filtered.filter(
+//       (product) =>
+//         product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//         product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+//     );
+//   }
+
+//   return filtered;
+// }, [productLists, selectedTypes, selectedStatuses, searchQuery, courseProductTypes, courseProductStatuses]);
 
 const handleTypeChange = (typeId: string) => {
   setSelectedTypes((prev) =>
@@ -230,9 +290,10 @@ const handleStatusChange = (statusId: string) => {
     );
   }
 
-  console.log("headerTypesDate : ", headerTypes, " -- End -- ");
-    console.log("courseProductTypes : ", courseProductTypes, " -- End -- ");
-      console.log("selectedTypes : ", selectedTypes, " -- End -- ");
+  // console.log("headerTypesDate : ", headerTypes, " -- End -- ");
+  //   console.log("courseProductTypes : ", courseProductTypes, " -- End -- ");
+  //     console.log("selectedTypes : ", selectedTypes, " -- End -- ");
+  console.log("productLists : ", productLists , "-- End --")
 
   return (
     <div className="container mx-auto px-4 py-8">

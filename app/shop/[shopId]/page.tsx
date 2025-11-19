@@ -163,7 +163,7 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
           {/* 三欄資訊卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-1">目標觀眾</h4>
+              <h4 className="font-semibold text-blue-900 mb-1">目標群眾</h4>
               <p className="text-gray-700 whitespace-pre-line">
                 {getProduct.Target_Audience || '未提供'}
               </p>

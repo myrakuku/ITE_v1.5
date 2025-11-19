@@ -453,7 +453,9 @@ const Create_Product_Form = ({
                   <FormItem className="md:col-span-2">
                     <FormLabel>是否公開</FormLabel>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} disabled={!!initialCourse} />
+                      <Switch checked={field.value} onCheckedChange={field.onChange}
+                      //  disabled={!!initialCourse} 
+                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

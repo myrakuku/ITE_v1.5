@@ -11,6 +11,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       },
       include: {
         CourseModul: true,
+        specialCourse:true,
+        Course:true
       },
     });
 

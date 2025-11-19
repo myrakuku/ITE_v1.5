@@ -1,17 +1,25 @@
 // app/api/SpecialCourse/SpecialCourse_Lists/route.ts
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const courses = await db.specialCourse.findMany({
+    const courses = await prisma.specialCourse.findMany({
       include: {
-        Students: true,
+        Students: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+          },
+        },
         SpecialCourseTimeRanges: {
           select: { id: true, timeRange: true, starttime: true, endtime: true },
         },
       },
     });
+
+    console.log("API SpecialCourse_Lists 回傳:", courses); // 除錯用
 
     return NextResponse.json(courses);
   } catch (error) {

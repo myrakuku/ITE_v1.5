@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     const timeHours = Number(formData.get("timeHours"));
     const teacher = JSON.parse(formData.get("teacher") as string);
     const teacherId = formData.get("teacherId") as string;
-    const isPublic = formData.get("isPublic") === "true";
+    const isPublic = formData.get("isPublic") === "false";
     const isProduct = formData.get("isProduct") === "true";
     const type = JSON.parse(formData.get("type") as string);
 
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
           timeHours,
           teacher,
           teacherId,
-          isPublic,
+          isPublic ,
           isProduct,
           type,
           courseModulId,

@@ -236,7 +236,7 @@ if (Array.isArray(rawVideos)) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-1">目標觀眾</h4>
+              <h4 className="font-semibold text-blue-900 mb-1">目標群眾</h4>
               <p className="text-gray-700 whitespace-pre-line">
                 {specialCourseData.Target_Audience || '未提供'}
               </p>
@@ -279,7 +279,7 @@ if (Array.isArray(rawVideos)) {
             <p><span className="font-semibold">課程代碼：</span> {specialCourseData.courseCode}</p>
             <p><span className="font-semibold">學校：</span> {specialCourseData.schoolName}</p>
             <p><span className="font-semibold">天數：</span> {specialCourseData.numberOfDays}</p>
-            <p><span className="font-semibold">學生數：</span> {specialCourseData.numberOfStudents}</p>
+
             <p><span className="font-semibold">總時數：</span> {specialCourseData.timeHours} 小時</p>
             <p><span className="font-semibold">開始日期：</span> {formatDateWithDay(specialCourseData.startDate)}</p>
             <p><span className="font-semibold">結束日期：</span> {formatDateWithDay(specialCourseData.endDate)}</p>
@@ -295,7 +295,7 @@ if (Array.isArray(rawVideos)) {
             {(specialCourseData.SpecialCourseTimeRanges ?? []).length > 0 ? (
               specialCourseData.SpecialCourseTimeRanges!.map((t) => (
                 <p key={t.id}>
-                  <span className="font-semibold">{t.timeRange}：</span>
+                  <span className="font-semibold">時間：</span>
                   {formatTime(t.starttime)} - {formatTime(t.endtime)}
                 </p>
               ))

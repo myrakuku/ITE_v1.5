@@ -401,6 +401,9 @@ interface CourseProduct {
   courseId: string | null;
   Course?: Course;
   Product_Img: ProductImg[];
+  specialCourse?: boolean; // 新增字段
+  specialCourseId?: string; // 新增字段
+  isTrash?: boolean; // ← 新增此行（可選）
 }
 
 interface CourseProductType {
@@ -507,87 +510,169 @@ const ShopPagebyUser = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const filterProducts = () => {
-      if (!originalProductLists.length) {
-        console.log("產品列表為空，設置 filteredProductLists 為空");
-        setFilteredProductLists([]);
-        return;
-      }
 
-      let filtered = originalProductLists;
+// useEffect(() => {
+//   const filterProducts = () => {
+//     if (!originalProductLists.length) {
+//       console.log("產品列表為空，設置 filteredProductLists 為空");
+//       setFilteredProductLists([]);
+//       return;
+//     }
 
-      filtered = filtered.filter((product) => {
-        const isPublicMatch = product.IsPublic === true;
-        console.log(`產品 ${product.title} 的 IsPublic: ${product.IsPublic}, 是否匹配: ${isPublicMatch}`);
-        return isPublicMatch;
-      });
+//     let filtered = originalProductLists;
 
-      if (selectedTypes.length > 0) {
-        filtered = filtered.filter((product) => {
-          const isTypeMatch =
-            Array.isArray(product.CourseProductTypeArray) &&
-            selectedTypes.some((type) => {
-              const match = product.CourseProductTypeArray.includes(type);
-              console.log(
-                `產品 ${product.title} 的 CourseProductTypeArray: ${product.CourseProductTypeArray}, 檢查類型 ${type}, 是否匹配: ${match}`
-              );
-              return match;
-            });
-          return isTypeMatch;
-        });
-      }
+//     // === 1. 必須公開 + 排除 specialCourse ===
+//     filtered = filtered.filter((product) => {
+//       const isPublicMatch = product.IsPublic === true;
+//       const hasSpecialCourse = !!product.specialCourse || !!product.specialCourseId;
+//       console.log(`產品 ${product.title} | IsPublic: ${isPublicMatch} | 有 specialCourse: ${hasSpecialCourse}`);
+//       return isPublicMatch && !hasSpecialCourse;
+//     });
 
-      if (selectedStatuses.length > 0) {
-        filtered = filtered.filter((product) => {
-          const isStatusMatch =
-            Array.isArray(product.CourseProductStatusArray) &&
-            selectedStatuses.some((status) => {
-              const match = product.CourseProductStatusArray.includes(status);
-              console.log(
-                `產品 ${product.title} 的 CourseProductStatusArray: ${product.CourseProductStatusArray}, 檢查狀態 ${status}, 是否匹配: ${match}`
-              );
-              return match;
-            });
-          return isStatusMatch;
-        });
-      }
+//     // === 2. 類型篩選 ===
+//     if (selectedTypes.length > 0) {
+//       filtered = filtered.filter((product) => {
+//         const isTypeMatch =
+//           Array.isArray(product.CourseProductTypeArray) &&
+//           selectedTypes.some((type) => {
+//             const match = product.CourseProductTypeArray.includes(type);
+//             console.log(
+//               `產品 ${product.title} 的 CourseProductTypeArray: ${product.CourseProductTypeArray}, 檢查類型 ${type}, 是否匹配: ${match}`
+//             );
+//             return match;
+//           });
+//         return isTypeMatch;
+//       });
+//     }
 
-      if (searchQuery) {
-        filtered = filtered.filter((product) => {
-          const titleMatch = product.title?.toLowerCase().includes(searchQuery.toLowerCase());
-          const descriptionMatch = product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-          console.log(
-            `產品 ${product.title} 的標題匹配: ${titleMatch}, 描述匹配: ${descriptionMatch}, 搜索詞: ${searchQuery}`
-          );
-          return titleMatch || descriptionMatch;
-        });
-      }
+//     // === 3. 狀態篩選 ===
+//     if (selectedStatuses.length > 0) {
+//       filtered = filtered.filter((product) => {
+//         const isStatusMatch =
+//           Array.isArray(product.CourseProductStatusArray) &&
+//           selectedStatuses.some((status) => {
+//             const match = product.CourseProductStatusArray.includes(status);
+//             console.log(
+//               `產品 ${product.title} 的 CourseProductStatusArray: ${product.CourseProductStatusArray}, 檢查狀態 ${status}, 是否匹配: ${match}`
+//             );
+//             return match;
+//           });
+//         return isStatusMatch;
+//       });
+//     }
 
-      console.log("最終篩選結果:", filtered);
-      setFilteredProductLists(filtered);
-    };
+//     // === 4. 搜尋 ===
+//     if (searchQuery) {
+//       filtered = filtered.filter((product) => {
+//         const titleMatch = product.title?.toLowerCase().includes(searchQuery.toLowerCase());
+//         const descriptionMatch = product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+//         console.log(
+//           `產品 ${product.title} 的標題匹配: ${titleMatch}, 描述匹配: ${descriptionMatch}, 搜索詞: ${searchQuery}`
+//         );
+//         return titleMatch || descriptionMatch;
+//       });
+//     }
 
-    filterProducts();
-  }, [selectedTypes, selectedStatuses, searchQuery, originalProductLists]);
+//     console.log("最終篩選結果:", filtered);
+//     setFilteredProductLists(filtered);
+//   };
 
-  const handleTypeChange = (typename: string) => {
-    const normalizedType = typename.trim();
-    setSelectedTypes((prev) =>
-      prev.includes(normalizedType)
-        ? prev.filter((t) => t !== normalizedType)
-        : [...prev, normalizedType]
-    );
+//   filterProducts();
+// }, [selectedTypes, selectedStatuses, searchQuery, originalProductLists]);
+
+
+useEffect(() => {
+  const filterProducts = () => {
+    if (!originalProductLists.length) {
+      setFilteredProductLists([]);
+      return;
+    }
+
+    let filtered = originalProductLists;
+
+    // === 1. 必須條件：公開 + 非 specialCourse + 非垃圾桶 ===
+    filtered = filtered.filter((product) => {
+      const isPublic = product.IsPublic === true;
+      const isNotSpecial = !product.specialCourse && !product.specialCourseId;
+      const isNotTrash = !product.isTrash;
+      return isPublic && isNotSpecial && isNotTrash;
+    });
+
+    // === 2. 類型篩選：比對 ID 而非 typename ===
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter((product) =>
+        Array.isArray(product.CourseProductTypeArray) &&
+        product.CourseProductTypeArray.some((typeId) =>
+          selectedTypes.includes(typeId)
+        )
+      );
+    }
+
+    // === 3. 狀態篩選：比對 ID 而非 statuename ===
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter((product) =>
+        Array.isArray(product.CourseProductStatusArray) &&
+        product.CourseProductStatusArray.some((statusId) =>
+          selectedStatuses.includes(statusId)
+        )
+      );
+    }
+
+    // === 4. 搜尋：標題 + 描述 ===
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((product) =>
+        product.title?.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredProductLists(filtered);
   };
 
-  const handleStatusChange = (statuename: string) => {
-    const normalizedStatus = statuename.trim();
-    setSelectedStatuses((prev) =>
-      prev.includes(normalizedStatus)
-        ? prev.filter((s) => s !== normalizedStatus)
-        : [...prev, normalizedStatus]
-    );
-  };
+  filterProducts();
+}, [
+  originalProductLists,
+  selectedTypes,
+  selectedStatuses,
+  searchQuery,
+]);
+
+
+  // const handleTypeChange = (typename: string) => {
+  //   const normalizedType = typename.trim();
+  //   setSelectedTypes((prev) =>
+  //     prev.includes(normalizedType)
+  //       ? prev.filter((t) => t !== normalizedType)
+  //       : [...prev, normalizedType]
+  //   );
+  // };
+
+  // const handleStatusChange = (statuename: string) => {
+  //   const normalizedStatus = statuename.trim();
+  //   setSelectedStatuses((prev) =>
+  //     prev.includes(normalizedStatus)
+  //       ? prev.filter((s) => s !== normalizedStatus)
+  //       : [...prev, normalizedStatus]
+  //   );
+  // };
+
+
+  const handleTypeChange = (typeId: string) => {
+  setSelectedTypes((prev) =>
+    prev.includes(typeId)
+      ? prev.filter((id) => id !== typeId)
+      : [...prev, typeId]
+  );
+};
+
+const handleStatusChange = (statusId: string) => {
+  setSelectedStatuses((prev) =>
+    prev.includes(statusId)
+      ? prev.filter((id) => id !== statusId)
+      : [...prev, statusId]
+  );
+};
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -638,6 +723,7 @@ const ShopPagebyUser = () => {
   console.log("courseProductStatuses:", courseProductStatuses, "-- End --");
   console.log("courseProductTypes:", courseProductTypes, "-- End --");
   console.log("filteredProductLists:", filteredProductLists, "-- End --");
+console.log("originalProductLists: ", originalProductLists , "-- End --")
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
@@ -657,7 +743,7 @@ const ShopPagebyUser = () => {
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">類型篩選</label>
               <div className="flex flex-wrap gap-2">
                 {courseProductTypes.map((type) => (
@@ -688,7 +774,41 @@ const ShopPagebyUser = () => {
                   </label>
                 ))}
               </div>
-            </div>
+            </div> */}
+
+            <div>
+  <label className="block text-sm font-medium text-gray-400 mb-2">類型篩選</label>
+  <div className="flex flex-wrap gap-2">
+    {courseProductTypes.map((type) => (
+      <label key={type.id} className="inline-flex items-center">
+        <input
+          type="checkbox"
+          checked={selectedTypes.includes(type.id)}  // 改用 ID
+          onChange={() => handleTypeChange(type.id)}
+          className="form-checkbox h-5 w-5 text-blue-600 rounded"
+        />
+        <span className="ml-2 text-sm text-white">{type.typename}</span>
+      </label>
+    ))}
+  </div>
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-400 mb-2">狀態篩選</label>
+  <div className="flex flex-wrap gap-2">
+    {courseProductStatuses.map((status) => (
+      <label key={status.id} className="inline-flex items-center">
+        <input
+          type="checkbox"
+          checked={selectedStatuses.includes(status.id)}  // 改用 ID
+          onChange={() => handleStatusChange(status.id)}
+          className="form-checkbox h-5 w-5 text-blue-600 rounded"
+        />
+        <span className="ml-2 text-sm text-white">{status.statuename}</span>
+      </label>
+    ))}
+  </div>
+</div>
           </div>
         </div>
 

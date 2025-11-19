@@ -197,32 +197,32 @@ export async function GET(
 
     const teacherCourses = await prisma.course.findMany({
       where: { teacherId: userId },
-      // select: {
-      //   id: true,
-      //   title: true,
-      //   description: true,
-      //   courseCode: true,
-      //   schoolName: true,
-      //   Students: true,
-      //   teacherId: true,
-      //   createdAt: true,
-      //   updatedAt: true,
-      // },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        courseCode: true,
+        schoolName: true,
+        Students: true,
+        teacherId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     const studentCourses = await prisma.course.findMany({
       where: { Students: { has: userName } },
-      // select: {
-      //   id: true,
-      //   title: true,
-      //   description: true,
-      //   courseCode: true,
-      //   schoolName: true,
-      //   Students: true,
-      //   teacherId: true,
-      //   createdAt: true,
-      //   updatedAt: true,
-      // },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        courseCode: true,
+        schoolName: true,
+        Students: true,
+        teacherId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     const uniqueCourses = [

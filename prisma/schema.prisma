@@ -513,46 +513,6 @@ model specialCourse {
 }
 
 
-// model specialCourse {
-//   id                  String                @id @default(uuid())
-//   title               String
-//   description         String
-//   courseCode          String
-//   schoolName          String
-//   CourseTypes         String?
-//   startDate           String?
-//   endDate             String?
-//   Coursedates         String[]              @default([])
-//   numberOfDays        Float
-//   numberOfStudents    Int?
-//   maxStudents         Int?                  // 新增：人數上限字段，可選
-//   timeHours           Float
-//   timeRange           String[]              @default([])
-//   teacher             String[]              @default([])
-//   teacherId           String
-//   isPublic            Boolean
-//   isProduct           Boolean
-//   Producted           Boolean
-//   Students            String[]
-//   type                String[]              @default([])
-//   classroom           String?
-//   weekday             String?
-//   createdAt           DateTime              @default(now())
-//   updatedAt           DateTime              @updatedAt
-//   IMG_URL             String?
-//   Video_URL           String?
-//   price               Float?
-//   GroupUser           GroupUser[]
-//   GroupMember         GroupMember[]
-//   CourseModul         CourseModul?          @relation(fields: [courseModulId], references: [id])
-//   courseModulId       String?
-//   CoursePorductType   CourseProductType[]
-//   CoursePorductStatue CourseProductStatus[]
-//   // CourseTimeRanges    CourseTimeRange[]     // 移除此關聯，因為它與 Course 相關
-//   SpecialCourseTimeRanges SpecialCourseTimeRange[] // 新增關聯
-//   Teacher             User?                 @relation(fields: [teacherId], references: [id])
-//   products            Product[]
-// }
 
 
 model SpecialCourseTimeRange {

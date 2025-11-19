@@ -22,7 +22,7 @@ type Course = {
   courseModulId: string | null;
   createdAt: string;
   updatedAt: string;
-  isProduct: boolean; // ← 新增欄位
+  Producted: boolean; // ← 新增欄位
   CourseModul?: {
     id: string;
     title: string;
@@ -85,8 +85,8 @@ const CourseListsByTeacher = () => {
                 href={`/teacher/${TeacherId}/CourseLists/${course.id}`}
                 className="block bg-gray-700 p-4 rounded-md shadow-md hover:bg-gray-600 transition relative"
               >
-                {/* 標記：isProduct === true 時顯示 */}
-                {course.isProduct && (
+                {/* 標記：Producted === true 時顯示 */}
+                {course.Producted && (
                   <span className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
                     已上架
                   </span>

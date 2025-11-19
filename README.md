@@ -240,3 +240,8 @@ Course
 加入Google Tag , Sitemap
 
 改了特別課程中的影片上傳方式
+
+
+18112025
+
+V.1.5

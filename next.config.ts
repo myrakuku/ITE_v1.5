@@ -19,7 +19,6 @@
 // module.exports = nextConfig;
 
 
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -27,19 +26,16 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "ite-teacher-fold.oss-cn-hongkong.aliyuncs.com",
-        port: "",
-        pathname: "/products/**", // 保留對 products 路徑的支持
+        pathname: "/products/**",
       },
       {
         protocol: "https",
         hostname: "ite-teacher-fold.oss-cn-hongkong.aliyuncs.com",
-        port: "",
-        pathname: "/special-course/**", // 添加對 special-course 路徑的支持
+        pathname: "/special-course/**",
       },
       {
         protocol: 'https',
         hostname: 'img.youtube.com',
-        port: '',
         pathname: '/vi/**',
       },
       {
@@ -48,10 +44,16 @@ const nextConfig = {
       },
     ],
   },
-  unoptimized: true, // 禁用圖片優化（僅用於開發環境）
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '30mb', // 關鍵：允許大檔案
+    },
+  },
+
   api: {
     bodyParser: {
-      sizeLimit: "30mb",
+      sizeLimit: "30mb", // API Routes 也支援
     },
   },
 };

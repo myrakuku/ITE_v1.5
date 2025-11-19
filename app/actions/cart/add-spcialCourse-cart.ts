@@ -190,7 +190,7 @@ export async function addSpcialCourseToCart(
   });
 
   if (!specialCourse) throw new Error('特殊課程不存在');
-  if (!specialCourse.isPublic) throw new Error('此課程不公開，無法加入購物車');
+  // if (!specialCourse.isPublic) throw new Error('此課程不公開，無法加入購物車');
 
   // 2. 查找對應的 Product（使用 specialCourseId 作為唯一識別）
   let product = await db.product.findFirst({

@@ -207,7 +207,9 @@ import { CreateSafeAction } from '@/lib/create-safe-action';
 import { Prisma } from '@prisma/client';
 
 const handler = async (data: InputType): Promise<ReturnType> => {
+  console.log("=== SERVER: 收到請求，data ===", data);
   try {
+    console.log("=== SERVER: 開始 Zod 驗證 ===");
     const validatedData = CreateCourseTeacherSchema.parse(data);
 
     const {
@@ -258,20 +260,23 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
-    // 驗證教師名稱
-    const validTeachers = await db.user.findMany({
-      where: {
-        name: { in: teacher },
-        role: 'TEACHER',
-      },
-      select: { name: true },
-    });
+// 驗證教師名稱
+const validTeachers = await db.user.findMany({
+  where: {
+    name: { in: teacher },
+    role: 'TEACHER',
+  },
+  select: { name: true },
+});
 
-    if (validTeachers.length !== teacher.length) {
-      return {
-        error: '部分教師名稱無效或不是教師角色',
-      };
-    }
+const inputTeacherSet = new Set(teacher);
+const validTeacherSet = new Set(validTeachers.map(t => t.name));
+
+for (const name of inputTeacherSet) {
+  if (!validTeacherSet.has(name)) {
+    return { error: `教師名稱無效或不是教師角色：${name}` };
+  }
+}
 
     // 驗證課程類型
     const validTypes = await db.courseProductType.findMany({
@@ -298,6 +303,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
+    console.log("=== SERVER: Zod 驗證通過 ===", validatedData);
+console.log("=== SERVER: 準備創建 courseData ===");
     // === 在創建 courseData 時，加入 CoursePorductType connect ===
 const courseData: Prisma.CourseCreateInput = {
   title,
@@ -335,7 +342,8 @@ const courseData: Prisma.CourseCreateInput = {
     CourseModul: { connect: { id: courseModuleId } },
   }),
 };
-
+console.log("=== SERVER: courseData 建構完成 ===", courseData);
+console.log("=== SERVER: 開始 db.course.create ===");
     // 創建課程
     const course = await db.course.create({
       data: courseData,
@@ -343,7 +351,7 @@ const courseData: Prisma.CourseCreateInput = {
         CourseTimeRanges: true,
       },
     });
-
+console.log("=== SERVER: 資料庫創建成功 ===", course);
     // 格式化返回數據
     const formattedCourseData: CourseReturnType = {
       id: course.id,
@@ -378,7 +386,7 @@ const courseData: Prisma.CourseCreateInput = {
     };
 
     console.log('-- Create course on server -- : ', formattedCourseData, '-- End --');
-
+console.log("=== SERVER: 準備回傳成功 ===");
     return {
       data: formattedCourseData,
     };

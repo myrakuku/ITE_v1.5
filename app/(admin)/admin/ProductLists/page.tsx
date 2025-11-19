@@ -20,6 +20,10 @@ interface Course {
   Students: string[];
   Producted?: boolean;
   isProduct?: boolean;
+  // === 必須加入這兩行 ===
+  startDate: string | null;
+  endDate: string | null;
+  // === 結束 ===
 }
 
 interface ProductLists {
@@ -58,6 +62,18 @@ const ProductListsPage = () => {
     }
   };
 
+  const restoreFromTrash = async (id: string) => {
+  try {
+    const res = await fetch(`/api/product/restore-from-trash/${id}`, { method: "PATCH" });
+    if (!res.ok) throw new Error("回復失敗");
+
+    // 直接重新 fetch，確保前端與 DB 同步
+    await fetchProducts();
+    toast.success("已從垃圾桶回復");
+  } catch {
+    toast.error("回復失敗");
+  }
+};
   const moveToTrash = async (id: string) => {
     try {
       const res = await fetch(`/api/product/move-to-trash/${id}`, { method: "PATCH" });
@@ -101,82 +117,123 @@ const ProductListsPage = () => {
 
   console.log("products : ", products , "-- End --")
   // 修正：加入 key 給 ProductCard
-  const ProductCard = (product: ProductLists) => (
-    <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-      <Link href={`/admin/ProductLists/${product.id}`} className="block">
-        <div className="relative aspect-video bg-gray-700">
-          {product.Product_Img[0]?.img_url ? (
-            <Image
-              src={product.Product_Img[0].img_url}
-              alt={product.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <span className="text-gray-500">無圖片</span>
-            </div>
-          )}
-          {product.Course && product.Course.Students.length >= (product.Course.maxStudents ?? 0) && product.Course.maxStudents && (
-            <Badge className="absolute top-2 right-2 bg-red-600">已滿</Badge>
-          )}
-        </div>
-        <div className="p-4 space-y-2">
-          <h3 className="font-semibold text-lg line-clamp-1">{product.title}</h3>
-          <p className="text-sm text-gray-400 line-clamp-2">{product.description}</p>
-          <div className="flex justify-between items-center">
-            <div>
-              <span className="text-xl font-bold text-green-400">HK${product.real_price}</span>
-              {product.price !== product.real_price && (
-                <span className="text-sm text-gray-500 line-through ml-2">HK${product.price}</span>
-              )}
-            </div>
-            <Badge variant={product.IsPublic ? "default" : "secondary"}>
-              {product.IsPublic ? "公開" : "不公開"}
-            </Badge>
-          </div>
-          {product.Course && (
-            <p className="text-xs text-gray-400">
-              學生：{product.Course.Students.length} / {product.Course.maxStudents ?? "無上限"}
-            </p>
-          )}
-        </div>
-      </Link>
-
-      <div className="p-3 border-t border-gray-700 flex gap-2">
-        {!product.isTrash ? (
-          <Button
-            size="sm"
-            variant="destructive"
-            className="flex-1"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              moveToTrash(product.id);
-            }}
-          >
-            <Archive className="w-4 h-4 mr-1" /> 設為廢品
-          </Button>
+const ProductCard = (product: ProductLists) => (
+  <div key={product.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+    <Link href={`/admin/ProductLists/${product.id}`} className="block">
+      <div className="relative aspect-video bg-gray-700">
+        {product.Product_Img[0]?.img_url ? (
+          <Image
+            src={product.Product_Img[0].img_url}
+            alt={product.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
         ) : (
-          <Button
-            size="sm"
-            variant="destructive"
-            className="flex-1"
-            disabled={!canDelete(product)}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (canDelete(product)) {
-                setDeleteDialog({ open: true, id: product.id });
-              }
-            }}
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            {canDelete(product) ? "永久刪除" : "有學生，不可刪"}
-          </Button>
+          <div className="flex items-center justify-center h-full">
+            <span className="text-gray-500">無圖片</span>
+          </div>
+        )}
+        {product.Course && product.Course.Students.length >= (product.Course.maxStudents ?? 0) && product.Course.maxStudents && (
+          <Badge className="absolute top-2 right-2 bg-red-600">已滿</Badge>
         )}
       </div>
+
+      <div className="p-4 space-y-2">
+        <h3 className="font-semibold text-lg line-clamp-1">{product.title}</h3>
+        <p className="text-sm text-gray-400 line-clamp-2">{product.description}</p>
+
+        {/* 開課日期 */}
+        {product.Course && product.Course.startDate && (
+          <div className="text-sm text-blue-400 font-medium">
+            開課：
+            {new Date(product.Course.startDate).toLocaleDateString('zh-HK', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              weekday: 'short'
+            })}
+            {product.Course.endDate && product.Course.startDate !== product.Course.endDate && (
+              <> ～ {new Date(product.Course.endDate).toLocaleDateString('zh-HK', {
+                month: 'short',
+                day: 'numeric',
+                weekday: 'short'
+              })}</>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-xl font-bold text-green-400">HK${product.real_price}</span>
+            {product.price !== product.real_price && (
+              <span className="text-sm text-gray-500 line-through ml-2">HK${product.price}</span>
+            )}
+          </div>
+          <Badge variant={product.IsPublic ? "default" : "secondary"}>
+            {product.IsPublic ? "公開" : "不公開"}
+          </Badge>
+        </div>
+
+        {product.Course && (
+          <p className="text-xs text-gray-400">
+            學生：{product.Course.Students.length} / {product.Course.maxStudents ?? "無上限"}
+          </p>
+        )}
+      </div>
+    </Link>
+
+<div className="p-3 border-t border-gray-700 flex gap-2">
+  {product.isTrash ? (
+    <>
+      {/* 刪除按鈕 */}
+      <Button
+        size="sm"
+        variant="destructive"
+        className="flex-1"
+        disabled={!canDelete(product)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (canDelete(product)) {
+            setDeleteDialog({ open: true, id: product.id });
+          }
+        }}
+      >
+        <Trash2 className="w-4 h-4 mr-1" />
+        {canDelete(product) ? "永久刪除" : "有學生，不可刪"}
+      </Button>
+
+      {/* 新增：回復按鈕 */}
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1 border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          restoreFromTrash(product.id);
+        }}
+      >
+        <Archive className="w-4 h-4 mr-1" /> 回復
+      </Button>
+    </>
+  ) : (
+    /* 原有「設為廢品」按鈕 */
+    <Button
+      size="sm"
+      variant="destructive"
+      className="flex-1"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        moveToTrash(product.id);
+      }}
+    >
+      <Archive className="w-4 h-4 mr-1" /> 設為廢品
+    </Button>
+  )}
+</div>
     </div>
   );
 
@@ -272,170 +329,3 @@ const EmptyState = ({ type }: { type: "normal" | "special" | "trash" }) => {
 };
 
 export default ProductListsPage;
-// "use client";
-
-// import Link from "next/link";
-// import { useEffect, useState } from "react";
-// import Image from "next/image";
-
-// interface ProductImg {
-//   id: string;
-//   img_url: string;
-// }
-
-// interface Course {
-//   maxStudents: number | null;
-//   Students: string[];
-// }
-
-// interface ProductLists {
-//   id: string;
-//   title: string;
-//   description: string;
-//   price: number;
-//   real_price: number;
-//   IsPublic: boolean;
-//   Product_Img: ProductImg[];
-//   Course?: Course;
-// }
-
-// const ProductListsPage = () => {
-//   const [GetProductData, setGetProductData] = useState<ProductLists[]>([]);
-//   const [error, setError] = useState<string | null>(null);
-
-//   useEffect(() => {
-//     const fetchProductDataLists = async () => {
-//       try {
-//         const response = await fetch("/api/product/Get_Product_Lists");
-//         if (!response.ok) {
-//           throw new Error(`API 錯誤: ${response.status} ${response.statusText}`);
-//         }
-//         const data = await response.json();
-//         if (data.error) {
-//           throw new Error(data.error);
-//         }
-//         setGetProductData(data);
-//       } catch (error) {
-//         setError(error instanceof Error ? error.message : "無法載入產品數據");
-//       }
-//     };
-
-//     fetchProductDataLists();
-//   }, []);
-
-//   // 檢查課程是否已滿
-//   const isCourseFull = (course?: Course) => {
-//     if (!course || course.maxStudents === null || course.maxStudents === undefined) {
-//       return false; // 無課程或無上限，視為未滿
-//     }
-//     return course.Students.length >= course.maxStudents;
-//   };
-
-//   if (error) {
-//     return (
-//       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-//         <div className="bg-red-600 px-4 py-2 rounded-md">{error}</div>
-//       </div>
-//     );
-//   }
-
-//   if (!GetProductData.length) {
-//     return (
-//       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center gap-4">
-//         <div className="text-lg">載入中...</div>
-//       </div>
-//     );
-//   }
-
-//   console.log("GetProductData : ", GetProductData, "-- End --");
-
-//   return (
-//     <div className="min-h-screen bg-gray-900 text-white">
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//         <div className="bg-gray-800 shadow-lg rounded-md p-6">
-//           <div className="flex justify-between items-center mb-6">
-//             <h1 className="text-2xl font-bold">產品列表</h1>
-//           </div>
-//           <div className="space-y-4">
-//             {GetProductData.map((product) => (
-//               <Link
-//                 key={product.id}
-//                 href={`/admin/ProductLists/${product.id}`}
-//                 className="block p-4 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-//               >
-//                 <div className="flex justify-between items-center mb-4">
-//                   <h2 className="text-lg font-semibold">{product.title}</h2>
-//                   {isCourseFull(product.Course) && (
-//                     <span className="text-sm text-red-400 font-medium bg-red-900 px-2 py-1 rounded">
-//                       已滿
-//                     </span>
-//                   )}
-//                 </div>
-//                 <div className="mb-4">
-//                   {product.Product_Img && product.Product_Img.length > 0 ? (
-//                     <Image
-//                       src={product.Product_Img[0].img_url}
-//                       alt={product.title}
-//                       width={300}
-//                       height={200}
-//                       className="w-full h-48 object-cover rounded-md"
-//                       priority={false}
-//                       placeholder="blur"
-//                       blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8//8/AwAI/AL+5PzM7gAAAABJRU5ErkJggg=="
-//                       onError={() => (
-//                         <Image
-//                           src="/placeholder-image.jpg"
-//                           alt="圖片加載失敗"
-//                           width={300}
-//                           height={200}
-//                           className="w-full h-48 object-cover rounded-md"
-//                           priority={false}
-//                         />
-//                       )}
-//                     />
-//                   ) : (
-//                     <Image
-//                       src="/placeholder-image.jpg"
-//                       alt="無圖片"
-//                       width={300}
-//                       height={200}
-//                       className="w-full h-48 object-cover rounded-md"
-//                       priority={false}
-//                       placeholder="blur"
-//                       blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8//8/AwAI/AL+5PzM7gAAAABJRU5ErkJggg=="
-//                     />
-//                   )}
-//                 </div>
-//                 <div className="space-y-2">
-//                   <div>
-//                     <span className="font-medium">標題:</span> {product.title}
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">描述:</span> {product.description}
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">價格:</span> {product.price}
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">實際價格:</span> {product.real_price}
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">公開狀態:</span>{" "}
-//                     {product.IsPublic ? "公開" : "不公開"}
-//                   </div>
-//                   <div>
-//                     <span className="font-medium">學生數:</span>{" "}
-//                     {product.Course?.Students.length ?? 0} /{" "}
-//                     {product.Course?.maxStudents ?? "無上限"}
-//                   </div>
-//                 </div>
-//               </Link>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ProductListsPage;

@@ -48,7 +48,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<CourseWithTime
     const { searchParams } = new URL(req.url);
     const typeId = searchParams.get("typeId");
     const page = Number(searchParams.get("page")) || 1;
-    const pageSize = Number(searchParams.get("pageSize")) || 10;
+    const pageSize = Number(searchParams.get("pageSize")) || 999;
 
     const courses: CourseWithTimeRanges[] = await prisma.course.findMany({
       where: typeId ? { type: { has: typeId } } : undefined,
