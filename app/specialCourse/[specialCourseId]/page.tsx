@@ -109,8 +109,8 @@ const SpecialCourseById = () => {
         const data = await response.json();
         setSpecialCourseData(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "無法獲取特殊課程數據");
-        toast.error(err instanceof Error ? err.message : "無法獲取特殊課程數據");
+        setError(err instanceof Error ? err.message : "無法獲取優惠課程數據");
+        toast.error(err instanceof Error ? err.message : "無法獲取優惠課程數據");
       } finally {
         setIsLoading(false);
       }
@@ -210,7 +210,7 @@ if (Array.isArray(rawVideos)) {
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-6">特殊課程詳情</h1>
+      <h1 className="text-3xl font-bold mb-6">優惠課程詳情</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 左側 */}
