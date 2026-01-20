@@ -12,10 +12,8 @@ import { useRouter } from 'next/navigation';
 import { EventDropArg } from '@fullcalendar/core';
 import { updateCourseDates } from '@/app/actions/Edit/Edit_AdminCourse/update-course-dates';
 
-// 定義 timeRange 枚舉類型
 type TimeRange = 'morning' | 'afternoon' | 'evening' | 'full_day';
 
-// 更新 Zod 模式，支援多個時間段
 const TimeRangeSchema = z.object({
   timeRange: z.enum(['morning', 'afternoon', 'evening', 'full_day']),
   startTime: z.string().optional().nullable(),
@@ -82,6 +80,7 @@ const Edit_Course_Form_Calendar = () => {
   const [calendarDates, setCalendarDates] = useState<string[]>([]);
   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // 搜尋關鍵字
   const calendarRef = useRef<FullCalendar>(null);
   const router = useRouter();
 
@@ -115,6 +114,11 @@ const Edit_Course_Form_Calendar = () => {
     { value: '5', label: '星期五' },
     { value: '6', label: '星期六' },
   ];
+
+  // 根據搜尋關鍵字過濾課程（依 courseCode）
+  const filteredCourses = courses.filter((course) =>
+    course.courseCode.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -270,8 +274,6 @@ const Edit_Course_Form_Calendar = () => {
         throw new Error('更新成功但未返回課程數據');
       }
 
-      console.log('更新成功，返回的課程數據：', result.course);
-
       const updatedCourse = result.course as unknown as Course;
 
       setCourses(courses.map((course) =>
@@ -375,9 +377,6 @@ const Edit_Course_Form_Calendar = () => {
     textColor: '#ffffff',
   }));
 
-  console.log('courses:', courses, '-- End --');
-  console.log('selectedCourse:', selectedCourse);
-
   return (
     <div className="shadow-lg">
       <h1 className="text-2xl font-bold mb-6">安排課程</h1>
@@ -395,29 +394,55 @@ const Edit_Course_Form_Calendar = () => {
         <div className="md:w-1/2 flex flex-col gap-6">
           <div className="bg-gray-800 rounded-md px-3 py-2 shadow-lg">
             <h2 className="text-lg font-semibold mb-4">課程列表</h2>
+
+            {/* 搜尋輸入框 */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="輸入課程代碼搜尋（例如：YOGA-2025）"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+              {searchQuery && (
+                <p className="text-sm text-gray-400 mt-2">
+                  找到 {filteredCourses.length} 個符合「{searchQuery}」的課程
+                </p>
+              )}
+            </div>
+
+            {/* 課程列表（使用 filteredCourses） */}
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {Array.isArray(courses) && courses.length > 0 ? (
-                courses.map((course) => (
+              {filteredCourses.length > 0 ? (
+                filteredCourses.map((course) => (
                   <div
                     key={course.id}
-                    onClick={() => setSelectedCourse(course)}
-                    className={`px-3 py-2 rounded-md cursor-pointer hover:bg-gray-700 ${
-                      selectedCourse?.id === course.id ? 'bg-gray-700' : ''
+                    onClick={() => {
+                      setSelectedCourse(course);
+                      setSearchQuery(''); // 選擇後清空搜尋欄
+                    }}
+                    className={`px-3 py-2 rounded-md cursor-pointer hover:bg-gray-700 transition-colors ${
+                      selectedCourse?.id === course.id ? 'bg-gray-700 ring-2 ring-blue-500' : ''
                     }`}
                   >
                     <p className="font-medium">{course.title}</p>
-                    <p className="text-sm text-gray-300">{course.courseCode}</p>
+                    <p className="text-sm text-gray-300">代碼：{course.courseCode}</p>
                     <p className="text-sm text-gray-300">
                       狀態: {course.Producted ? '已成為產品' : '未成為產品'}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-400">沒有可用的課程</p>
+                <p className="text-gray-400 text-center py-8">
+                  {searchQuery
+                    ? `找不到包含「${searchQuery}」的課程`
+                    : '沒有可用的課程'}
+                </p>
               )}
             </div>
           </div>
 
+          {/* 課程詳情表單 */}
           {selectedCourse && (
             <div className="bg-gray-800 rounded-md px-3 py-2 shadow-lg">
               <h2 className="text-lg font-semibold mb-4">課程詳情</h2>
@@ -447,9 +472,7 @@ const Edit_Course_Form_Calendar = () => {
                 <div>
                   <label className="block text-sm font-medium">時間段</label>
                   <div className="mt-1 flex flex-wrap gap-2">
-                    {selectedCourse &&
-                    Array.isArray(selectedCourse.CourseTimeRanges) &&
-                    selectedCourse.CourseTimeRanges.length > 0 ? (
+                    {selectedCourse.CourseTimeRanges.length > 0 ? (
                       selectedCourse.CourseTimeRanges.map((range) => (
                         <button
                           key={range.id}
@@ -492,9 +515,6 @@ const Edit_Course_Form_Calendar = () => {
                         max={timeRangeOptions[field.timeRange as TimeRange].end}
                         className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2"
                       />
-                      {errors.timeRanges?.[index]?.startTime && (
-                        <p className="text-red-500 text-sm">{errors.timeRanges[index]?.startTime?.message}</p>
-                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium">結束時間</label>
@@ -505,9 +525,6 @@ const Edit_Course_Form_Calendar = () => {
                         max={timeRangeOptions[field.timeRange as TimeRange].end}
                         className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2"
                       />
-                      {errors.timeRanges?.[index]?.endTime && (
-                        <p className="text-red-500 text-sm">{errors.timeRanges[index]?.endTime?.message}</p>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -524,9 +541,6 @@ const Edit_Course_Form_Calendar = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.weekday && (
-                    <p className="text-red-500 text-sm">{errors.weekday.message}</p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">課室</label>
@@ -536,9 +550,6 @@ const Edit_Course_Form_Calendar = () => {
                     className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white px-3 py-2"
                     placeholder="輸入課室名稱（可選）"
                   />
-                  {errors.classroom && (
-                    <p className="text-red-500 text-sm">{errors.classroom.message}</p>
-                  )}
                 </div>
                 <button
                   type="submit"
@@ -551,6 +562,7 @@ const Edit_Course_Form_Calendar = () => {
           )}
         </div>
 
+        {/* 課程月曆 */}
         <div className="md:w-1/2">
           <div className="bg-gray-800 rounded-md px-3 py-2 shadow-lg">
             <h2 className="text-lg font-semibold mb-4">課程月曆</h2>

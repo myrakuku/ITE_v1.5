@@ -251,5 +251,27 @@ github
 
 
 
+12-12-2025
+
+加入POST DB 以及 相關function
 
 
+22-12-2025
+
+已經加入
+# Admin 
+排堂日歷 內的課堂當用戶Click左框框之後加
+該數據的開始時間與結束時間 （時段值）
+建立課程/更改課程列表 加Search Bar （CourseID）
+
+# Admin
+後台商品例表 產品加＋Course ID Number
+
+再加post server action function
+
+為了改nextjs 12月份的bug 要把版本升級
+
+
+31／2/2025
+
+lib中的oss.ts 是給ADMIN 開post用 

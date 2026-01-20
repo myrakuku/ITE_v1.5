@@ -280,7 +280,15 @@ if (Array.isArray(rawVideos)) {
             <p><span className="font-semibold">學校：</span> {specialCourseData.schoolName}</p>
             <p><span className="font-semibold">天數：</span> {specialCourseData.numberOfDays}</p>
 
-            <p><span className="font-semibold">總時數：</span> {specialCourseData.timeHours} 小時</p>
+<p>
+  <span className="font-semibold">總時數：</span>
+  {(() => {
+    const dailyHours = Number(specialCourseData.timeHours) || 0;
+    const days = specialCourseData.Coursedates?.length || 0;
+    const total = dailyHours * days;
+    return total > 0 ? `${total.toFixed(1)} 小時` : '未設置';
+  })()}
+</p>
             <p><span className="font-semibold">開始日期：</span> {formatDateWithDay(specialCourseData.startDate)}</p>
             <p><span className="font-semibold">結束日期：</span> {formatDateWithDay(specialCourseData.endDate)}</p>
             <p><span className="font-semibold">上課日期：</span>

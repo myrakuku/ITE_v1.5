@@ -46,6 +46,7 @@ const publicRoutes = [
   '/about',
   '/complaintFrom',
   '/specialCourse',
+  '/Posts'
 ];
 
 export default auth(async (req) => {
@@ -53,9 +54,11 @@ export default auth(async (req) => {
 
   // 檢查是否匹配動態路由 /[shopId] 或 /specialCourse/[courseId]
   const isShopIdRoute = /^\/shop\/[a-zA-Z0-9-]+$/.test(currentPath);
+  const isPostIdRoute = /^\/Posts\/[a-zA-Z0-9-]+$/.test(currentPath);
   const isSpecialCourseIdRoute = /^\/specialCourse\/[a-zA-Z0-9-]+$/.test(currentPath);
 
-  if (!req.auth?.user && !publicRoutes.includes(currentPath) && !isShopIdRoute && !isSpecialCourseIdRoute) {
+
+  if (!req.auth?.user && !publicRoutes.includes(currentPath) && !isShopIdRoute && !isSpecialCourseIdRoute && !isPostIdRoute) {
     const newUrl = new URL('/', req.nextUrl.origin);
     return NextResponse.redirect(newUrl);
   }

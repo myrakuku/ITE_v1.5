@@ -119,21 +119,22 @@ export async function POST(req: NextRequest) {
     console.log('Accounts 寫入完成');
 
     // ── 5. 建立 Invoice ───────────────────────────────────
-    const invoiceData = cart.items.map((item) => ({
-      studentname: username,
-      title: item.product.title,
-      description: item.product.description ?? '',
-      price: item.product.price,
-      total: item.product.price * item.quantity,
-      date: currentDate,
-      student_id: userId,
-      Invoice_id: createId(),
-      servetype: '',
-      DB: 0,
-      adminFee: 0,
-      content: [],
-      PaymentMethods: [],
-    }));
+const invoiceData = cart.items.map((item) => ({
+  studentname: username,
+  title: item.product.title,
+  description: item.product.description ?? '',
+  price: item.product.price,
+  total: item.product.price * item.quantity,
+  date: currentDate,
+  student_id: userId,
+  Invoice_id: createId(),
+  servetype: '',
+  DB: 0,
+  adminFee: 0,
+  content: [],
+  PaymentMethods: [],
+  userId: userId,  // 此欄位現在存在，可直接插入
+}));
     console.log('準備寫入 Invoice:', invoiceData.length, '筆');
     await prisma.invoice.createMany({
       data: invoiceData,
@@ -338,203 +339,3 @@ if (courseIds.length > 0) {
     );
   }
 }
-
-
-
-// // app/api/handle-payment-success/route.ts
-// 'use server';
-
-// import { NextRequest, NextResponse } from 'next/server';
-// import Stripe from 'stripe';
-// import { prisma } from '@/lib/prisma';
-// import { auth } from '@/auth';
-// import { createId } from '@paralleldrive/cuid2';
-
-// if (!process.env.STRIPE_SECRET_KEY) {
-//   throw new Error('STRIPE_SECRET_KEY is not defined');
-// }
-// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-//   apiVersion: '2025-07-30.basil',
-// });
-
-// interface PaymentSuccessInput {
-//   sessionId: string;
-//   userId: string;
-//   username: string;
-// }
-
-// export async function POST(req: NextRequest) {
-//   try {
-//     const { sessionId, userId, username } = await req.json() as PaymentSuccessInput;
-//     if (!sessionId || !userId || !username) {
-//       return NextResponse.json({ error: '缺少必要參數' }, { status: 400 });
-//     }
-
-//     const session = await auth();
-//     if (!session?.user?.id || session.user.id !== userId) {
-//       return NextResponse.json({ error: '未授權' }, { status: 401 });
-//     }
-
-//     const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId, {
-//       expand: ['line_items'],
-//     });
-//     if (checkoutSession.payment_status !== 'paid') {
-//       return NextResponse.json({ error: '支付尚未完成' }, { status: 400 });
-//     }
-
-//     // ── 1. 取得購物車（包含 courseId & specialCourseId） ─────────────────────────────────────
-//     const cart = await prisma.cart.findFirst({
-//       where: { userId },
-//       include: {
-//         items: {
-//           include: {
-//             product: {
-//               select: {
-//                 id: true,
-//                 title: true,
-//                 description: true,
-//                 price: true,
-//                 courseId: true,          // ← 普通課程 ID
-//                 specialCourseId: true,   // ← specialCourse ID
-//               },
-//             },
-//           },
-//         },
-//       },
-//     });
-
-//     if (!cart || cart.items.length === 0) {
-//       return NextResponse.json({ success: true }, { status: 200 });
-//     }
-
-//     const currentDate = new Date();
-
-//     // ── 2. 建立 Accounts & Invoice ───────────────────────
-//     await prisma.accounts.createMany({
-//       data: cart.items.map((item) => ({
-//         client_name: username,
-//         title: item.product.title,
-//         description: item.product.description ?? '',
-//         price: item.product.price,
-//         total: item.product.price * item.quantity,
-//         date: currentDate.toISOString(),
-//         client_id: userId,
-//       })),
-//       skipDuplicates: true,
-//     });
-
-//     await prisma.invoice.createMany({
-//       data: cart.items.map((item) => ({
-//         studentname: username,
-//         title: item.product.title,
-//         description: item.product.description ?? '',
-//         price: item.product.price,
-//         total: item.product.price * item.quantity,
-//         date: currentDate,
-//         student_id: userId,
-//         Invoice_id: createId(),
-//         servetype: '',
-//         DB: 0,
-//         adminFee: 0,
-//         content: [],
-//         PaymentMethods: [],
-//       })),
-//       skipDuplicates: true,
-//     });
-
-//     // ── 3. 分類：courseIds & specialCourseIds ─────────────────────────────
-//     const courseIds: string[] = [];
-//     const specialCourseIds: string[] = [];
-
-//     cart.items.forEach((item) => {
-//       if (item.product.courseId) {
-//         courseIds.push(item.product.courseId);
-//       }
-//       if (item.product.specialCourseId) {
-//         specialCourseIds.push(item.product.specialCourseId);
-//       }
-//     });
-
-//     // ── 4. 將使用者加入 Course.Students（字串陣列） ─────────────────────
-//     if (courseIds.length > 0) {
-//       await prisma.$transaction(
-//         courseIds.map((courseId) =>
-//           prisma.course.update({
-//             where: { id: courseId },
-//             data: {
-//               Students: { push: userId }, // 字串陣列用 push
-//             },
-//           })
-//         )
-//       );
-//     }
-
-//     // ── 5. 將使用者加入 specialCourse.Students（關聯陣列） ─────────────
-//     if (specialCourseIds.length > 0) {
-//       await prisma.user.update({
-//         where: { id: userId },
-//         data: {
-//           specialCourse: {
-//             connect: specialCourseIds.map((id) => ({ id })),
-//           },
-//         },
-//       });
-//     }
-
-//     // ── 6. 更新 User.Course[]（關聯陣列） ─────────────────────────────
-//     if (courseIds.length > 0) {
-//       await prisma.user.update({
-//         where: { id: userId },
-//         data: {
-//           Course: {
-//             connect: courseIds.map((id) => ({ id })),
-//           },
-//         },
-//       });
-//     }
-
-//     // ── 7. 清空購物車 ─────────────────────────────────────
-//     await prisma.cartItem.deleteMany({ where: { cart: { userId } } });
-//     await prisma.cart.deleteMany({ where: { userId } });
-
-//     // ── 8. 建立 GTM `purchase` 事件 ─────────────────────────────
-//     const totalAmount = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
-//     const gtmItems = cart.items.map((item) => ({
-//       item_id: item.product.id,
-//       item_name: item.product.title,
-//       price: item.product.price,
-//       quantity: item.quantity,
-//     }));
-
-//     const gtmEvent = {
-//       event: 'purchase',
-//       ecommerce: {
-//         transaction_id: checkoutSession.id,
-//         value: totalAmount,
-//         currency: 'TWD',
-//         items: gtmItems,
-//       },
-//     };
-
-//     // ── 9. 回傳成功 + GTM 事件 + 註冊結果 ─────────────────────────────
-//     return NextResponse.json(
-//       {
-//         success: true,
-//         gtmEvent,
-//         enrolledCourses: courseIds,
-//         enrolledSpecialCourses: specialCourseIds,
-//       },
-//       { status: 200 }
-//     );
-//   } catch (error) {
-//     console.error('處理支付失敗:', error);
-//     return NextResponse.json(
-//       {
-//         error: '無法處理支付成功',
-//         details: error instanceof Error ? error.message : undefined,
-//       },
-//       { status: 500 },
-//     );
-//   }
-// }

@@ -1,54 +1,53 @@
-// // types/next-auth.d.ts
-// import { DefaultSession, DefaultUser } from 'next-auth';
-// import { JWT } from 'next-auth/jwt';
 
-// declare module 'next-auth' {
-//   interface Session {
+// // types/next-auth.d.ts（覆蓋或合併您現有內容）
+
+// import { UserRole } from "@/prisma/generated/client"; // 或您的 UserRole 位置
+// import { DefaultSession, DefaultUser } from "next-auth";
+
+// declare module "next-auth" {
+//   interface Session extends DefaultSession {
 //     user: {
 //       id: string;
+//       role: UserRole;
 //       name?: string | null;
-//       role?: string; // 對應 Prisma 的 UserRole 枚舉
-//     } & DefaultSession['user'];
+//       email?: string | null;
+//       image?: string | null;
+//     } & DefaultSession["user"];
 //   }
 
 //   interface User extends DefaultUser {
-//     role?: string; // 對應 Prisma 的 UserRole 枚舉
+//     id: string;
+//     role: UserRole;
 //   }
 // }
 
-// declare module 'next-auth/jwt' {
+// declare module "next-auth/jwt" {
 //   interface JWT {
 //     id?: string;
-//     name?: string | null;
-//     role?: string; // 對應 Prisma 的 UserRole 枚舉
+//     role?: UserRole;
 //   }
 // }
-
 
 
 // types/next-auth.d.ts
-import { UserRole } from "@/lib/auth";
-import { DefaultSession, DefaultUser } from "@auth/core/types";
+import "next-auth";
+import { DefaultSession } from "next-auth";
 
-declare module "@auth/core/types" {
-  interface Session extends DefaultSession {
+declare module "next-auth" {
+  interface Session {
     user: {
       id: string;
-      name: string;
-      role: UserRole;
+      role: "ADMIN" | "TEACHER" | "USER";  // 對應您的 UserRole enum
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
     } & DefaultSession["user"];
-  }
-
-  interface User extends DefaultUser {
-    id: string;
-    name: string | null;
-    role: UserRole;
   }
 }
 
-declare module "@auth/core/jwt" {
+declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
-    role?: UserRole;
+    role?: "ADMIN" | "TEACHER" | "USER";
   }
 }

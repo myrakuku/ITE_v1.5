@@ -47,7 +47,7 @@
 
 // export const dynamic = 'force-dynamic';
 
-
+ // app/api/oss/get-signed-url/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { auth} from "@/auth";
 import { createOssClient } from "@/lib/oss-client";

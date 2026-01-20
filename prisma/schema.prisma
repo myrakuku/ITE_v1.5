@@ -94,7 +94,7 @@ model Certigificate {
   date        String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  GroupUser   GroupUser[]
+  GroupUser   GroupUser[]   
   GroupMember GroupMember[]
 }
 
@@ -429,30 +429,34 @@ model Invoice {
   isPayment        Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  User             User[]
+  userId           String   // relation scalar field
+  user             User     @relation(fields: [userId], references: [id])
   PaymentMethods_price PaymentMethods_price[]
 }
 
 
 model Receipt {
-  id          String  @id @default(cuid())
-  title       String
-  content     String[]
-  // parentId    String?
-  studentname  String
-  invoicebydbid   String
-  Invoice_id   String
-  servetype       String
-  isPayment        Boolean 
-  DB Float
-  adminFee          Float
-  price           Float
-  PaymentMethods  String[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  User            User[]
-}
+  id             String  @id @default(cuid())
+  title          String
+  content        String[]
+  studentname    String
+  invoicebydbid  String
+  Invoice_id     String
+  servetype      String
+  isPayment      Boolean 
+  DB             Float
+  adminFee       Float
+  price          Float
+  PaymentMethods String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  // 新增：明確指向 User 的外鍵
+  userId         String
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
 model PaymentMethods_price {
   id          String  @id @default(cuid())
   Invoice_id  String
@@ -474,7 +478,7 @@ model specialCourse {
   numberOfDays     Int
   numberOfStudents Int?
   maxStudents      Int?
-  timeHours        Int
+  timeHours        Float
   teacher          String[]
   teacherId        String
   isPublic         Boolean
@@ -504,7 +508,7 @@ model specialCourse {
   // productId        String?
   products                 Product[]  // ← 反向關係
   SpecialCourseTimeRanges SpecialCourseTimeRange[]
-  Students         User[]
+  Students         User[]   
   GroupUser           GroupUser[]
   GroupMember         GroupMember[]
   CoursePorductType   CourseProductType[]  // 新增這行
@@ -513,6 +517,18 @@ model specialCourse {
 }
 
 
+
+model PostAdmin{
+  id        String   @id @default(uuid())
+  Title     String?
+  SupTitle  String?
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  img_url   String[]
+  video_url String[]
+  author String?
+}
 
 
 model SpecialCourseTimeRange {

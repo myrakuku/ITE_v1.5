@@ -20,20 +20,6 @@ declare global {
   }
 }
 
-// function reportGoogleAdsConversion(transactionId: string) {
-//   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-//     window.gtag('event', 'conversion', {
-//       send_to: 'AW-17538190885/Tql-COKsoL8bEKWc7qpB',
-//       transaction_id: transactionId,
-//       // 可選：加入金額、貨幣（若後端有提供）
-//       // value: 99.99,
-//       // currency: 'HKD',
-//     });
-//     console.log('Google Ads 轉換已回報:', transactionId);
-//   } else {
-//     console.warn('gtag 未載入，無法回報轉換');
-//   }
-// }
 
 export default function SuccessPage() {
   const params = useParams();
@@ -81,21 +67,6 @@ export default function SuccessPage() {
           return;
         }
 
-        // const { adsConversion } = paymentResponse.data;
-
-        // === 支付成功：回報 Google Ads 轉換 ===
-        // if (!conversionReported.current && adsConversion) {
-        //   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-        //     window.gtag('event', 'conversion', {
-        //       send_to: `AW-17538190885/${process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL}`,
-        //       transaction_id: adsConversion.transaction_id,
-        //       value: adsConversion.value,
-        //       currency: adsConversion.currency,
-        //     });
-        //     console.log('Google Ads 轉換已回報:', adsConversion);
-        //   }
-        //   conversionReported.current = true;
-        // }
 
         // === 2. 將用戶加入所有已購課程 ===
         if (!addStudentDone) {

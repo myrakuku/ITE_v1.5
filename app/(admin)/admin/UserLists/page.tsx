@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 interface UserDataLists {
   id: string;
   username: string;
-  phone: string | null; // 允許 null
-  name: string | null; // 允許 null
-  email: string | null; // 允許 null
+  phone: string | null;
+  name: string | null;
+  email: string | null;
   role: string;
 }
 
@@ -17,31 +17,53 @@ const UserListsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deletingId, setDeletingId] = useState<string | null>(null); // 正在刪除的 ID
+  const [showConfirm, setShowConfirm] = useState<string | null>(null); // 確認視窗
+
   const usersPerPage = 10;
 
   useEffect(() => {
     const fetchUserDataLists = async () => {
       try {
         const response = await fetch("/api/user/Get_User_Lists");
-        if (!response.ok) {
-          throw new Error(`API 錯誤: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`API 錯誤: ${response.status}`);
         const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
         setGetUserDataLists(data);
       } catch (error) {
-        console.error("fetchUserDataLists error:", error);
         setError(error instanceof Error ? error.message : "無法獲取用戶數據");
       }
     };
     fetchUserDataLists();
   }, []);
 
-  console.log("getUserDataLists:", getUserDataLists, "-- End --");
+  // 刪除用戶函式
+  const handleDelete = async (userId: string) => {
+    setDeletingId(userId);
+    try {
+      const res = await fetch(`/api/user/delete/${userId}`, {
+        method: "DELETE",
+      });
 
-  // 搜尋和過濾用戶，處理 null 值
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "刪除失敗");
+      }
+
+      // 成功刪除後，從狀態中移除
+      setGetUserDataLists((prev) => prev.filter((user) => user.id !== userId));
+      alert("用戶已成功刪除");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "刪除失敗，請稍後再試");
+    } finally {
+      setDeletingId(null);
+      setShowConfirm(null);
+    }
+  };
+
+  // 過濾與分頁邏輯（不變）
   const filteredUsers = getUserDataLists.filter(
     (user) =>
       (user.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
@@ -50,7 +72,6 @@ const UserListsPage = () => {
       (user.role?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
 
-  // 分頁邏輯
   const totalUsers = filteredUsers.length;
   const totalPages = Math.ceil(totalUsers / usersPerPage);
   const paginatedUsers = filteredUsers.slice(
@@ -61,7 +82,6 @@ const UserListsPage = () => {
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* 標題與創建用戶按鈕 */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">用戶列表</h1>
           <Link
@@ -72,14 +92,12 @@ const UserListsPage = () => {
           </Link>
         </div>
 
-        {/* 錯誤訊息 */}
         {error && (
           <div className="mb-4 text-red-500 p-4 bg-red-900/50 rounded-md">
             {error}
           </div>
         )}
 
-        {/* 搜尋框 */}
         <div className="mb-4">
           <input
             type="text"
@@ -87,42 +105,88 @@ const UserListsPage = () => {
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setCurrentPage(1); // 重置到第一頁
+              setCurrentPage(1);
             }}
             className="w-full px-4 py-2 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
-        {/* 用戶列表 */}
         <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden mb-6">
           {paginatedUsers.length === 0 ? (
             <p className="p-4 text-gray-400">無用戶數據或正在加載...</p>
           ) : (
             <div className="divide-y divide-gray-700">
               {paginatedUsers.map((user) => (
-                <Link
+                <div
                   key={user.id}
-                  href={`/admin/UserLists/${user.id}`}
-                  className="block px-4 py-3 hover:bg-gray-700 transition"
+                  className="px-4 py-3 hover:bg-gray-700 transition flex items-center justify-between"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-base font-medium">{user.name || "無名稱"}</div>
-                      <div className="text-sm text-gray-400">{user.username}</div>
+                  <Link
+                    href={`/admin/UserLists/${user.id}`}
+                    className="flex-1 block"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-base font-medium">
+                          {user.name || "無名稱"}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {user.username}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-400 text-right">
+                        <div>{user.email || "無電郵"}</div>
+                        <div>角色: {user.role}</div>
+                        <div>電話: {user.phone || "無"}</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-400 text-right">
-                      <div>{user.email || "無電郵"}</div>
-                      <div>角色: {user.role}</div>
-                      <div>電話: {user.phone || "無"}</div>
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+
+                  {/* 刪除按鈕 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setShowConfirm(user.id);
+                    }}
+                    disabled={deletingId === user.id}
+                    className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm rounded transition"
+                  >
+                    {deletingId === user.id ? "刪除中..." : "刪除"}
+                  </button>
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* 分頁控制 */}
+        {/* 確認刪除視窗 */}
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full">
+              <h3 className="text-lg font-bold mb-4">確認刪除</h3>
+              <p className="text-gray-300 mb-6">
+                確定要永久刪除此用戶嗎？此操作無法復原。
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowConfirm(null)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleDelete(showConfirm)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white"
+                >
+                  確認刪除
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 分頁 */}
         {totalPages > 1 && (
           <div className="flex justify-center space-x-2 mb-6">
             <button
