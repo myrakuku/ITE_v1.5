@@ -23,7 +23,7 @@ export async function uploadFilesToOSS(formData: FormData): Promise<string[]> {
     
     // 從 FormData 中提取檔案
     for (const entry of Array.from(formData.entries())) {
-      const [key, value] = entry;
+      const [, value] = entry;
       if (value instanceof File && value.size > 0) {
         files.push(value);
       }

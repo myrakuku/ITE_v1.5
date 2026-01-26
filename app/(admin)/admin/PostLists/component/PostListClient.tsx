@@ -16,7 +16,7 @@ interface PostListClientProps {
 
 export default function PostListClient({ posts, total, page, limit, search }: PostListClientProps) {
   const router = useRouter();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {

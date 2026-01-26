@@ -36,10 +36,10 @@ interface SpecialCourse {
   weekday?: string;
 }
 
-interface UserData {
-  Course: Course[];
-  specialCourse: SpecialCourse[];
-}
+// interface UserData {
+//   Course: Course[];
+//   specialCourse: SpecialCourse[];
+// }
 
 export default function CourseListsPage() {
   const { data: session, status } = useSession();

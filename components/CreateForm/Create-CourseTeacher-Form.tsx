@@ -61,7 +61,7 @@ const CreateCourseTeacherForm = () => {
   const params = useParams();
   const teacherId = params.Teacherid as string;
   const [courseTypes, setCourseTypes] = useState<CourseType[]>([]);
-  const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
+  // const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
   const [filteredCourseModules, setFilteredCourseModules] = useState<CourseModule[]>([]);
   const [teacherData, setTeacherData] = useState<Teacher | null>(null);
   // === 新增：獲取教師現有課程 ===
@@ -164,20 +164,19 @@ useEffect(() => {
       }
     };
 
-    const fetchCourseModules = async () => {
-      try {
-        const res = await fetch("/api/Course/Get_CourseModul_Lists");
-        if (!res.ok) throw new Error(`無法獲取課程模組: ${res.status}`);
-        const data: CourseModule[] = await res.json();
-        setCourseModules(data);
-        const filtered = data.filter(m => m.TeacherId === teacherId);
-        setFilteredCourseModules(filtered);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "無法載入課程模組");
-        setCourseModules([]);
-        setFilteredCourseModules([]);
-      }
-    };
+// 在 fetchCourseModules 中：
+const fetchCourseModules = async () => {
+  try {
+    const res = await fetch("/api/Course/Get_CourseModul_Lists");
+    if (!res.ok) throw new Error(`無法獲取課程模組: ${res.status}`);
+    const data: CourseModule[] = await res.json();
+    const filtered = data.filter(m => m.TeacherId === teacherId);
+    setFilteredCourseModules(filtered);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "無法載入課程模組");
+    setFilteredCourseModules([]);
+  }
+};
 
     const fetchTeacherData = async () => {
       try {

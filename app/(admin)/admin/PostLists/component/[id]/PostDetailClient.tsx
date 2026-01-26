@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { deletePostAdmin } from "@/app/actions/Admin_Post/post-admin";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface PostDetailClientProps {
   post: {
@@ -136,7 +137,7 @@ export default function PostDetailClient({ post }: PostDetailClientProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {post.img_url.map((url, index) => (
                 <div key={index} className="relative group">
-                  <img
+                  <Image
                     src={url}
                     alt={`文章圖片 ${index + 1}`}
                     className="w-full h-40 object-cover rounded border border-gray-200"

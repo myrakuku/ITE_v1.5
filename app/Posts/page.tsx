@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { getPostAdmins } from "../actions/Admin_Post/post-admin";
+import Image from "next/image";
 
 export default async function PostsPage() {
   const result = await getPostAdmins({ limit: 20 });
@@ -42,11 +43,14 @@ export default async function PostsPage() {
             {/* 若有首張圖片，可顯示縮圖 */}
             {post.img_url && post.img_url.length > 0 && (
               <div className="aspect-video relative">
-                <img
-                  src={post.img_url[0]}
-                  alt={post.Title || "文章圖片"}
-                  className="object-cover w-full h-full"
-                />
+<Image
+  src={post.img_url[0]}
+  alt={post.Title || "文章圖片"}
+  width={640}           // representative width
+  height={360}          // maintain ~16:9 ratio
+  className="object-cover w-full h-full"
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
               </div>
             )}
 

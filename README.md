@@ -272,6 +272,13 @@ github
 為了改nextjs 12月份的bug 要把版本升級
 
 
-31／2/2025
+31／12/2025
 
 lib中的oss.ts 是給ADMIN 開post用 
+
+26-1-2026
+
+加了google login
+next -v 16.0.10 版本
+
+改了post 的image bug

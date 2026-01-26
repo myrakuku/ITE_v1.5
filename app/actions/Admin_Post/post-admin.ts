@@ -661,20 +661,20 @@ export async function createPostAdmin(formData: FormData): Promise<any> {
       img_url = newImgUrls;
 
       // video_url：有新輸入則覆蓋，否則保留原有
-      const finalVideoUrls =
-        cleanedVideoUrls.length > 0 ? cleanedVideoUrls : existingPost.video_url;
+      // const finalVideoUrls =
+      //   cleanedVideoUrls.length > 0 ? cleanedVideoUrls : existingPost.video_url;
 
-      const post = await prisma.postAdmin.update({
-        where: { id },
-        data: {
-          Title: otherData.Title,
-          SupTitle: otherData.SupTitle || undefined,
-          content: otherData.content || undefined,
-          img_url,
-          video_url: finalVideoUrls,
-          author: otherData.author || undefined,
-        },
-      });
+      // const post = await prisma.postAdmin.update({
+      //   where: { id },
+      //   data: {
+      //     Title: otherData.Title,
+      //     SupTitle: otherData.SupTitle || undefined,
+      //     content: otherData.content || undefined,
+      //     img_url,
+      //     video_url: finalVideoUrls,
+      //     author: otherData.author || undefined,
+      //   },
+      // });
 
       revalidatePath("/admin/PostLists");
       revalidatePath(`/admin/PostLists/${id}`);
@@ -682,18 +682,18 @@ export async function createPostAdmin(formData: FormData): Promise<any> {
     } else {
       // 新建模式
       const { img_url: newImgUrls } = await processFileUploads(imageFiles);
-      img_url = newImgUrls;
+      // img_url = newImgUrls;
 
-      const post = await prisma.postAdmin.create({
-        data: {
-          Title: otherData.Title,
-          SupTitle: otherData.SupTitle || null,
-          content: otherData.content || null,
-          img_url,
-          video_url: cleanedVideoUrls,
-          author: otherData.author || null,
-        },
-      });
+      // const post = await prisma.postAdmin.create({
+      //   data: {
+      //     Title: otherData.Title,
+      //     SupTitle: otherData.SupTitle || null,
+      //     content: otherData.content || null,
+      //     img_url,
+      //     video_url: cleanedVideoUrls,
+      //     author: otherData.author || null,
+      //   },
+      // });
 
       revalidatePath("/admin/PostLists");
       redirect("/admin/PostLists"); // 同上
