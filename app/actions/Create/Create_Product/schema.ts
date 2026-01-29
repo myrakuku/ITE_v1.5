@@ -52,7 +52,7 @@
 // };
 
 
-// schema.ts
+// ./app/actions/Create/Create_Product/schema.ts
 import { z } from "zod";
 
 export const CreateProductSchema = z.object({
@@ -79,6 +79,8 @@ export const CreateProductSchema = z.object({
       })
     )
     .optional(),
+    // 新增欄位
+  referencedPosts: z.string().optional(),   // 可為空
 });
 
 // 输入类型只包含客户端提交的数据

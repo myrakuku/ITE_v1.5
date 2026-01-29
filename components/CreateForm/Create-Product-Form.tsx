@@ -109,6 +109,7 @@ const Create_Product_Form = ({
         endTime: range.endTime ?? timeRangeOptions[range.timeRange as keyof typeof timeRangeOptions]?.end ?? null,
       })) || [],
       images: [],
+      referencedPosts: "",
     },
   });
 
@@ -331,6 +332,9 @@ const Create_Product_Form = ({
     formData.append("courseTimeRanges", JSON.stringify(values.courseTimeRanges || []));
     if (values.videoUrls) formData.append("videoUrls", values.videoUrls);
     selectedImages.forEach((file) => formData.append("images", file));
+    if (values.referencedPosts) {
+  formData.append("referencedPosts", values.referencedPosts);
+}
 
     startTransition(async () => {
       try {
@@ -491,6 +495,27 @@ const Create_Product_Form = ({
                   )}
                 />
               ))}
+
+              {/* 新增：引用文章 */}
+    <FormField
+      control={user_Product_form.control}
+      name="referencedPosts"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>引用文章（可貼連結或說明文字）</FormLabel>
+          <FormControl>
+            <Textarea
+              {...field}
+              value={field.value ?? ""}
+              placeholder="可輸入文章標題、說明或直接貼上 URL，每篇可換行分隔&#10;範例：&#10;https://example.com/post/123 - 基礎入門教學&#10;https://blog.xxx.com/advanced - 進階技巧分享"
+              rows={6}
+              disabled={isPending}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
             </div>
           )}
 

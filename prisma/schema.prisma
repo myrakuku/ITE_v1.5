@@ -215,6 +215,9 @@ model Product {
   Product_Course_Time_Ranges Product_Course_Time_Ranges[]
   Product_Img              Product_Img[]
   Product_video            Product_video[]
+
+  // 新增：引用文章（大量文字，可貼 URL）
+  referencedPosts          String?               // 或 Text 類型
 }
 
 model Product_Course_Dates {
@@ -528,6 +531,8 @@ model PostAdmin{
   img_url   String[]
   video_url String[]
   author String?
+  // 新增：相關課程（大量文字，可貼 URL）
+  relatedCourses  String?   // 或 Text 類型，視資料庫而定（PostgreSQL 支援長文字）
 }
 
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter,usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import { zhHK } from 'date-fns/locale';
@@ -80,30 +80,46 @@ export default function ShopPagebyId() {
   const [getProduct, setGetProduct] = useState<ProductDetail | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isRegistrationClosed, setIsRegistrationClosed] = useState(false);
+  const pathname = usePathname();
 
 
-  useEffect(() => {
-    const fetchProductDataLists = async (id: string) => {
-      try {
-        const response = await fetch(`/api/product/Get_Product_Lists_by_ID/${id}`);
-        if (!response.ok) throw new Error('無法獲取課程數據');
-        const data = await response.json();
-        setGetProduct(data);
-      } catch (err) {
-        console.error('獲取課程數據失敗:', err);
-        setError('無法載入課程詳情');
+// 在 useEffect 裡面，當取得產品資料後進行判斷
+useEffect(() => {
+  const fetchProductDataLists = async (id: string) => {
+    try {
+      const response = await fetch(`/api/product/Get_Product_Lists_by_ID/${id}`);
+      if (!response.ok) throw new Error('無法獲取課程數據');
+      const data: ProductDetail = await response.json();
+      setGetProduct(data);
+
+      // 判斷是否已過報名截止日期
+      if (data.Course?.startDate) {
+        const startDate = new Date(data.Course.startDate);
+        const now = new Date();
+        // 如果現在時間 >= 開始日期 → 視為已截止
+        if (now >= startDate) {
+          setIsRegistrationClosed(true);
+        }
       }
-    };
+    } catch (err) {
+      console.error('獲取課程數據失敗:', err);
+      setError('無法載入課程詳情');
+    }
+  };
 
-    if (productId) fetchProductDataLists(productId as string);
-  }, [productId]);
+  if (productId) fetchProductDataLists(productId as string);
+}, [productId]);
 
   const handleAddToCart = () => {
     if (status === 'unauthenticated') {
-      alert('請先登入以加入課程');
-      router.push('/login');
+      // alert('請先登入以加入課程');
+      const callbackUrl = encodeURIComponent(pathname);
+      router.replace(`/login?callbackUrl=${callbackUrl}`);
       return;
     }
+
+    
 
     startTransition(async () => {
       try {
@@ -116,6 +132,10 @@ export default function ShopPagebyId() {
       }
     });
   };
+
+
+
+
 
   const opts = {
     height: '315',
@@ -218,7 +238,13 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
               ) : (
                 <p><span className="font-semibold">時間：</span>未設置</p>
               )}
+              {isRegistrationClosed && (
+      <p className="text-red-600 font-medium mt-3">
+        ※ 報名截止日期為 {formatDateWithDay(getProduct.Course.startDate)}，目前已過截止時間
+      </p>
+    )}
             </div>
+            
           )}
 
 {/* YouTube 影片播放器（僅顯示第一部）*/}
@@ -245,28 +271,39 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
   </div>
 )}
 
-          {/* 加入課程 */}
-          <div className="flex items-center gap-3 pt-4 border-t">
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-              min="1"
-              className="border rounded p-2 w-20 text-center"
-              disabled={isPending}
-            />
-            <button
-              onClick={handleAddToCart}
-              disabled={isPending}
-              className={`flex-1 py-3 rounded font-medium transition ${
-                isPending
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-            >
-              {isPending ? '加入中...' : '加入課程'}
-            </button>
-          </div>
+{/* 加入課程 */}
+<div className="flex items-center gap-3 pt-4 border-t">
+  {isRegistrationClosed ? (
+    <button
+      disabled
+      className="flex-1 py-3 rounded font-medium bg-gray-400 text-white cursor-not-allowed"
+    >
+      報名已截止
+    </button>
+  ) : (
+    <>
+      <input
+        type="number"
+        value={quantity}
+        onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+        min="1"
+        className="border rounded p-2 w-20 text-center"
+        disabled={isPending}
+      />
+      <button
+        onClick={handleAddToCart}
+        disabled={isPending}
+        className={`flex-1 py-3 rounded font-medium transition ${
+          isPending
+            ? 'bg-gray-400 cursor-not-allowed text-white'
+            : 'bg-blue-600 hover:bg-blue-700 text-white'
+        }`}
+      >
+        {isPending ? '加入中...' : '加入課程'}
+      </button>
+    </>
+  )}
+</div>
         </div>
       </div>
     </div>

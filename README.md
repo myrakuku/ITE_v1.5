@@ -282,3 +282,10 @@ lib中的oss.ts 是給ADMIN 開post用
 next -v 16.0.10 版本
 
 改了post 的image bug
+
+29-1-2026
+
+1)刪除：叫人去註冊button彈出黎果舊野
+2)註冊後跳回上一個頁面
+3)加入：已截止日期
+4)Post & Course 關連，自己手動加落去，Post 下面加 Course (button or link)，Course下面加 Post (button or link)

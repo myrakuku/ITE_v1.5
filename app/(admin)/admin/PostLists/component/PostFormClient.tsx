@@ -18,6 +18,8 @@ const schema = z.object({
   content: z.string().optional(),
   author: z.string().optional(),
   video_urls: z.array(z.string().url("必須為有效的 URL").optional()).optional(),
+  // 新增
+  relatedCourses: z.string().optional(),
 });
 
 type FormInput = z.infer<typeof schema>;
@@ -42,6 +44,8 @@ export default function PostFormClient({ initialData }: { initialData?: any }) {
       content: initialData?.content || "",
       author: initialData?.author || "",
       video_urls: initialData?.video_url || [],
+      // 新增
+      relatedCourses: initialData?.relatedCourses || "",
     },
   });
 
@@ -99,7 +103,10 @@ export default function PostFormClient({ initialData }: { initialData?: any }) {
       if (data.SupTitle) formData.append("SupTitle", data.SupTitle);
       if (data.content) formData.append("content", data.content);
       if (data.author) formData.append("author", data.author);
-
+// 新增：相關課程
+      if (data.relatedCourses?.trim()) {
+        formData.append("relatedCourses", data.relatedCourses.trim());
+      }
       // 新上傳的圖片檔案
       imageFiles.forEach((file) => {
         formData.append("images", file);
@@ -301,6 +308,19 @@ export default function PostFormClient({ initialData }: { initialData?: any }) {
           </button>
         </div>
         <p className="text-sm text-gray-500">支援 YouTube、Vimeo 或任何可直接播放的影片 URL。</p>
+      </div>
+
+
+
+      {/* 內容之後新增 相關課程 */}
+      <div>
+        <label className="block text-sm font-medium mb-2">相關課程</label>
+        <textarea
+          {...register("relatedCourses")}
+          placeholder="可輸入相關課程名稱、說明或直接貼上 URL，每門課程可換行分隔&#10;範例：&#10;https://your-site.com/course/python101 - Python 入門課程&#10;進階資料分析實務（內部課程）"
+          rows={6}
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
       </div>
 
       {/* 提交按鈕 */}
