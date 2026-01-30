@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { useParams, useRouter,usePathname } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import { zhHK } from 'date-fns/locale';
@@ -36,6 +36,7 @@ interface ProductDetail {
   Target_Audience?: string | null;
   Course_Objective?: string | null;
   Applicable_Scenarios?: string | null;
+  referencedPosts?: string | null;  // ← 新增此欄位
   Course?: {
     startDate?: string | null;
     endDate?: string | null;
@@ -83,43 +84,37 @@ export default function ShopPagebyId() {
   const [isRegistrationClosed, setIsRegistrationClosed] = useState(false);
   const pathname = usePathname();
 
+  useEffect(() => {
+    const fetchProductDataLists = async (id: string) => {
+      try {
+        const response = await fetch(`/api/product/Get_Product_Lists_by_ID/${id}`);
+        if (!response.ok) throw new Error('無法獲取課程數據');
+        const data: ProductDetail = await response.json();
+        setGetProduct(data);
 
-// 在 useEffect 裡面，當取得產品資料後進行判斷
-useEffect(() => {
-  const fetchProductDataLists = async (id: string) => {
-    try {
-      const response = await fetch(`/api/product/Get_Product_Lists_by_ID/${id}`);
-      if (!response.ok) throw new Error('無法獲取課程數據');
-      const data: ProductDetail = await response.json();
-      setGetProduct(data);
-
-      // 判斷是否已過報名截止日期
-      if (data.Course?.startDate) {
-        const startDate = new Date(data.Course.startDate);
-        const now = new Date();
-        // 如果現在時間 >= 開始日期 → 視為已截止
-        if (now >= startDate) {
-          setIsRegistrationClosed(true);
+        // 判斷是否已過報名截止日期
+        if (data.Course?.startDate) {
+          const startDate = new Date(data.Course.startDate);
+          const now = new Date();
+          if (now >= startDate) {
+            setIsRegistrationClosed(true);
+          }
         }
+      } catch (err) {
+        console.error('獲取課程數據失敗:', err);
+        setError('無法載入課程詳情');
       }
-    } catch (err) {
-      console.error('獲取課程數據失敗:', err);
-      setError('無法載入課程詳情');
-    }
-  };
+    };
 
-  if (productId) fetchProductDataLists(productId as string);
-}, [productId]);
+    if (productId) fetchProductDataLists(productId as string);
+  }, [productId]);
 
   const handleAddToCart = () => {
     if (status === 'unauthenticated') {
-      // alert('請先登入以加入課程');
       const callbackUrl = encodeURIComponent(pathname);
       router.replace(`/login?callbackUrl=${callbackUrl}`);
       return;
     }
-
-    
 
     startTransition(async () => {
       try {
@@ -133,10 +128,6 @@ useEffect(() => {
     });
   };
 
-
-
-
-
   const opts = {
     height: '315',
     width: '100%',
@@ -144,15 +135,14 @@ useEffect(() => {
   };
 
   const videos = getProduct?.Product_video || [];
-const firstVideo = videos[0];
-const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
+  const firstVideo = videos[0];
+  const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
 
   if (!getProduct) {
     return <div className="text-center py-10">{error ?? '載入中...'}</div>;
   }
 
-
-  console.log("getProduct : ", getProduct , "-- End --")
+  console.log("getProduct : ", getProduct, "-- End --");
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -205,7 +195,7 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
           </div>
         </div>
 
-        {/* 右側：詳情 + 課程 + 影片 + 課程 */}
+        {/* 右側：詳情 + 課程 + 參考文章 + 影片 + 加入按鈕 */}
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-semibold mb-2">{getProduct.title}</h2>
@@ -239,71 +229,97 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
                 <p><span className="font-semibold">時間：</span>未設置</p>
               )}
               {isRegistrationClosed && (
-      <p className="text-red-600 font-medium mt-3">
-        ※ 報名截止日期為 {formatDateWithDay(getProduct.Course.startDate)}，目前已過截止時間
-      </p>
-    )}
+                <p className="text-red-600 font-medium mt-3">
+                  ※ 報名截止日期為 {formatDateWithDay(getProduct.Course.startDate)}，目前已過截止時間
+                </p>
+              )}
             </div>
-            
           )}
 
-{/* YouTube 影片播放器（僅顯示第一部）*/}
-{videos.length > 0 && (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <Play className="w-5 h-5" /> 課程影片
-    </h3>
+          {/* 新增：參考文章區塊 */}
+          <div className="bg-gray-50 p-4 rounded-lg space-y-3 text-sm">
+            <h3 className="font-semibold text-gray-900">參考文章</h3>
+            {getProduct.referencedPosts?.trim() ? (
+              <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                {getProduct.referencedPosts.split('\n').map((line, index) => (
+                  <p key={index} className="mb-2">
+                    {line.trim().startsWith('http') ? (
+                      <a
+                        href={line.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {line.trim()}
+                      </a>
+                    ) : (
+                      line
+                    )}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">尚未提供參考文章</p>
+            )}
+          </div>
 
-    <div className="relative bg-black rounded-lg overflow-hidden">
-      {firstVideoId ? (
-        <YouTube
-          videoId={firstVideoId}
-          opts={opts}
-          className="aspect-video"
-          iframeClassName="w-full h-full"
-        />
-      ) : (
-        <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
-          無法載入影片
-        </div>
-      )}
-    </div>
-  </div>
-)}
+          {/* YouTube 影片播放器（僅顯示第一部）*/}
+          {videos.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Play className="w-5 h-5" /> 課程影片
+              </h3>
 
-{/* 加入課程 */}
-<div className="flex items-center gap-3 pt-4 border-t">
-  {isRegistrationClosed ? (
-    <button
-      disabled
-      className="flex-1 py-3 rounded font-medium bg-gray-400 text-white cursor-not-allowed"
-    >
-      報名已截止
-    </button>
-  ) : (
-    <>
-      <input
-        type="number"
-        value={quantity}
-        onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-        min="1"
-        className="border rounded p-2 w-20 text-center"
-        disabled={isPending}
-      />
-      <button
-        onClick={handleAddToCart}
-        disabled={isPending}
-        className={`flex-1 py-3 rounded font-medium transition ${
-          isPending
-            ? 'bg-gray-400 cursor-not-allowed text-white'
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
-        }`}
-      >
-        {isPending ? '加入中...' : '加入課程'}
-      </button>
-    </>
-  )}
-</div>
+              <div className="relative bg-black rounded-lg overflow-hidden">
+                {firstVideoId ? (
+                  <YouTube
+                    videoId={firstVideoId}
+                    opts={opts}
+                    className="aspect-video"
+                    iframeClassName="w-full h-full"
+                  />
+                ) : (
+                  <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
+                    無法載入影片
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 加入課程 */}
+          <div className="flex items-center gap-3 pt-4 border-t">
+            {isRegistrationClosed ? (
+              <button
+                disabled
+                className="flex-1 py-3 rounded font-medium bg-gray-400 text-white cursor-not-allowed"
+              >
+                報名已截止
+              </button>
+            ) : (
+              <>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                  min="1"
+                  className="border rounded p-2 w-20 text-center"
+                  disabled={isPending}
+                />
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isPending}
+                  className={`flex-1 py-3 rounded font-medium transition ${
+                    isPending
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isPending ? '加入中...' : '加入課程'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

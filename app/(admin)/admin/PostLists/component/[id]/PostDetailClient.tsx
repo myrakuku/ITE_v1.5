@@ -18,6 +18,7 @@ interface PostDetailClientProps {
     img_url: string[];
     video_url: string[];
     author: string | null;
+    relatedCourses: string | null;   // ← 新增這一行
   };
 }
 
@@ -129,6 +130,21 @@ export default function PostDetailClient({ post }: PostDetailClientProps) {
             )}
           </div>
         </div>
+        {/* 相關課程 */}
+        {post.relatedCourses && (
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-700">相關課程</h2>
+            <div className="bg-gray-50 rounded p-4 min-h-[120px] whitespace-pre-wrap text-gray-900">
+              {post.relatedCourses.trim() ? (
+                <div className="whitespace-pre-wrap break-words">
+                  {post.relatedCourses}
+                </div>
+              ) : (
+                <p className="text-gray-400">(無相關課程資訊)</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 圖片 */}
         {post.img_url && post.img_url.length > 0 && (

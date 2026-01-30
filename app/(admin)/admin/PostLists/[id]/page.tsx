@@ -45,6 +45,7 @@ export default async function AdminPostDetailPage({ params }: AdminPostDetailPag
       img_url: post.img_url || [],
       video_url: post.video_url || [],
       author: post.author,
+      relatedCourses: post.relatedCourses,
     };
     
     console.log("詳細頁面 - 傳遞給客戶端的資料:", postData);

@@ -19,22 +19,22 @@ export default function PostListClient({ posts, total, page, limit, search }: Po
   // const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("確定刪除此文章？")) {
-      return;
-    }
-    
-    setIsDeleting(id);
-    try {
-      await deletePostAdmin(id);
-      router.refresh();
-    } catch (error: any) {
-      console.error("刪除失敗:", error);
-      alert(`刪除失敗: ${error.message}`);
-    } finally {
-      setIsDeleting(null);
-    }
-  };
+const handleDelete = async (id: string) => {
+  if (!confirm("確定刪除此文章？")) return;
+
+  setIsDeleting(id);
+  try {
+    await deletePostAdmin(id);
+    // 若伺服器未重定向，這裡可作為後備
+    router.refresh();
+    router.push("/admin/PostLists");
+  } catch (error: any) {
+    console.error("刪除失敗:", error);
+    // alert(`刪除失敗: ${error.message || "請稍後再試"}`);
+  } finally {
+    setIsDeleting(null);
+  }
+};
 
   const totalPages = Math.ceil(total / limit);
 

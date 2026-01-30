@@ -23,34 +23,52 @@ async function ensureAdmin() {
 function extractFilesFromFormData(formData: FormData): {
   imageFiles: File[];
   videoUrls: string[];
-  otherData: Record<string, any>;
+  otherData: Record<string, string>;
   id?: string;
   filesToDelete: string[];
-  relatedCourses?: string;   // ← 新增
+  relatedCourses?: string;
 } {
   const imageFiles: File[] = [];
   const videoUrls: string[] = [];
-  const otherData: Record<string, any> = {};
+  const otherData: Record<string, string> = {};
   const filesToDelete: string[] = [];
   let relatedCourses: string | undefined;
 
-  for (const [key, value] of Array.from(formData.entries())) {
+  for (const [key, value] of formData.entries()) {
     if (value instanceof File) {
       if (value.size > 0 && value.type.startsWith("image/")) {
         imageFiles.push(value);
       }
+      // 可以選擇忽略非圖片檔案，或加入錯誤處理
     } else if (typeof value === "string") {
+      const trimmedValue = value.trim();
+
       if (key.startsWith("delete_")) {
-        filesToDelete.push(value.trim());
+        if (trimmedValue) filesToDelete.push(trimmedValue);
       } else if (key === "video_urls") {
-        if (value.trim()) videoUrls.push(value.trim());
+        if (trimmedValue) videoUrls.push(trimmedValue);
+      } else if (key === "relatedCourses") {
+        // 明確處理 relatedCourses
+        if (trimmedValue) {
+          relatedCourses = trimmedValue;
+        }
+      } else if (key === "id") {
+        otherData[key] = trimmedValue;
       } else {
-        otherData[key] = value;
+        // 其他文字欄位
+        otherData[key] = trimmedValue;
       }
     }
   }
 
-  return { imageFiles, videoUrls, otherData, filesToDelete, id: otherData.id ,relatedCourses};
+  return {
+    imageFiles,
+    videoUrls,
+    otherData,
+    filesToDelete,
+    id: otherData.id,
+    relatedCourses,
+  };
 }
 
 async function processFileUploads(
@@ -68,18 +86,31 @@ async function processFileUploads(
     img_url: [...existingImageUrls, ...newImageUrls],
   };
 }
-
 // 統一處理新建與更新
 export async function createPostAdmin(formData: FormData): Promise<any> {
   await ensureAdmin();
 
+  let shouldRedirect = false;
+  let redirectPath = "/admin/PostLists";
+
   try {
-    const { imageFiles, videoUrls, otherData, filesToDelete, id, relatedCourses } =
-      extractFilesFromFormData(formData);
+    const { 
+      imageFiles, 
+      videoUrls, 
+      otherData, 
+      filesToDelete, 
+      id, 
+      relatedCourses: rawRelatedCourses 
+    } = extractFilesFromFormData(formData);
 
     if (!otherData.Title?.trim()) {
       throw new Error("標題不能為空");
     }
+
+    // 清理 relatedCourses：移除前後空白，若完全空白則設為 null
+    const cleanedRelatedCourses = rawRelatedCourses?.trim() 
+      ? rawRelatedCourses.trim() 
+      : null;
 
     let img_url: string[] = [];
     const cleanedVideoUrls = videoUrls.filter(Boolean);
@@ -109,8 +140,7 @@ export async function createPostAdmin(formData: FormData): Promise<any> {
       );
       img_url = newImgUrls;
 
-      // 取消註解並更新（加入 relatedCourses）
-      await prisma.postAdmin.update({
+      const updatedPost = await prisma.postAdmin.update({
         where: { id },
         data: {
           Title: otherData.Title,
@@ -119,19 +149,33 @@ export async function createPostAdmin(formData: FormData): Promise<any> {
           author: otherData.author || undefined,
           img_url,
           video_url: cleanedVideoUrls.length > 0 ? cleanedVideoUrls : undefined,
-          relatedCourses: relatedCourses || undefined,   // ← 新增
+          relatedCourses: cleanedRelatedCourses,  // 使用清理後的值
         },
+      });
+
+      // 更新成功日誌
+      console.log("[PostAdmin] 更新成功", {
+        id: updatedPost.id,
+        title: updatedPost.Title,
+        updatedAt: updatedPost.updatedAt.toISOString(),
+        img_count: updatedPost.img_url.length,
+        video_count: updatedPost.video_url?.length ?? 0,
+        relatedCourses_length: updatedPost.relatedCourses?.length ?? 0,
+        relatedCourses_preview: updatedPost.relatedCourses 
+          ? updatedPost.relatedCourses.substring(0, 120) + (updatedPost.relatedCourses.length > 120 ? "..." : "")
+          : "無",
+        has_content: !!updatedPost.content,
       });
 
       revalidatePath("/admin/PostLists");
       revalidatePath(`/admin/PostLists/${id}`);
-      redirect("/admin/PostLists");
+      shouldRedirect = true;
     } else {
       // 新建模式
       const { img_url: newImgUrls } = await processFileUploads(imageFiles);
       img_url = newImgUrls;
 
-      await prisma.postAdmin.create({
+      const newPost = await prisma.postAdmin.create({
         data: {
           Title: otherData.Title,
           SupTitle: otherData.SupTitle || null,
@@ -139,16 +183,38 @@ export async function createPostAdmin(formData: FormData): Promise<any> {
           author: otherData.author || null,
           img_url,
           video_url: cleanedVideoUrls,
-          relatedCourses: relatedCourses || null,   // ← 新增
+          relatedCourses: cleanedRelatedCourses,  // 使用清理後的值
         },
       });
 
+      // 新建成功日誌（包含 relatedCourses 預覽）
+      console.log("[PostAdmin] 新建成功", {
+        id: newPost.id,
+        title: newPost.Title,
+        createdAt: newPost.createdAt.toISOString(),
+        img_count: newPost.img_url.length,
+        video_count: newPost.video_url.length,
+        relatedCourses_length: newPost.relatedCourses?.length ?? 0,
+        relatedCourses_preview: newPost.relatedCourses 
+          ? newPost.relatedCourses.substring(0, 120) + (newPost.relatedCourses.length > 120 ? "..." : "")
+          : "無",
+        has_content: !!newPost.content,
+      });
+
       revalidatePath("/admin/PostLists");
-      redirect("/admin/PostLists");
+      shouldRedirect = true;
     }
   } catch (error: any) {
-    console.error("操作失敗:", error);
+    console.error("[PostAdmin] 操作失敗:", {
+      message: error.message,
+      stack: error.stack ? error.stack.split("\n").slice(0, 4).join("\n") : undefined,
+    });
     throw new Error(error.message || "操作失敗，請稍後重試");
+  }
+
+  // 重定向必須放在 try-catch 外部
+  if (shouldRedirect) {
+    redirect(redirectPath);
   }
 }
 
@@ -183,38 +249,64 @@ export async function simpleUpdatePostAdmin(
     throw new Error(error.message || "更新文章失敗");
   }
 }
-
-// 刪除單篇文章
-export async function deletePostAdmin(
-  id: string
-): Promise<{ success: boolean; message: string }> {
+// 刪除單篇文章（純 Server Action，重定向為主）
+// 刪除單篇文章（Server Action，主導重定向）
+export async function deletePostAdmin(id: string): Promise<never> {
   await ensureAdmin();
 
+  let deletionSuccess = false;
+
   try {
+    // 查詢文章是否存在並取得相關檔案 URL
     const post = await prisma.postAdmin.findUnique({
       where: { id },
       select: { img_url: true, video_url: true },
     });
 
-    if (post) {
-      const allUrls = [...post.img_url, ...post.video_url];
-      if (allUrls.length > 0) {
-        await deleteFromOSS(allUrls);
-      }
+    if (!post) {
+      throw new Error("文章不存在");
     }
 
+    // 刪除 OSS 中的相關檔案
+    const allUrls = [...post.img_url, ...post.video_url];
+    if (allUrls.length > 0) {
+      await deleteFromOSS(allUrls);
+    }
+
+    // 執行資料庫刪除
     await prisma.postAdmin.delete({
       where: { id },
     });
 
-    revalidatePath("/Posts");
-    redirect("/admin/PostLists"); // 刪除後導回列表
+    // 重新驗證列表頁面快取
+    revalidatePath("/admin/PostLists");
 
-    return { success: true, message: "文章刪除成功" };
+    // 記錄成功日誌
+    console.log("[PostAdmin] 刪除成功", {
+      id,
+      deletedAt: new Date().toISOString(),
+    });
+
+    deletionSuccess = true;
   } catch (error: any) {
-    console.error("刪除文章失敗:", error);
-    throw new Error("刪除文章失敗，請稍後重試");
+    // 僅記錄真正的錯誤（不包含重定向相關）
+    console.error("刪除文章失敗:", {
+      id,
+      message: error.message,
+      stack: error.stack ? error.stack.split("\n").slice(0, 3).join("\n") : undefined,
+    });
+
+    // 拋出給客戶端顯示的錯誤訊息
+    throw new Error(error.message || "刪除文章失敗，請稍後重試");
   }
+
+  // 成功時才執行重定向（放在 try-catch 外部）
+  if (deletionSuccess) {
+    redirect("/admin/PostLists");
+  }
+
+  // 理論上不會執行到這裡
+  throw new Error("刪除流程異常結束");
 }
 
 // 批次刪除

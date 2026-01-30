@@ -289,3 +289,8 @@ next -v 16.0.10 版本
 2)註冊後跳回上一個頁面
 3)加入：已截止日期
 4)Post & Course 關連，自己手動加落去，Post 下面加 Course (button or link)，Course下面加 Post (button or link)
+
+
+30-1-2026
+
+加了Post 及 Course 相關頁面 的 東西

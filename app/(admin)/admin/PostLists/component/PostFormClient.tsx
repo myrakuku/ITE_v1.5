@@ -93,6 +93,7 @@ export default function PostFormClient({ initialData }: { initialData?: any }) {
   };
 
   const onSubmit = async (data: FormInput) => {
+    console.log("提交資料:", data , "-- End --");
     setIsUploading(true);
 
     try {
@@ -127,7 +128,7 @@ export default function PostFormClient({ initialData }: { initialData?: any }) {
         formData.append("id", initialData.id);
       }
 
-      await createPostAdmin(formData);
+     await createPostAdmin(formData);
 
       toast.success(initialData?.id ? "文章更新成功" : "文章建立成功");
       router.push("/admin/PostLists");

@@ -34,6 +34,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       where: {
         id: String(id),
       },
+      
       include: {
         Course: {
                   include: {
@@ -43,6 +44,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         },
         Product_Img: true,
         Product_video: true,
+        
       },
     });
 

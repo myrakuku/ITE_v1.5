@@ -37,6 +37,7 @@ interface ProductDetail {
   Target_Audience?: string | null;
   Course_Objective?: string | null;
   Applicable_Scenarios?: string | null;
+  referencedPosts?: string | null;  // ← 新增此欄位
   Course?: {
     startDate?: string | null;
     endDate?: string | null;
@@ -90,7 +91,6 @@ export default function ProductPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-
   useEffect(() => {
     const fetchProductDataLists = async (id: string) => {
       try {
@@ -125,8 +125,8 @@ export default function ProductPage() {
   };
 
   const videos = getProduct?.Product_video || [];
-const firstVideo = videos[0];
-const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
+  const firstVideo = videos[0];
+  const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
 
   if (!getProduct) {
     return (
@@ -166,20 +166,26 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h4 className="font-semibold text-blue-900 mb-1">目標觀眾</h4>
-              <p className="text-gray-700">{getProduct.Target_Audience || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Target_Audience || '未提供'}
+              </p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <h4 className="font-semibold text-green-900 mb-1">課程目標</h4>
-              <p className="text-gray-700">{getProduct.Course_Objective || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Course_Objective || '未提供'}
+              </p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
               <h4 className="font-semibold text-purple-900 mb-1">適用場景</h4>
-              <p className="text-gray-700">{getProduct.Applicable_Scenarios || '未提供'}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {getProduct.Applicable_Scenarios || '未提供'}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* 右側：詳情 + 課程 + 影片 + 購物車 */}
+        {/* 右側：詳情 + 課程 + 參考文章 + 影片 + 加入購物車 */}
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-semibold mb-2">{getProduct.title}</h2>
@@ -215,29 +221,57 @@ const firstVideoId = firstVideo ? getYouTubeId(firstVideo.video_url) : null;
             </div>
           )}
 
-{/* YouTube 影片播放器（僅顯示第一部）*/}
-{videos.length > 0 && (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold flex items-center gap-2">
-      <Play className="w-5 h-5" /> 課程影片
-    </h3>
+          {/* 新增：參考文章區塊 */}
+          <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900">參考文章</h3>
+            {getProduct.referencedPosts?.trim() ? (
+              <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm">
+                {getProduct.referencedPosts.split('\n').map((line, index) => (
+                  <p key={index} className="mb-2">
+                    {line.trim().startsWith('http') || line.trim().startsWith('https') ? (
+                      <a
+                        href={line.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {line.trim()}
+                      </a>
+                    ) : (
+                      line
+                    )}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic text-sm">尚未提供參考文章</p>
+            )}
+          </div>
 
-    <div className="relative bg-black rounded-lg overflow-hidden">
-      {firstVideoId ? (
-        <YouTube
-          videoId={firstVideoId}
-          opts={opts}
-          className="aspect-video"
-          iframeClassName="w-full h-full"
-        />
-      ) : (
-        <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
-          無法載入影片
-        </div>
-      )}
-    </div>
-  </div>
-)}
+          {/* YouTube 影片播放器（僅顯示第一部）*/}
+          {videos.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Play className="w-5 h-5" /> 課程影片
+              </h3>
+
+              <div className="relative bg-black rounded-lg overflow-hidden">
+                {firstVideoId ? (
+                  <YouTube
+                    videoId={firstVideoId}
+                    opts={opts}
+                    className="aspect-video"
+                    iframeClassName="w-full h-full"
+                  />
+                ) : (
+                  <div className="bg-gray-800 text-white flex items-center justify-center h-80 rounded">
+                    無法載入影片
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 加入購物車 */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <input
