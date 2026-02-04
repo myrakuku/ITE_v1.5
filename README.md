@@ -300,3 +300,5 @@ next -v 16.0.10 版本
 
 試修服login bug
 以及run build bug
+
+再改了login 方法 把auth.ts 以及./auth.config.ts middleware.ts 改了
