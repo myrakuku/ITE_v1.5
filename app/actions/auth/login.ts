@@ -5,6 +5,8 @@ import { signIn } from "@/auth";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { AuthError } from "next-auth"; // ✅ 1. 這裡要引入 AuthError
+
 
 const schema = z.object({
   username: z.string().min(1, "請輸入帳號"),
@@ -44,9 +46,24 @@ export async function serverLogin(formData: FormData) {
       redirect: false,
     });
     return { success: true };
-  } catch (_error: unknown) { // 改用 unknown + ESLint 設定忽略
-    console.error("登入錯誤:", _error); // 可選：記錄錯誤
-    return { error: "登入失敗，請稍後重試" };
+  } catch (error) {
+    // 1. 如果是 NextAuth 的錯誤，可以做特殊處理
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "帳號或密碼錯誤" };
+        default:
+          return { error: "登入發生未知錯誤" };
+      }
+    }
+
+    // 2. 如果是 Next.js 的 Redirect 錯誤 (雖然這裡用了 redirect: false，但在某些 adapter 下仍可能發生)
+    // 必須把它拋出去，否則跳轉會失效
+    // 不過因為你用了 redirect: false，這裡通常不會觸發，但為了代碼健壯性建議保留邏輯
+    
+    console.error("Server Action Error:", error);
+    // 3. 捕捉其他錯誤
+    return { error: "系統錯誤，請稍後重試" };
   }
 }
 

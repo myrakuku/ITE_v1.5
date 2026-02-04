@@ -51,11 +51,12 @@ const nextConfig = {
     },
   },
 
-  api: {
-    bodyParser: {
-      sizeLimit: "30mb", // API Routes 也支援
-    },
-  },
+  // api: {
+  //   bodyParser: {
+  //     sizeLimit: "30mb", // API Routes 也支援
+  //   },
+  // },
+
 };
 
 export default nextConfig;

@@ -294,3 +294,9 @@ next -v 16.0.10 版本
 30-1-2026
 
 加了Post 及 Course 相關頁面 的 東西
+
+
+4－2－2026
+
+試修服login bug
+以及run build bug
