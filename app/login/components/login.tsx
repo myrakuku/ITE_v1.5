@@ -43,6 +43,7 @@ useEffect(() => {
   }
 }, [status, session, router, searchParams]);
   // 表單登入
+  // 表單登入
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -51,20 +52,24 @@ useEffect(() => {
     const formData = new FormData(e.currentTarget);
     const result = await serverLogin(formData);
 
+    // 修改處：如果有錯誤，顯示錯誤訊息，而不是跳轉
     if (result?.error) {
-const callbackUrl = searchParams.get('callbackUrl') || '/';
-      // 登入成功後直接跳轉（比依賴 useEffect 更即時）
-      router.replace(callbackUrl);
-      await update(); // 可保留，但不強制
-      toast.success('登入成功');
+      setError(result.error); // 設定錯誤訊息，讓它顯示在 input 下方
+      toast.error(result.error); // 彈出錯誤提示
     } else {
+      // 成功時才更新 session 並跳轉
       await update(); // 同步 session
       toast.success("登入成功");
-      // 導向由 useEffect 處理
+      
+      // 這裡可以選擇手動跳轉，或者依賴上方的 useEffect 自動跳轉
+      // 因為 update() 後 status 會變為 "authenticated"，useEffect 會觸發
+      const callbackUrl = searchParams.get('callbackUrl') || '/';
+      router.replace(callbackUrl); 
     }
 
     setIsLoading(false);
   };
+
 
   // Google 登入（關鍵修正）
   const handleGoogleSignIn = async () => {
