@@ -13,7 +13,7 @@ import { createChat } from "@n8n/chat";
 import "@n8n/chat/style.css";
 
 // 導入圖片資源
-import ITELOGO from "../public/image/ITELOGO.jpeg";
+import ITELOGO from "@/public/Logo_White.png";
 import { UserRole } from "@/auth-options";
 
 export default function Navbar() {
@@ -122,7 +122,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-gray-800 text-white shadow-lg">
+    <nav className="bg-slate-900 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
