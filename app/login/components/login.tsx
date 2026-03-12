@@ -133,8 +133,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">登入</h1>
+    <div className="container mx-auto p-4 max-w-md mt-20">
+      <h1 className="text-2xl font-bold mb-6 text-center">學生登入</h1>
 
       {/* 表單登入 */}
       <form onSubmit={handleSubmit} className="space-y-4">

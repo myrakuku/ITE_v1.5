@@ -22,8 +22,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ITE",
-  description: "探索 ITE 的優質課程和服務",
+  title: '關於我們 | 宏業教育中心 InnoTrendEDU - 專業IT與AI科技培訓',
+  description: '了解宏業教育中心 (InnoTrendEDU) 的創新教育理念。我們擁有15年以上經驗的資深導師團隊，提供AI、Python、Web全棧開發等實戰課程。作為NITTP認可培訓機構，我們致力於孕育未來IT領袖，助企業與個人提升競爭力。',
+  keywords: ['宏業教育中心', 'InnoTrendEDU', 'IT培訓', 'AI課程', 'Python教學', 'Web全棧開發', 'NITTP資助課程', '企業IT培訓', '香港IT課程']
 };
 
 export default function RootLayout({

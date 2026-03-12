@@ -156,6 +156,8 @@ export default function PostDetailClient({ post }: PostDetailClientProps) {
                   <Image
                     src={url}
                     alt={`文章圖片 ${index + 1}`}
+                    width={1080}
+                    height={1080}
                     className="w-full h-40 object-cover rounded border border-gray-200"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/placeholder-image.jpg";

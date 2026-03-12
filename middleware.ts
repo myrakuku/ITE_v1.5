@@ -64,7 +64,10 @@ const publicRoutes = [
   '/about',
   '/complaintFrom',
   '/specialCourse',
-  '/Posts'
+  '/Posts',
+  '/core',
+  '/ourteam',
+  '/privacy-policy'
 ];
 
 export default auth((req) => {

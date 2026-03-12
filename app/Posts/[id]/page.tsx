@@ -30,111 +30,118 @@ export default async function PostDetailPage({ params }: Props) {
   const post = result.data;
 
   return (
-    <article className="container mx-auto py-8 prose max-w-3xl prose-invert">
-      <h1 className="text-3xl font-bold mb-4">{post.Title || "無標題"}</h1>
+    <article className="container mx-auto py-10 px-4 prose max-w-4xl prose-slate">
+  {/* 新聞標題區 */}
+  <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3 tracking-tight">{post.Title || "無標題"}</h1>
 
-      <div className="mb-6">
-        <Link href="/Posts" className="text-blue-500 hover:underline">
-          ← 返回文章列表
-        </Link>
-      </div>
+  {/* 返回按鈕 - 新聞風格弱化處理 */}
+  <div className="mb-6">
+    <Link href="/Posts" className="text-gray-600 hover:text-gray-800 hover:underline text-sm transition-colors">
+      ← 返回新聞列表
+    </Link>
+  </div>
 
-      {post.SupTitle && (
-        <h2 className="text-xl text-gray-400 mb-6">{post.SupTitle}</h2>
-      )}
+  {/* 新聞副標/引題 */}
+  {post.SupTitle && (
+    <h2 className="text-xl md:text-2xl text-gray-700 mb-8 font-light italic border-b border-gray-200 pb-3">
+      {post.SupTitle}
+    </h2>
+  )}
 
-      {/* 文章內容 */}
-      <div className="mt-8">
-        <div
-          className="whitespace-pre-wrap prose-p:my-4 prose-ul:my-4 prose-ol:my-4"
-          dangerouslySetInnerHTML={{ __html: post.content || "" }}
-        />
-        {!post.content && (
-          <p className="text-gray-500 italic">本文尚未填寫內容</p>
-        )}
-      </div>
+  {/* ===== 新聞元數據======== */}
+  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-8 pb-4 border-b border-gray-200">
+    {post.author && (
+      <p className="font-medium">作者：{post.author}</p>
+    )}
+    <p>最後更新：{new Date(post.updatedAt).toLocaleString("zh-TW")}</p>
+  </div>
 
-      {/* 新增：相關課程區塊 */}
-      <div className="mt-12">
-        <h3 className="text-2xl font-semibold mb-4 text-white">相關課程</h3>
-        {post.relatedCourses?.trim() ? (
-          <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 whitespace-pre-wrap leading-relaxed">
-            {post.relatedCourses.split('\n').map((line, index) => (
-              <p key={index} className="mb-2">
-                {line.trim().startsWith('http') ? (
-                  <a
-                    href={line.trim()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline"
-                  >
-                    {line.trim()}
-                  </a>
-                ) : (
-                  line
-                )}
-              </p>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 italic">
-            尚未提供相關課程資訊
+  {/* 新聞正文內容 */}
+  <div className="mt-0 text-gray-800">
+    <div
+      className="whitespace-pre-wrap prose-p:my-6 prose-ul:my-6 prose-ol:my-6 prose-li:ml-6 prose-h3:text-xl prose-h4:text-lg leading-relaxed text-base md:text-lg"
+      dangerouslySetInnerHTML={{ __html: post.content || "" }}
+    />
+    {!post.content && (
+      <p className="text-gray-500 italic text-center py-8">本文尚未填寫內容</p>
+    )}
+  </div>
+
+  {/* 相關課程區塊 - 新聞側欄風格 */}
+  <div className="mt-12 bg-gray-50 border-l-4 border-slate-600 rounded-r-lg p-6 shadow-sm">
+    <h3 className="text-xl font-semibold text-gray-900 mb-4">相關課程</h3>
+    {post.relatedCourses?.trim() ? (
+      <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
+        {post.relatedCourses.split('\n').map((line, index) => (
+          <p key={index} className="mb-2">
+            {line.trim().startsWith('http') ? (
+              <a
+                href={line.trim()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-700 hover:text-blue-800 underline"
+              >
+                {line.trim()}
+              </a>
+            ) : (
+              line
+            )}
           </p>
-        )}
+        ))}
       </div>
-
-      {/* 圖片渲染 */}
-      {post.img_url && post.img_url.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-12">
-          {post.img_url.map((url, index) => (
-            <Image
-              key={index}
-              src={url}
-              alt={`${post.Title} - 圖片 ${index + 1}`}
-              className="rounded-lg shadow-lg object-cover w-full h-auto"
-              width={800}
-              height={600}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* 影片渲染 */}
-      {post.video_url && post.video_url.length > 0 && (
-        <div className="space-y-8 my-12">
-          {post.video_url.map((url, index) => (
-            <div key={index} className="aspect-video">
-              {url.includes("youtube.com") || url.includes("youtu.be") ? (
-                <iframe
-                  src={url
-                    .replace("watch?v=", "embed/")
-                    .replace("youtu.be/", "www.youtube.com/embed/")}
-                  title={`影片 ${index + 1}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full rounded-lg shadow-lg"
-                />
-              ) : (
-                <video controls className="w-full h-full rounded-lg shadow-lg">
-                  <source src={url} />
-                  您的瀏覽器不支援影片播放。
-                </video>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {post.author && (
-        <p className="text-sm text-gray-500 mt-12">
-          作者：{post.author}
-        </p>
-      )}
-
-      {/* 可選：顯示建立/更新時間 */}
-      <p className="text-sm text-gray-500 mt-4">
-        最後更新：{new Date(post.updatedAt).toLocaleString("zh-TW")}
+    ) : (
+      <p className="text-gray-500 italic">
+        尚未提供相關課程資訊
       </p>
-    </article>
+    )}
+  </div>
+
+  {/* 新聞影片區 */}
+  {post.video_url && post.video_url.length > 0 && (
+    <div className="space-y-8 my-12">
+      {post.video_url.map((url, index) => (
+        <div key={index} className="aspect-video">
+          {url.includes("youtube.com") || url.includes("youtu.be") ? (
+            <iframe
+              src={url
+                .replace("watch?v=", "embed/")
+                .replace("youtu.be/", "www.youtube.com/embed/")}
+              title={`影片 ${index + 1}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full rounded-lg shadow-md"
+            />
+          ) : (
+            <video controls className="w-full h-full rounded-lg shadow-md">
+              <source src={url} />
+              您的瀏覽器不支援影片播放。
+            </video>
+          )}
+          <p className="text-xs text-gray-600 mt-2">
+            影片 {index + 1}：{post.Title || "新聞影片"}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+  
+  {/* 新聞圖片區 - 新聞排版風格 */}
+  {post.img_url && post.img_url.length > 0 && (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-12">
+      {post.img_url.map((url, index) => (
+        <figure key={index} className="group">
+          <Image
+            src={url}
+            alt={`${post.Title} - 圖片 ${index + 1}`}
+            className="rounded-lg shadow-md object-cover w-full h-auto group-hover:shadow-lg transition-shadow"
+            width={800}
+            height={600}
+          />
+        </figure>
+      ))}
+    </div>
+  )}
+
+</article>
   );
 }

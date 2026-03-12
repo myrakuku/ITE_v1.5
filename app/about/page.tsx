@@ -1,6 +1,6 @@
-'use client';
-import { useState } from 'react';
+import { Metadata } from "next";
 import { ChevronRight } from 'lucide-react';
+
 import Link from 'next/link'
 import Image from 'next/image'
 import Footer from '@/components/Footer';
@@ -13,8 +13,6 @@ import core from '@/public/core.png'
 import Mr_Aaron from '@/public/Teacher_WaiLung.webp'
 import Mr_Honcy from '@/public/Teacher_HoncyLee.webp'
 import Mr_Eric from '@/public/Teacher_Eric.png'
-
-
 
 
 // 教師團隊數據（已加入中文職稱）
@@ -42,9 +40,24 @@ const teamMembers = [
   },
 ];
 
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: '關於我們 | 宏業教育中心 InnoTrendEDU - 專業IT與AI科技培訓',
+    description: '了解宏業教育中心 (InnoTrendEDU) 的創新教育理念。我們擁有15年以上經驗的資深導師團隊，提供AI、Python、Web全棧開發等實戰課程。作為NITTP認可培訓機構，我們致力於孕育未來IT領袖，助企業與個人提升競爭力。',
+    keywords: ['宏業教育中心', 'InnoTrendEDU', 'IT培訓', 'AI課程', 'Python教學', 'Web全棧開發', 'NITTP資助課程', '企業IT培訓', '香港IT課程'],
+    openGraph: {
+    title: '關於我們 | 宏業教育中心 InnoTrendEDU',
+    description: '15年+資深師資，提供AI、Python及Web開發實戰課程，獲NITTP政府資助認可，助您與企業掌握前沿科技。',
+    url: 'https://ite.edu.hk/about',
+    siteName: '宏業教育中心 InnoTrendEDU',
+    locale: 'zh_HK',
+    type: 'website',
+    },
+  };
+}
 
 export default function ITEEducationCenter() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const email = "info@ite.edu.hk";
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
@@ -152,10 +165,18 @@ export default function ITEEducationCenter() {
           </button>
           </Link>
 
-          {/* 客製化 Button */}
+          {/* 個人客製化化 Button - WhatsApp */}
           <Link href='https://wa.me/51001888'>
           <button className="px-5 py-2 border-cyan-700  border-2 text-gray-800 rounded-3xl flex items-center gap-2 hover:bg-cyan-800 hover:text-white transition-colors">
-            <span>索取企業客製化方案 / 報價</span>
+            <span>個人客製化方案 / 報價</span>
+            <ChevronRight size={16} />
+          </button>
+          </Link>
+
+          {/* 企業客製化 Button - Email */}
+          <Link href={`mailto:${email}`}>
+          <button className="px-5 py-2 border-cyan-700  border-2 text-gray-800 rounded-3xl flex items-center gap-2 hover:bg-cyan-800 hover:text-white transition-colors">
+            <span>企業客製化方案 / 報價</span>
             <ChevronRight size={16} />
           </button>
           </Link>

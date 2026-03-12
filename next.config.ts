@@ -42,6 +42,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.aliyuncs.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 

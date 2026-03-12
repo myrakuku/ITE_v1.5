@@ -348,7 +348,7 @@ const handleStatusChange = (statusId: string) => {
           <div className="w-full lg:w-1/4 shrink-0 space-y-6 lg:sticky lg:top-4">
             
             {/* 搜尋框卡片 */}
-            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4">
               <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">搜索課程</label>
               <div className="relative">
                 <input
@@ -362,9 +362,9 @@ const handleStatusChange = (statusId: string) => {
             </div>
 
             {/* 類型篩選 */}
-            <div className="hidden lg:block bg-white border border-slate-200 shadow-sm rounded-xl p-6">
+            <div className="hidden lg:block  bg-white border border-slate-200 shadow-sm rounded-xl p-4">
               <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">類型篩選</label>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 max-h-20 overflow-y-auto pr-2">
                 {courseProductTypes.map((type) => (
                   <label key={type.id} className="inline-flex items-center group cursor-pointer">
                     <input
@@ -380,9 +380,9 @@ const handleStatusChange = (statusId: string) => {
             </div>
 
             {/* 狀態篩選 */}
-            <div className="hidden lg:block bg-white border border-slate-200 shadow-sm rounded-xl p-6">
+            <div className="hidden lg:block h-1/5 bg-white border border-slate-200 shadow-sm rounded-xl p-4">
               <label className="block text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">狀態篩選</label>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 max-h-20 overflow-y-auto pr-2">
                 {courseProductStatuses.map((status) => (
                   <label key={status.id} className="inline-flex items-center group cursor-pointer">
                     <input

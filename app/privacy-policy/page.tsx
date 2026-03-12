@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
@@ -17,7 +16,6 @@ export default function PrivacyPolicyPage() {
 
   return (
     <>
-    <Nav/>
     <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
         
