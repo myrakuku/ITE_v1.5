@@ -1,124 +1,122 @@
 # Update on 2026.7.17
-components/GoogleMap.tsx
-Add: Set default business hours, line 2 & line 27
+  components/GoogleMap.tsx
+  Add: Set default business hours, line 2 & line 27
 
 
 # Update on 2026-03-12
 
-// Missing -> Delete Double Nav
-app/privacy-policy/page.tsx
+  // Missing -> Delete Double Nav
+  app/privacy-policy/page.tsx
 
-// Fixed WhatsApp button
-WhatsApp Order sent to Front
-components/Navbar.tsx
-Line 134: z-49
-components/Whatsapp.tsx
-Line 10: z-50
+  // Fixed WhatsApp button
+  WhatsApp Order sent to Front
+  components/Navbar.tsx
+  Line 134: z-49
+  components/Whatsapp.tsx
+  Line 10: z-50
 
-// SEO setting
-components/GoogleMap.tsx
-app/page.tsx
-app/layout.tsx
-app/Posts/page.tsx
-app/core/page.tsx
-app/about/page.tsx
-app/ourteam/page.tsx
+  // SEO setting
+  components/GoogleMap.tsx
+  app/page.tsx
+  app/layout.tsx
+  app/Posts/page.tsx
+  app/core/page.tsx
+  app/about/page.tsx
+  app/ourteam/page.tsx
 
-// Seperating OurTeam
-Add components: components/Teacher.tsx
+  // Seperating OurTeam
+  Add components: components/Teacher.tsx
 
 
-# =====================
-# =====================
-# =====================
+
 # Update on 2026-03-09
 
-### COURSE 課程總覽
-/components/ShopPage.tsx
-類型篩選 & 狀態篩選 高級 Overflow 修正
-app/(user)/user/[userId]/shop/page.tsx
+    ### COURSE 課程總覽
+    /components/ShopPage.tsx
+    類型篩選 & 狀態篩選 高級 Overflow 修正
+    app/(user)/user/[userId]/shop/page.tsx
 
 
-/shop
-此版本欠日期時間、參考文章，不能夠直接return
-app/shop/[shopId]/page.tsx
-app/(user)/user/[userId]/shop/[productsId]/page.tsx
+    /shop
+    此版本欠日期時間、參考文章，不能夠直接return
+    app/shop/[shopId]/page.tsx
+    app/(user)/user/[userId]/shop/[productsId]/page.tsx
 
-左側：
-唔要張圖 個位換影片
-目標x3 優化佢
+    左側：
+    唔要張圖 個位換影片
+    目標x3 優化佢
 
-右側：
-Button 字改成報名 / user -> 報名及付款
-加報讀流程（流程式咁做）
-
-
-### Navbar
-components/Navbar.tsx
-睇下可唔可以改風格
-Remove - n8nChatbox
-Add - WhatsApp button -> Whatsapp.tsx [only display on public & user]
-rename user navbar: 願望清單 > 心儀課程
-Changed Logo: White -> Blue
-
-/WhatsApp item
-components/Whatsapp.tsx
-Add Whatsapp 界面
-
-### Other Page
-/login
-app/login/components/login.tsx
-Line 137:登入 > 學生登入
-Add: mt-20
-
-/register
-components/CreateForm/Create-User-Form_client.tsx
-Line 224: 帳戶名稱 > 登入帳號
-LIne 244: 姓名 > 學生姓名
-Add: 報名流程 
-
-/user/id
-app/(user)/user/[userId]/page.tsx
-Line 159: 用戶資料 > 學生資料
-Line 164: 用ID > 學生 ID
-Line 168: 用戶名 > 登入帳號
-Line 172: 姓名 > 學生姓名
-
-/user cart
-app/(user)/user/[userId]/cart/page.tsx
-願望清單 > 心儀課程
-
-app/ourteam/page.tsx
-Remove: Double Nav
-Upate Typo: Lung -> Wai
-Add Teacher: Antoninus Yeung
-
-/about page
-app/about/page.tsx
-Add button: 個人客製化方案 / 報價 [Whatsapp] & 企業客製化方案 / 報價 [Email]
-Update Google Map
-
-//core
-Remove Double Nav
+    右側：
+    Button 字改成報名 / user -> 報名及付款
+    加報讀流程（流程式咁做）
 
 
-### Post
-app/Posts/[id]/page.tsx
-app/Posts/page.tsx
-**改時要小心，不要動到SEO meta**
+  ### Navbar
+    components/Navbar.tsx
+    睇下可唔可以改風格
+    Remove - n8nChatbox
+    Add - WhatsApp button -> Whatsapp.tsx [only display on public & user]
+    rename user navbar: 願望清單 > 心儀課程
+    Changed Logo: White -> Blue
+
+    /WhatsApp item
+    components/Whatsapp.tsx
+    Add Whatsapp 界面
+
+  ### Other Page
+    /login
+    app/login/components/login.tsx
+    Line 137:登入 > 學生登入
+    Add: mt-20
+
+    /register
+    components/CreateForm/Create-User-Form_client.tsx
+    Line 224: 帳戶名稱 > 登入帳號
+    LIne 244: 姓名 > 學生姓名
+    Add: 報名流程 
+
+    /user/id
+    app/(user)/user/[userId]/page.tsx
+    Line 159: 用戶資料 > 學生資料
+    Line 164: 用ID > 學生 ID
+    Line 168: 用戶名 > 登入帳號
+    Line 172: 姓名 > 學生姓名
+
+    /user cart
+    app/(user)/user/[userId]/cart/page.tsx
+    願望清單 > 心儀課程
+
+    app/ourteam/page.tsx
+    Remove: Double Nav
+    Upate Typo: Lung -> Wai
+    Add Teacher: Antoninus Yeung
+
+    /about page
+    app/about/page.tsx
+    Add button: 個人客製化方案 / 報價 [Whatsapp] & 企業客製化方案 / 報價 [Email]
+    Update Google Map
+
+    //core
+    Remove Double Nav
+
+
+  ### Post
+  app/Posts/[id]/page.tsx
+  app/Posts/page.tsx
+  **改時要小心，不要動到SEO meta**
 
 
 ### Public page setting
-middleware.ts
-Add: /ourteam, /privacy-policy
+  middleware.ts
+  Add: /ourteam, /privacy-policy
 
 ### Next config
-next.config.ts
-Add: picsum.photos
+  next.config.ts
+  Add: picsum.photos
 
-==== 改動notes ====
+  ==== 改動notes ====
 
-帳目紀錄 gen 成invoice??
+  帳目紀錄 gen 成invoice??
 
 
 # =====================
