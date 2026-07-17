@@ -1,6 +1,8 @@
-# =====================
-# =====================
-# =====================
+# Update on 2026.7.17
+components/GoogleMap.tsx
+Add: Set default business hours, line 2 & line 27
+
+
 # Update on 2026-03-12
 
 // Missing -> Delete Double Nav
