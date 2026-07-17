@@ -19,7 +19,7 @@ import Mr_Eric from '@/public/Teacher_Eric.png'
 const teamMembers = [
   {
     id: 1,
-    name: "Mr. Aaron Lung",
+    name: "Mr. Aaron Wai",
     avatar: Mr_Aaron,
     title: "跨領域科技與管理講師", // 新增中文職稱
     bio: "With a multidisciplinary background that bridges tech, finance, sales, and leadership, he brings hands-on corporate experience from building systems, managing teams, and scaling businesses in Asia, all while focusing on practical teaching approaches that emphasize job-ready skills in web development, automation, and data analysis."
