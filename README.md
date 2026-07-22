@@ -1,3 +1,7 @@
+# Update on 2026.7.21
+  components/Teacher.tsx
+  Change: Mr. Oscar Lo -> Mr. Oscar Kong
+
 # Update on 2026.7.17
   components/GoogleMap.tsx
   Add: Set default business hours, line 2 & line 27
