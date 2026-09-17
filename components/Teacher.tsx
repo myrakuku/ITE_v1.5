@@ -9,6 +9,8 @@ import Teacher_Eric from "@/public/Teacher_Eric.png";
 import Teacher_JTsang from "@/public/Teacher_JTsang.png";
 import Teacher_Antoninus from "@/public/Teacher_Antoninus.jpeg";
 import TA_Myra from "@/public/TA_Myra.jpeg";
+import Teacher_CSFung from "@/public/Teacher_CSFung.png";
+import Teacher_Oscar from "@/public/Teacher_Oscar.jpeg";
 // import Teacher_WaiLung from "@/public/";
 
 // 教師數據
@@ -123,55 +125,105 @@ const teamMembers = [
     bio: "He excels at delivering high-quality visual assets that meet the rigorous demands of large-scale production environments, combining artistic flair with technical precision to bring characters and worlds to life."
   },
   {
-    id: 5,
-    name: "Mr. Antoninus Yeung",
-    position: "Teacher",
-    avatar: Teacher_Antoninus,
-    intro: "Accomplished and versatile professional with a robust background in accounting, business management, and system re-engineering. Antoninus holds multiple graduate degrees in business disciplines, complemented by professional certifications as an accountant in Australia, the UK, and Hong Kong. With over 30 years of experience in commercial environments, he brings a unique blend of analytical skills and strategic insight to drive business innovation and optimize operational efficiency.",
-    technicalBg: [
-      "Solid technical expertise in database management, including relational databases (RDBMS) and NoSQL systems, with hands-on experience in Oracle, MSSQL, MySQL, and MongoDB.",
-      "Proficient in Microsoft Office Suite and VBA, enhancing productivity and automating workflows.",
-      "Familiar with business intelligence tools, including SharePoint, Power BI, and Power Automate, to facilitate data-driven decision-making."
-    ],
-    educationalContrib: [
-      "In-House Coaching: Experienced in mentoring individuals and teams, fostering a collaborative environment that encourages professional growth and skill enhancement.",
-      "Business System Re-engineering: Demonstrated ability to innovate business processes, enhancing operational efficiency and driving organizational success.",
-      "Commercial Acumen: Proven track record in executing marketing strategies and managing complex business functions, ensuring alignment with organizational goals."
-    ],
-    expertise: [
-      "Accounting & Financial Management: Professional Accountant with proficiency in financial analysis, budgeting, and risk management.",
-      "Database Management: Expert in Oracle, MSSQL, MySQL, and MongoDB.",
-      "Automation & Productivity: Advanced skills in Microsoft Office, VBA, and integrated business solutions.",
-      "Business Development: Experienced in system re-engineering and innovation, focusing on creating efficient business models.",
-      "Cyber Security: Knowledgeable in cybersecurity principles with a Certified Information Security Professional (CISP) credential."
-      
-    ],
-    bio: "Antoninus excels at leveraging his extensive professional experience to act as a consultant for business system innovations. His background enables him to foster collaboration across departments and implement effective strategies that enhance organizational performance."
+  id: 5,
+  name: "Mr. Antoninus Yeung",
+  position: "Teacher",
+  avatar: Teacher_Antoninus,
+  intro: "Accomplished and versatile professional with a robust background in accounting, business management, and system re-engineering. Antoninus holds multiple graduate degrees in business disciplines, complemented by professional certifications as an accountant in Australia, the UK, and Hong Kong. With over 30 years of experience in commercial environments, he brings a unique blend of analytical skills and strategic insight to drive business innovation and optimize operational efficiency.",
+  technicalBg: [
+    "Solid technical expertise in database management, including relational databases (RDBMS) and NoSQL systems, with hands-on experience in Oracle, MSSQL, MySQL, and MongoDB.",
+    "Proficient in Microsoft Office Suite and VBA, enhancing productivity and automating workflows.",
+    "Familiar with business intelligence tools, including SharePoint, Power BI, and Power Automate, to facilitate data-driven decision-making."
+  ],
+  educationalContrib: [
+    "In-House Coaching: Experienced in mentoring individuals and teams, fostering a collaborative environment that encourages professional growth and skill enhancement.",
+    "Business System Re-engineering: Demonstrated ability to innovate business processes, enhancing operational efficiency and driving organizational success.",
+    "Commercial Acumen: Proven track record in executing marketing strategies and managing complex business functions, ensuring alignment with organizational goals."
+  ],
+  expertise: [
+    "Accounting & Financial Management: Professional Accountant with proficiency in financial analysis, budgeting, and risk management.",
+    "Database Management: Expert in Oracle, MSSQL, MySQL, and MongoDB.",
+    "Automation & Productivity: Advanced skills in Microsoft Office, VBA, and integrated business solutions.",
+    "Business Development: Experienced in system re-engineering and innovation, focusing on creating efficient business models.",
+    "Cyber Security: Knowledgeable in cybersecurity principles with a Certified Information Security Professional (CISP) credential."
+    
+  ],
+  bio: "Antoninus excels at leveraging his extensive professional experience to act as a consultant for business system innovations. His background enables him to foster collaboration across departments and implement effective strategies that enhance organizational performance."
   },
-    {
-    id: 6,
-    name: "Ms. Myra Ku",
-    position: "Teaching Assistant",
-    avatar: TA_Myra,
-    intro: "Aspiring and versatile professional with a burgeoning career in web development, underpinned by a solid foundation in business management and creative design. Myra holds a Bachelor of Business Administration (Hons) and a specialized Certificate in Front-End Website Development, bringing a unique blend of aesthetic sensibility and marketing acumen to technical projects. She combines practical experience in clean coding and responsive design with a history of driving sales and operational efficiency in corporate settings.",
-    technicalBg: [
-      "Solid technical expertise in modern front-end technologies, with hands-on proficiency in writing clean, efficient code using HTML, CSS, JavaScript, and React.",
-      "Design-Driven Development: Leverages a strong background in design and tools like Adobe Creative Cloud and Figma to ensure user-friendly, responsive, and visually engaging web applications.",
-      "Data & Operations awareness: Equipped with data analysis skills using Power BI, SQL, and Python, complementing her ability to handle operations, SEO marketing, and digital platform management."
-    ],
-    educationalContrib: [
-      "Web Developer Trainee: Actively contributes to development teams by applying best practices in UX and responsive design, participating in brainstorming sessions, and delivering efficient code based on strict project requirements.",
-      "Marketing & Business Growth: Proven track record as a Sales and Marketing Executive, where she planned website content, executed SEO strategies, and designed advertisement artwork that increased brand exposure by 10-20%.",
-      "Operational Excellence: Demonstrated reliability in fast-paced environments as an Operations and Office Support Specialist, adept at coordinating delivery teams, handling emergency services, and communicating effectively with clients."
-    ],
-    expertise: [
-      "Front-End Development: HTML/CSS/Tailwind CSS/JavaScript/React",
-      "Data & Logic: Python/SQL/Power BI",
-      "Design & UI/UX: Figma/Adobe Illustrator/Adobe Photoshop/Responsive Design",
-      "Business Tools: Microsoft Excel/Word",
-      "Marketing & Strategy: SEO Marketing/Website Content Planning/Online Sales Monitoring/Brand Image Development"
-    ],
-    bio: "She excels at leveraging her dual skills in coding and design to create engaging web applications that enhance user experience while aligning with core marketing principles. Her eagerness to implement innovative solutions makes her a adaptable contributor capable of bridging the gap between technical execution and business goals."
+  {
+  id: 6,
+  name: "Ms. CS Fung",
+  position: "Teacher",
+  avatar: Teacher_CSFung,
+  intro: "An adaptable and highly experienced educator who began her teaching journey at age 16, building over a decade of extensive experience in language instruction. Backed by an academic foundation in English Studies and complemented by studies in Japanese and Business, Ms. CS Fung has been continuously entrusted to lead engaging English Enhancement Courses across various primary and secondary schools. Uniquely positioning herself at the intersection of modern technology and education, she combines teaching pragmatism with current digital tech literacies.",
+  technicalBg: [
+    "Competent Technical Command: Equipped with a solid understanding of Artificial Intelligence (AI) applications and how modern educational tooling converges with everyday workflows.",
+    "Foundation in Programming: Formally trained in Full-stack web development basics, enabling logic-oriented systematic approaches to lesson plannings and complex problem-solving."
+  ],
+  educationalContrib: [
+    "Core Language Instruction: Over 10 years of consistent, successful delivery in designing and teaching English language enhancement components geared toward young educators and multi-level students in registered primary and secondary schools.",
+    "Pedagogical Translation: Highly regarded for her unique attribute of stripping down and simplifying immensely complex linguistic and technical concepts into digestible learning milestones for absolute beginners to intermediate learners.",
+    "Versatility in Delivery: Has developed a refined pedagogical toolkit to distinctively dynamically adapt teaching styles to address the widely ranging needs spanning different age groups."
+  ],
+  expertise: [
+    "Educational Subjects: English Studies / Japanese Language Basics / Business Frameworks",
+    "Instruction Design: English Enhancement Course Delivery / Cross-Age Cohort Pedagogical Design",
+    "Modern Tools: AI-assisted Learning Integration / Foundations in Full-Stack Web Methodologies"
+  ],
+  bio: "Equipped with a diverse fusion of linguistic and forward-looking capabilities, Ms. CS Fung excels at simplifying complex subjects for students. Her outstanding adaptive capacities guarantee that all curriculum learning outcomes are smoothly achieved and material perfectly understood natively across diverse age spectrums limitlessly."
+},
+{
+  id: 7,
+  name: "Mr. Oscar Lo",
+  position: "Analyst Programmer & Senior Educator",
+  avatar: Teacher_Oscar,
+  intro: "Oscar Lo is a distinguished Analyst Programmer and Senior Educator with an extensive track record in enterprise-level software development and technical training. With professional experience at IBM, he has spearheaded the development of high-profile enterprise platforms, specializing in microservices, API architecture, and high-performance commercial systems. As a high-volume educator, Oscar has taught over 4,500+ hours of professional programming courses over the past three years.",
+  technicalBg: [
+    "Enterprise Software Development: Led the development of high-profile enterprise platforms at IBM with expertise in microservices, API architecture, and high-performance commercial systems.",
+    "Backend Engineering Specialization: Expert in breaking down complex backend concepts including Java, Spring Boot, and SQL into digestible, actionable knowledge for students.",
+    "Practical System Development: Hands-on experience building automated recruitment plugins and market data extractors with technical insights beyond standard textbooks."
+  ],
+  educationalContrib: [
+    "Professional Programming Instructor: Taught over 4,500+ hours of professional programming courses in the past three years to students of various levels.",
+    "Industry Skill Empowerment: Bridges multinational corporate development experience with classroom teaching to equip tech talents with exact industry-demanded skill sets.",
+    "Technical Knowledge Translation: Specializes in simplifying complex engineering concepts for effective learning and practical application."
+  ],
+  expertise: [
+    "Backend Engineering: Java / Spring Boot / Spring Data JPA / RESTful API Design",
+    "Database Management: SQL / PostgreSQL / MySQL / Database Schema Design",
+    "Data Analysis Tools: Python / Pandas / Numpy / Polars / Numba / SciPy",
+    "Data Integration & Automation: Web Scraping / BeautifulSoup / Selenium / Scrapy / Session Management",
+    "Web Development: Django / HTML / CSS / JavaScript / Flowbite",
+    "Version Control & Collaboration: Git / GitHub / GitLab / Git Flow",
+    "Enterprise Experience: Microservices Architecture / Performance Testing / Enterprise Platform Development (IBM)",
+    "Project Management: Automated Productivity Tools / GUI-based Scrapers (PyQt5) / Market Data Analytics"
+  ],
+  bio: "His deep technical expertise combined with extensive enterprise development experience enables him to deliver industry-relevant education. By bridging the gap between corporate development at a multinational level and passionate classroom teaching, Oscar excels at empowering the next generation of tech talent with the exact skill sets demanded by today’s industry."
+},
+  {
+  id: 8,
+  name: "Ms. Myra Ku",
+  position: "Teaching Assistant",
+  avatar: TA_Myra,
+  intro: "Aspiring and versatile professional with a burgeoning career in web development, underpinned by a solid foundation in business management and creative design. Myra holds a Bachelor of Business Administration (Hons) and a specialized Certificate in Front-End Website Development, bringing a unique blend of aesthetic sensibility and marketing acumen to technical projects. She combines practical experience in clean coding and responsive design with a history of driving sales and operational efficiency in corporate settings.",
+  technicalBg: [
+    "Solid technical expertise in modern front-end technologies, with hands-on proficiency in writing clean, efficient code using HTML, CSS, JavaScript, and React.",
+    "Design-Driven Development: Leverages a strong background in design and tools like Adobe Creative Cloud and Figma to ensure user-friendly, responsive, and visually engaging web applications.",
+    "Data & Operations awareness: Equipped with data analysis skills using Power BI, SQL, and Python, complementing her ability to handle operations, SEO marketing, and digital platform management."
+  ],
+  educationalContrib: [
+    "Web Developer Trainee: Actively contributes to development teams by applying best practices in UX and responsive design, participating in brainstorming sessions, and delivering efficient code based on strict project requirements.",
+    "Marketing & Business Growth: Proven track record as a Sales and Marketing Executive, where she planned website content, executed SEO strategies, and designed advertisement artwork that increased brand exposure by 10-20%.",
+    "Operational Excellence: Demonstrated reliability in fast-paced environments as an Operations and Office Support Specialist, adept at coordinating delivery teams, handling emergency services, and communicating effectively with clients."
+  ],
+  expertise: [
+    "Front-End Development: HTML/CSS/Tailwind CSS/JavaScript/React",
+    "Data & Logic: Python/SQL/Power BI",
+    "Design & UI/UX: Figma/Adobe Illustrator/Adobe Photoshop/Responsive Design",
+    "Business Tools: Microsoft Excel/Word",
+    "Marketing & Strategy: SEO Marketing/Website Content Planning/Online Sales Monitoring/Brand Image Development"
+  ],
+  bio: "She excels at leveraging her dual skills in coding and design to create engaging web applications that enhance user experience while aligning with core marketing principles. Her eagerness to implement innovative solutions makes her a adaptable contributor capable of bridging the gap between technical execution and business goals."
   }
 ];
 
