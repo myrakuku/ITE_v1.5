@@ -62,6 +62,8 @@ const publicRoutes = [
   '/shop',
   '/register',
   '/about',
+  '/contact',
+  '/corporate',
   '/complaintFrom',
   '/specialCourse',
   '/Posts',

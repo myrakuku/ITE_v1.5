@@ -61,52 +61,67 @@ export default async function PostsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-  <h1 className="text-2xl md:text-3xl font-medium text-gray-800 mb-8">最新文章</h1>
-  <div className="grid gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
-    {posts.map((post) => (
-      <Link
-        key={post.id}
-        href={`/Posts/${post.id}`}
-        className="block bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:translate-y-[-2px]"
-      >
-        {/* 若有首張圖片，可顯示縮圖 */}
-        {post.img_url && post.img_url.length > 0 && (
-          <div className="aspect-video relative">
-            <Image
-              src={post.img_url[0]}
-              alt={post.Title || "文章圖片"}
-              width={640}           // representative width
-              height={360}          // maintain ~16:9 ratio
-              className="object-cover w-full h-full"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-        )}
+  <div className="container mx-auto py-12 px-4">
+    <div className="mb-10 max-w-5xl">
+      <h1 className="text-2xl font-semibold text-gray-500 mb-3">
+        最新文章
+      </h1>
+      <p className="text-gray-600">
+        最新文章涵蓋企業培訓、AI 應用、資安議題及課程資訊，分享實務知識與真實案例。內容拆解企業培訓規劃、AI 落地方法，剖析數碼轉型下的資安風險，協助企業善用 AI 同時保障數據安全。當中亦附上相關課程資訊，方便團隊報讀，在平衡創新與風險管理的同時，提升團隊數碼能力。
+      </p>
+    </div>
 
-        <div className="p-5 md:p-6">
-          <h2 className="text-xl md:text-2xl font-medium text-gray-800 mb-2 line-clamp-2 leading-tight">
-            {post.Title || "無標題"}
-          </h2>
-          {post.SupTitle && (
-            <p className="text-base text-gray-600 mb-4 line-clamp-2 leading-relaxed">
-              {post.SupTitle}
-            </p>
+    <div className="grid md:grid-cols-2 gap-x-10 gap-y-12 max-w-5xl">
+      {posts.map((post) => (
+        <Link
+          key={post.id}
+          href={`/Posts/${post.id}`}
+          className="group flex flex-col sm:flex-row gap-5 pb-8 border-b border-gray-100 transition-all duration-300 hover:opacity-90"
+        >
+          {post.img_url && post.img_url.length > 0 && (
+            <div className="sm:w-56 flex-shrink-0">
+              <div className="aspect-video rounded-xl overflow-hidden bg-gray-100">
+                <Image
+                  src={post.img_url[0]}
+                  alt={post.Title || "文章圖片"}
+                  width={640}
+                  height={360}
+                  className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-500"
+                  sizes="(max-width: 640px) 100vw, 220px"
+                />
+              </div>
+            </div>
           )}
-          <div className="flex flex-wrap items-center justify-between text-sm text-gray-500 gap-2 pt-2 border-t border-gray-100">
-            <time dateTime={post.createdAt.toISOString()}>
-              {new Date(post.createdAt).toLocaleDateString("zh-HK", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-            {post.author && <span>作者：{post.author}</span>}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
+              <time dateTime={post.createdAt.toISOString()}>
+                {new Date(post.createdAt).toLocaleDateString("zh-HK", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+              {post.author && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                  <span>作者：{post.author}</span>
+                </>
+              )}
+            </div>
+            <h2 className="text-md font-semibold text-gray-800 mb-3 group-hover:text-cyan-700 transition-colors leading-snug">
+              {post.Title || "無標題"}
+            </h2>
+            {post.SupTitle && (
+              <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                {post.SupTitle}
+              </p>
+            )}
           </div>
-        </div>
-      </Link>
-    ))}
+        </Link>
+      ))}
+    </div>
   </div>
-</div>
-  );
+);
+
+
 }

@@ -1,7 +1,35 @@
-# Update on 2026.7.21
-  components/Teacher.tsx
-  Change: Mr. Oscar Lo -> Mr. Oscar Kong
+# Update on 2026.9.21
 
+  install mail with solve peer conflicts
+  npm install nodemailer --legacy-peer-deps
+
+  Change:
+  middleware.ts
+  components/Navbar.tsx
+  components/GoogleMap.tsx
+  app/Posts/[id]/page.tsx
+  app/Posts/page.tsx
+  
+
+  Add:
+  .env >> stmp
+  public/corporate_banner.jpg
+  components/FloatingContactButton.tsx
+
+  app/corporate
+  app/corporate/layout.tsx
+  app/corporate/page.tsx
+
+  app/contact
+  app/contact/page.tsx
+
+  app/api/send-contact
+  app/api/send-contact/route.ts
+
+  app/api/send-enquiry
+  app/api/send-enquiry/route.ts
+
+  
 # Update on 2026.7.17
   components/GoogleMap.tsx
   Add: Set default business hours, line 2 & line 27
@@ -190,6 +218,10 @@ Teacher_HoncyLee.webp
 Teacher_JTsang.png
 Teacher_WaiLung.webp
 **新加入/更改圖片
+
+#### installation
+npm install --legacy-peer-deps
+
 
 
 

@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
@@ -9,9 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image"; // 導入 Next.js 的 Image 組件
 
-// import { createChat } from "@n8n/chat";
-// import "@n8n/chat/style.css";
-import WhatsAppButton from "@/components/Whatsapp";
+import FloatingContactButton from "@/components/FloatingContactButton";
 
 // 導入圖片資源
 import ITELOGO from "@/public/Logo_Blue.png";
@@ -59,13 +54,15 @@ export default function Navbar() {
     : [];
 
   const publicNavItems = [
-    { name: "課程總覽", engname: "COURSE", href: "/" },
-    { name: "最新消息", engname: "NEWS", href: "/Posts" },
-    { name: "教育團隊", engname: "OUR TEAM", href: "/ourteam" },
-    { name: "關於我們", engname: "About Us", href: "/about" },
+    { name: "企業培訓", engname: "Corporate", href: "/corporate" },
+    { name: "課程總覽", engname: "Course", href: "/" },
+    { name: "最新消息", engname: "News", href: "/Posts" },
+    { name: "教育團隊", engname: "Team", href: "/ourteam" },
+    { name: "關於我們", engname: "About", href: "/about" },
+    { name: "聯絡我們", engname: "Contact", href: "/contact" },
     { name: "登錄", engname: "", href: "/login" },
     { name: "註冊", engname: "", href: "/register" },
-    { name: "", engname: "", href: "", isCustom: true, component: <WhatsAppButton /> },
+    { name: "", engname: "", href: "", isCustom: true, component: <FloatingContactButton /> },
   ];
 
   // 根據 session 和角色選擇導航項目
@@ -87,49 +84,17 @@ export default function Navbar() {
         ? `/teacher/${teacherId}`
         : session?.user?.role === UserRole.USER && userId
         ? `/user/${userId}`
-        : "/"
-      : "/";
+        : "/corporate"
+      : "/corporate";
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/login" });
   };
 
-  // useEffect(() => {
-  //   // n8n 聊天功能初始化
-  //   createChat({
-  //     webhookUrl: "https://n8n.cx/webhook/39c0161e-b6d4-4d1a-8b3d-98e17dbb18e0/chat",
-  //     webhookConfig: {
-  //       method: "POST",
-  //       headers: {},
-  //     },
-  //     target: "#n8n-chat",
-  //     mode: "window",
-  //     chatInputKey: "chatInput",
-  //     chatSessionKey: "sessionId",
-  //     loadPreviousSession: true,
-  //     metadata: {},
-  //     showWelcomeScreen: false,
-  //     defaultLanguage: "en",
-  //     initialMessages: ["您好! 👋 請問有什麼服務想查詢？"],
-  //     i18n: {
-  //       en: {
-  //         title: "",
-  //         subtitle: "",
-  //         footer: "",
-  //         getStarted: "New Conversation",
-  //         inputPlaceholder: "請在此輸入文字..",
-  //         closeButtonTooltip: "",
-  //       },
-  //     },
-  //     enableStreaming: false,
-  //   });
-  // }, []);
-  
-
   return (
     <>
     {(status === "unauthenticated" || session?.user?.role === UserRole.USER) && (
-    <WhatsAppButton />
+    <FloatingContactButton />
   )}
     <nav className="sticky top-0 bg-white/90 backdrop-blur-sm z-49">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -232,10 +197,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
-      {/* n8n 聊天窗口容器 */}
-       {/* <div id="n8n-chat" /> */}
-      
     </nav>
     </>
   );
